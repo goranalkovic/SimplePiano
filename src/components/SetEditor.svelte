@@ -16,7 +16,7 @@
 
   async function getInstruments() {
     let data = await fetch(
-      `http://gleitz.github.io/midi-js-soundfonts/${$currentSoundFont}/names.json`
+      `https://gleitz.github.io/midi-js-soundfonts/${$currentSoundFont}/names.json`
     );
     availInstruments = await data.json();
     selectedInstrument = availInstruments[0];
