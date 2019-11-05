@@ -45,7 +45,7 @@
   }
 
   .piano-grid-container {
-    margin: 4rem auto;
+    margin: 2rem auto;
     height: 12rem;
   }
 

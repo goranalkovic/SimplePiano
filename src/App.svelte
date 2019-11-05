@@ -5,6 +5,7 @@
   import PianoGrid from "./components/PianoGrid.svelte";
   import SetEditor from "./components/SetEditor.svelte";
   import SetList from "./components/SetList.svelte";
+  import InstrumentList from "./components/InstrumentList.svelte";
 
   import {
     soundFont,
@@ -23,7 +24,8 @@
 
   import Soundfont from "soundfont-player";
 
-  let darkTheme = false;
+  let theme = 0;
+  $: themeName = theme === 0 ? 'Auto' : (theme === 1 ? 'Light' : 'Dark');
 
   function clamp(value, min, max) {
     if (value <= min) return min;
@@ -42,17 +44,29 @@
 
     for (let i in keyCodes) {
       document
-        .querySelector("#" + keyCodes[i])
-        .classList.remove("piano-key-highlight");
+              .querySelector("#" + keyCodes[i])
+              .classList.remove("piano-key-highlight");
     }
   }
 
   function switchDark() {
-    darkTheme = !darkTheme;
+    theme++;
 
-    document.querySelector("html").className = darkTheme ? "dark" : "";
+    if (theme === 3) {
+      theme = 0;
+    }
 
-    console.log(document.querySelector("html").className);
+    applyTheme();
+  }
+
+  function applyTheme() {
+    if ((theme === 0 && window.matchMedia("(prefers-color-scheme: dark)").matches) || theme === 2) {
+      document.querySelector("html").className = "dark";
+    } else {
+      document.querySelector("html").className = "";
+    }
+
+    // console.log(`Current theme: ${themeName}`);
   }
 
   function handleKeyDown(e) {
@@ -65,8 +79,8 @@
     if ($keysDown[kCode] === true) return;
 
     document
-      .querySelector("#" + keyCodes[kCode])
-      .classList.add("piano-key-highlight");
+            .querySelector("#" + keyCodes[kCode])
+            .classList.add("piano-key-highlight");
 
     keysDown.update(kd => {
       kd[kCode] = true;
@@ -75,11 +89,11 @@
 
     for (let instrument of $instrumentSets[$activeSet].instruments) {
       let octShift =
-        instrument.octave === null
-          ? $octaveShift
-          : $octaveShift + instrument.octave;
+              instrument.octave === null
+                      ? $octaveShift
+                      : $octaveShift + instrument.octave;
       let vol =
-        instrument.volume > -1 ? instrument.volume / 100 : $volume / 100;
+              instrument.volume > -1 ? (instrument.absoluteVolume ? ($volume * (instrument.volume / 100)) / 100 : instrument.volume / 100)  : $volume / 100;
 
       let adjustedOctShift = clamp(octShift + instrument.octave, -3, 3);
 
@@ -92,8 +106,8 @@
         if (newAdsr[3] < 0) newAdsr[3] = defaultAdsr[3];
 
         let note = (
-          parseInt(keyNotes[kCode]) +
-          12 * adjustedOctShift
+                parseInt(keyNotes[kCode]) +
+                12 * adjustedOctShift
         ).toString();
 
         let inst = instr.play(note, ac.currentTime, {
@@ -111,6 +125,7 @@
         }
       });
     }
+
   }
 
   function handleKeyUp(e) {
@@ -149,6 +164,7 @@
 
     if (kCode === 40) {
       if ($volume >= 10) volume.update(v => v - 10);
+      if ($volume - 10 < 0) volume.update(v => v = 0);
       return;
     }
 
@@ -158,7 +174,8 @@
     }
 
     if (kCode === 38) {
-      if ($volume < 90) volume.update(v => v + 10);
+      if ($volume <= 90) volume.update(v => v + 10);
+      if($volume + 10 > 100) volume.update(v => v = 100);
       return;
     }
 
@@ -169,8 +186,8 @@
     if ($keysDown[kCode] === false) return;
 
     document
-      .querySelector("#" + keyCodes[kCode])
-      .classList.remove("piano-key-highlight");
+            .querySelector("#" + keyCodes[kCode])
+            .classList.remove("piano-key-highlight");
 
     keysDown.update(kd => {
       kd[kCode] = false;
@@ -191,24 +208,29 @@
       kp[kCode] = [];
       return kp;
     });
+
   }
+
+  applyTheme();
 </script>
 
 <style>
   .split {
     display: flex;
   }
+
+  h3, h4 {
+    font-weight: 400;
+  }
 </style>
 
 <div class="container">
 
   <TitleBar>
-    <h3 slot="left">🎹 Piano</h3>
+    <h3 slot="left">Piano</h3>
 
     <Button outline on:click={stopAllSounds}>Stop all sounds</Button>
-    <Button spaced on:click={switchDark}>
-       {darkTheme ? 'Light' : 'Dark'} theme
-    </Button>
+    <Button spaced outline on:click={switchDark}>{themeName} theme</Button>
   </TitleBar>
 
   <Controls />
@@ -216,6 +238,7 @@
   <PianoGrid />
 
   <div class="split">
+    <InstrumentList />
     <SetEditor />
     <SetList />
   </div>

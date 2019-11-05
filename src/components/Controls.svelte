@@ -32,10 +32,18 @@
 <style>
     .flex {
         display: flex;
+        justify-content: space-between;
+    }
+
+    .spacer {
+        display: inline-block;
+        content: "";
+        width: 2rem;
     }
 </style>
 
 <div class="flex">
     <SlideControl {...volumeControl} bind:value={$volume}  />
+    <div class="spacer"></div>
     <SlideControl {...octaveControl} bind:value={$octaveShift}  />
 </div>

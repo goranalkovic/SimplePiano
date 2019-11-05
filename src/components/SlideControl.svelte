@@ -11,12 +11,12 @@
 
   $: formattedValue = (customValueDisplay != null && customValueDisplay[value] != null) ? customValueDisplay[value] : value;
 
-
+  let hovering = false;
 </script>
 
 <style>
   .slide-ctrl {
-    margin-right: 60px;
+    /*margin-right: 60px;*/
     display: flex;
     flex-direction: column;
   }
@@ -84,14 +84,14 @@
   }
 </style>
 
-<div class="slide-ctrl">
-  <label>
+<div class="slide-ctrl" >
+  <label  >
     <span class="title">{title}</span>
     <input type="range" {min} {max} {step} bind:value on:change />
     <span class="value">{formattedValue}</span>
   </label>
 
-  {#if keyboardKeys}
+  {#if keyboardKeys && hovering}
     <div class="hints">
       {#each keyboardKeys as kbKey}
         <KeyboardKey {...kbKey} />

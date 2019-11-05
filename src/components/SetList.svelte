@@ -43,6 +43,8 @@
   .fixed-card {
     width: 14rem;
     display: flex;
+    padding: 0;
+    margin: 0;
   }
 
   .instrument {
@@ -79,7 +81,7 @@
         }}>
         <div class="fixed-card">
           <div class="f-grow">
-            <h5 class:act={$activeSet === i}>{set.name}</h5>
+            <h5 style="font-weight: 400;" class:act={$activeSet === i}>{set.name}</h5>
 
             {#each set.instruments as i (i.id)}
               <span transition:slide animate:flip class="instrument">
