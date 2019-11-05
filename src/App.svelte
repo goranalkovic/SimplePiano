@@ -88,14 +88,11 @@
     });
 
     for (let instrument of $instrumentSets[$activeSet].instruments) {
-      let octShift =
-              instrument.octave === null
-                      ? $octaveShift
-                      : $octaveShift + instrument.octave;
+
       let vol =
               instrument.volume > -1 ? (instrument.absoluteVolume ? ($volume * (instrument.volume / 100)) / 100 : instrument.volume / 100)  : $volume / 100;
 
-      let adjustedOctShift = clamp(octShift + instrument.octave, -3, 3);
+      let adjustedOctShift = clamp($octaveShift + instrument.octave, -3, 3);
 
       instrument.data.then(instr => {
         let newAdsr = instrument.adsr;

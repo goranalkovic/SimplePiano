@@ -59,7 +59,7 @@
 
     let currentShift = currentSets[$activeSet].instruments[index].octave;
     currentSets[$activeSet].instruments[index].octave = clamp(
-      currentShift + $octaveShift + 1,
+      currentShift + 1,
       -3,
       3
     );
@@ -74,7 +74,7 @@
 
     let currentShift = currentSets[$activeSet].instruments[index].octave;
     currentSets[$activeSet].instruments[index].octave = clamp(
-      currentShift + $octaveShift - 1,
+      currentShift - 1,
       -3,
       3
     );
@@ -126,7 +126,10 @@
 <style>
   .toolbar {
     /* display: flex; */
-    margin-top: 0.6rem;
+    margin-top: -0.1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
   }
 
   .status {
@@ -135,7 +138,7 @@
     flex-grow: 1;
   }
 
-  .status span {
+  .info-txt {
     display: inline-block;
     font-size: 0.8rem;
     opacity: 0.6;
@@ -152,6 +155,13 @@
     display: flex;
     align-items: start;
   }
+
+  .uppercase {
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    font-weight: 400 !important;
+    letter-spacing: 1.2px;
+  }
 </style>
 
 <Card
@@ -161,9 +171,8 @@
 
   <div class="row">
     <div class="status">
-      <h4>{normalizedName(name)}</h4>
-      <span>{octShift}</span>
-      <span transition:slide>Sound font: {normalizedName(soundfont)}</span>
+      <h4 class="uppercase">{normalizedName(name)}</h4>
+      <span class="info-txt">{octShift}</span>
       {#if volume > -1}
         <span transition:slide>{volTxt}</span>
       {/if}
@@ -174,22 +183,31 @@
   </div>
 
   {#if optionsVisible}
-    <div transition:slide class="toolbar">
-      <Button outline on:click={octavePlus}>Octave +</Button>
-      <Button outline on:click={octaveMinus} spaced>Octave -</Button>
-      <br />
-      <br />
 
-      <SlideControl
-        min={-1}
-        max={100}
-        step={1}
-        title={'Volume'}
-        bind:value={volume}
-        on:change={setVolume}
-        customValueDisplay={{ '-1': 'Default', '0': 'Muted' }} />
-      <Button outline on:click={toggleAbsoluteVolume} spaced>{absoluteVolume ? '% current' : 'Absolute'}</Button>
-      {#if $showAdsr}
+    <div transition:slide class="toolbar">
+
+      <p class="info-txt">Sound font: {normalizedName(soundfont)}</p>
+      <div style="margin: 0.6rem 0" class="row">
+        <Button outline on:click={octavePlus}>Octave +</Button>
+        <Button outline on:click={octaveMinus} spaced>Octave -</Button>
+      </div>
+
+      <div class="row">
+        <div style="flex-grow: 1">
+          <SlideControl
+                  min={-1}
+                  max={100}
+                  step={1}
+                  title={'Volume'}
+                  bind:value={volume}
+                  on:change={setVolume}
+                  customValueDisplay={{ '-1': 'Default', '0': 'Muted' }} />
+        </div>
+        <Button outline on:click={toggleAbsoluteVolume} spaced>{absoluteVolume ? '% current' : 'Absolute'}</Button>
+
+      </div>
+
+        {#if $showAdsr}
         <SlideControl
           min={-0.01}
           max={1}

@@ -65,6 +65,13 @@
   .act {
     color: var(--accent-color);
   }
+
+  .uppercase {
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    font-weight: 400 !important;
+    letter-spacing: 1.2px;
+  }
 </style>
 
 <div class="container">
@@ -81,7 +88,7 @@
         }}>
         <div class="fixed-card">
           <div class="f-grow">
-            <h5 style="font-weight: 400;" class:act={$activeSet === i}>{set.name}</h5>
+            <h5 class="uppercase" class:act={$activeSet === i}>{set.name}</h5>
 
             {#each set.instruments as i (i.id)}
               <span transition:slide animate:flip class="instrument">
@@ -98,7 +105,7 @@
       </Card>
     {:else}
       <p>
-        No instrument sets.
+        🕳 No instrument sets.
         <br />
         This is an error.
       </p>

@@ -2637,7 +2637,7 @@ var app = (function () {
 
     const file$7 = "src\\components\\InstrumentCard.svelte";
 
-    // (167:6) {#if volume > -1}
+    // (176:6) {#if volume > -1}
     function create_if_block_2(ctx) {
     	var span, t, span_transition, current;
 
@@ -2645,8 +2645,7 @@ var app = (function () {
     		c: function create() {
     			span = element("span");
     			t = text(ctx.volTxt);
-    			attr(span, "class", "svelte-reqy4n");
-    			add_location(span, file$7, 167, 8, 3845);
+    			add_location(span, file$7, 176, 8, 3990);
     		},
 
     		m: function mount(target, anchor) {
@@ -2687,7 +2686,7 @@ var app = (function () {
     	};
     }
 
-    // (173:4) <Button style="height: 1.6rem; width: 1.6rem; padding: 0; margin: 0.2rem;" outline on:click={removeInstrument}>
+    // (182:4) <Button style="height: 1.6rem; width: 1.6rem; padding: 0; margin: 0.2rem;" outline on:click={removeInstrument}>
     function create_default_slot_4(ctx) {
     	var span;
 
@@ -2697,7 +2696,7 @@ var app = (function () {
     			span.textContent = "✗";
     			set_style(span, "font-family", "'Inter'");
     			set_style(span, "font-size", "1.2rem");
-    			add_location(span, file$7, 172, 115, 4029);
+    			add_location(span, file$7, 181, 115, 4174);
     		},
 
     		m: function mount(target, anchor) {
@@ -2712,9 +2711,9 @@ var app = (function () {
     	};
     }
 
-    // (176:2) {#if optionsVisible}
+    // (185:2) {#if optionsVisible}
     function create_if_block$3(ctx) {
-    	var div, t0, t1, br0, t2, br1, t3, updating_value, t4, t5, div_transition, current;
+    	var div3, p, t0, t1_value = normalizedName(ctx.soundfont), t1, t2, div0, t3, t4, div2, div1, updating_value, t5, t6, div3_transition, current;
 
     	var button0 = new Button({
     		props: {
@@ -2776,45 +2775,62 @@ var app = (function () {
 
     	return {
     		c: function create() {
-    			div = element("div");
-    			button0.$$.fragment.c();
-    			t0 = space();
-    			button1.$$.fragment.c();
-    			t1 = space();
-    			br0 = element("br");
+    			div3 = element("div");
+    			p = element("p");
+    			t0 = text("Sound font: ");
+    			t1 = text(t1_value);
     			t2 = space();
-    			br1 = element("br");
+    			div0 = element("div");
+    			button0.$$.fragment.c();
     			t3 = space();
-    			slidecontrol.$$.fragment.c();
+    			button1.$$.fragment.c();
     			t4 = space();
-    			button2.$$.fragment.c();
+    			div2 = element("div");
+    			div1 = element("div");
+    			slidecontrol.$$.fragment.c();
     			t5 = space();
+    			button2.$$.fragment.c();
+    			t6 = space();
     			if (if_block) if_block.c();
-    			add_location(br0, file$7, 179, 6, 4323);
-    			add_location(br1, file$7, 180, 6, 4337);
-    			attr(div, "class", "toolbar svelte-reqy4n");
-    			add_location(div, file$7, 176, 4, 4143);
+    			attr(p, "class", "info-txt svelte-1regomg");
+    			add_location(p, file$7, 188, 6, 4338);
+    			set_style(div0, "margin", "0.6rem 0");
+    			attr(div0, "class", "row svelte-1regomg");
+    			add_location(div0, file$7, 189, 6, 4409);
+    			set_style(div1, "flex-grow", "1");
+    			add_location(div1, file$7, 195, 8, 4640);
+    			attr(div2, "class", "row svelte-1regomg");
+    			add_location(div2, file$7, 194, 6, 4613);
+    			attr(div3, "class", "toolbar svelte-1regomg");
+    			add_location(div3, file$7, 186, 4, 4290);
     		},
 
     		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
-    			mount_component(button0, div, null);
-    			append(div, t0);
-    			mount_component(button1, div, null);
-    			append(div, t1);
-    			append(div, br0);
-    			append(div, t2);
-    			append(div, br1);
-    			append(div, t3);
-    			mount_component(slidecontrol, div, null);
-    			append(div, t4);
-    			mount_component(button2, div, null);
-    			append(div, t5);
-    			if (if_block) if_block.m(div, null);
+    			insert(target, div3, anchor);
+    			append(div3, p);
+    			append(p, t0);
+    			append(p, t1);
+    			append(div3, t2);
+    			append(div3, div0);
+    			mount_component(button0, div0, null);
+    			append(div0, t3);
+    			mount_component(button1, div0, null);
+    			append(div3, t4);
+    			append(div3, div2);
+    			append(div2, div1);
+    			mount_component(slidecontrol, div1, null);
+    			append(div2, t5);
+    			mount_component(button2, div2, null);
+    			append(div3, t6);
+    			if (if_block) if_block.m(div3, null);
     			current = true;
     		},
 
     		p: function update(changed, ctx) {
+    			if ((!current || changed.soundfont) && t1_value !== (t1_value = normalizedName(ctx.soundfont))) {
+    				set_data(t1, t1_value);
+    			}
+
     			var button0_changes = {};
     			if (changed.$$scope) button0_changes.$$scope = { changed, ctx };
     			button0.$set(button0_changes);
@@ -2841,7 +2857,7 @@ var app = (function () {
     					if_block = create_if_block_1(ctx);
     					if_block.c();
     					transition_in(if_block, 1);
-    					if_block.m(div, null);
+    					if_block.m(div3, null);
     				}
     			} else if (if_block) {
     				group_outros();
@@ -2865,8 +2881,8 @@ var app = (function () {
     			transition_in(if_block);
 
     			add_render_callback(() => {
-    				if (!div_transition) div_transition = create_bidirectional_transition(div, slide, {}, true);
-    				div_transition.run(1);
+    				if (!div3_transition) div3_transition = create_bidirectional_transition(div3, slide, {}, true);
+    				div3_transition.run(1);
     			});
 
     			current = true;
@@ -2879,15 +2895,15 @@ var app = (function () {
     			transition_out(button2.$$.fragment, local);
     			transition_out(if_block);
 
-    			if (!div_transition) div_transition = create_bidirectional_transition(div, slide, {}, false);
-    			div_transition.run(0);
+    			if (!div3_transition) div3_transition = create_bidirectional_transition(div3, slide, {}, false);
+    			div3_transition.run(0);
 
     			current = false;
     		},
 
     		d: function destroy(detaching) {
     			if (detaching) {
-    				detach(div);
+    				detach(div3);
     			}
 
     			destroy_component(button0, );
@@ -2901,13 +2917,13 @@ var app = (function () {
     			if (if_block) if_block.d();
 
     			if (detaching) {
-    				if (div_transition) div_transition.end();
+    				if (div3_transition) div3_transition.end();
     			}
     		}
     	};
     }
 
-    // (178:6) <Button outline on:click={octavePlus}>
+    // (191:8) <Button outline on:click={octavePlus}>
     function create_default_slot_3(ctx) {
     	var t;
 
@@ -2928,7 +2944,7 @@ var app = (function () {
     	};
     }
 
-    // (179:6) <Button outline on:click={octaveMinus} spaced>
+    // (192:8) <Button outline on:click={octaveMinus} spaced>
     function create_default_slot_2(ctx) {
     	var t;
 
@@ -2949,7 +2965,7 @@ var app = (function () {
     	};
     }
 
-    // (191:6) <Button outline on:click={toggleAbsoluteVolume} spaced>
+    // (206:8) <Button outline on:click={toggleAbsoluteVolume} spaced>
     function create_default_slot_1(ctx) {
     	var t_value = ctx.absoluteVolume ? '% current' : 'Absolute', t;
 
@@ -2976,7 +2992,7 @@ var app = (function () {
     	};
     }
 
-    // (192:6) {#if $showAdsr}
+    // (210:8) {#if $showAdsr}
     function create_if_block_1(ctx) {
     	var updating_value, t0, updating_value_1, t1, updating_value_2, t2, updating_value_3, current;
 
@@ -3169,9 +3185,9 @@ var app = (function () {
     	};
     }
 
-    // (157:0) <Card    on:mouseover={() => (optionsVisible = true)}    on:mouseleave={() => (optionsVisible = false)}>
+    // (167:0) <Card    on:mouseover={() => (optionsVisible = true)}    on:mouseleave={() => (optionsVisible = false)}>
     function create_default_slot(ctx) {
-    	var div1, div0, h4, t0_value = normalizedName(ctx.name), t0, t1, span0, t2, t3, span1, t4, t5_value = normalizedName(ctx.soundfont), t5, span1_transition, t6, t7, t8, if_block1_anchor, current;
+    	var div1, div0, h4, t0_value = normalizedName(ctx.name), t0, t1, span, t2, t3, t4, t5, if_block1_anchor, current;
 
     	var if_block0 = (ctx.volume > -1) && create_if_block_2(ctx);
 
@@ -3195,29 +3211,23 @@ var app = (function () {
     			h4 = element("h4");
     			t0 = text(t0_value);
     			t1 = space();
-    			span0 = element("span");
+    			span = element("span");
     			t2 = text(ctx.octShift);
     			t3 = space();
-    			span1 = element("span");
-    			t4 = text("Sound font: ");
-    			t5 = text(t5_value);
-    			t6 = space();
     			if (if_block0) if_block0.c();
-    			t7 = space();
+    			t4 = space();
     			button.$$.fragment.c();
-    			t8 = space();
+    			t5 = space();
     			if (if_block1) if_block1.c();
     			if_block1_anchor = empty();
-    			attr(h4, "class", "svelte-reqy4n");
-    			add_location(h4, file$7, 163, 6, 3671);
-    			attr(span0, "class", "svelte-reqy4n");
-    			add_location(span0, file$7, 164, 6, 3710);
-    			attr(span1, "class", "svelte-reqy4n");
-    			add_location(span1, file$7, 165, 6, 3741);
-    			attr(div0, "class", "status svelte-reqy4n");
-    			add_location(div0, file$7, 162, 4, 3643);
-    			attr(div1, "class", "row svelte-reqy4n");
-    			add_location(div1, file$7, 161, 2, 3620);
+    			attr(h4, "class", "uppercase svelte-1regomg");
+    			add_location(h4, file$7, 173, 6, 3858);
+    			attr(span, "class", "info-txt svelte-1regomg");
+    			add_location(span, file$7, 174, 6, 3915);
+    			attr(div0, "class", "status svelte-1regomg");
+    			add_location(div0, file$7, 172, 4, 3830);
+    			attr(div1, "class", "row svelte-1regomg");
+    			add_location(div1, file$7, 171, 2, 3807);
     		},
 
     		m: function mount(target, anchor) {
@@ -3226,17 +3236,13 @@ var app = (function () {
     			append(div0, h4);
     			append(h4, t0);
     			append(div0, t1);
-    			append(div0, span0);
-    			append(span0, t2);
+    			append(div0, span);
+    			append(span, t2);
     			append(div0, t3);
-    			append(div0, span1);
-    			append(span1, t4);
-    			append(span1, t5);
-    			append(div0, t6);
     			if (if_block0) if_block0.m(div0, null);
-    			append(div1, t7);
+    			append(div1, t4);
     			mount_component(button, div1, null);
-    			insert(target, t8, anchor);
+    			insert(target, t5, anchor);
     			if (if_block1) if_block1.m(target, anchor);
     			insert(target, if_block1_anchor, anchor);
     			current = true;
@@ -3249,10 +3255,6 @@ var app = (function () {
 
     			if (!current || changed.octShift) {
     				set_data(t2, ctx.octShift);
-    			}
-
-    			if ((!current || changed.soundfont) && t5_value !== (t5_value = normalizedName(ctx.soundfont))) {
-    				set_data(t5, t5_value);
     			}
 
     			if (ctx.volume > -1) {
@@ -3298,11 +3300,6 @@ var app = (function () {
 
     		i: function intro(local) {
     			if (current) return;
-    			add_render_callback(() => {
-    				if (!span1_transition) span1_transition = create_bidirectional_transition(span1, slide, {}, true);
-    				span1_transition.run(1);
-    			});
-
     			transition_in(if_block0);
 
     			transition_in(button.$$.fragment, local);
@@ -3312,9 +3309,6 @@ var app = (function () {
     		},
 
     		o: function outro(local) {
-    			if (!span1_transition) span1_transition = create_bidirectional_transition(span1, slide, {}, false);
-    			span1_transition.run(0);
-
     			transition_out(if_block0);
     			transition_out(button.$$.fragment, local);
     			transition_out(if_block1);
@@ -3324,7 +3318,6 @@ var app = (function () {
     		d: function destroy(detaching) {
     			if (detaching) {
     				detach(div1);
-    				if (span1_transition) span1_transition.end();
     			}
 
     			if (if_block0) if_block0.d();
@@ -3332,7 +3325,7 @@ var app = (function () {
     			destroy_component(button, );
 
     			if (detaching) {
-    				detach(t8);
+    				detach(t5);
     			}
 
     			if (if_block1) if_block1.d(detaching);
@@ -3373,7 +3366,7 @@ var app = (function () {
 
     		p: function update(changed, ctx) {
     			var card_changes = {};
-    			if (changed.$$scope || changed.optionsVisible || changed.$showAdsr || changed.adsr || changed.absoluteVolume || changed.volume || changed.volTxt || changed.soundfont || changed.octShift || changed.name) card_changes.$$scope = { changed, ctx };
+    			if (changed.$$scope || changed.optionsVisible || changed.$showAdsr || changed.adsr || changed.absoluteVolume || changed.volume || changed.soundfont || changed.volTxt || changed.octShift || changed.name) card_changes.$$scope = { changed, ctx };
     			card.$set(card_changes);
     		},
 
@@ -3408,14 +3401,12 @@ var app = (function () {
     }
 
     function instance$6($$self, $$props, $$invalidate) {
-    	let $instrumentSets, $activeSet, $octaveShift, $showAdsr;
+    	let $instrumentSets, $activeSet, $showAdsr;
 
     	validate_store(instrumentSets, 'instrumentSets');
     	subscribe($$self, instrumentSets, $$value => { $instrumentSets = $$value; $$invalidate('$instrumentSets', $instrumentSets); });
     	validate_store(activeSet, 'activeSet');
     	subscribe($$self, activeSet, $$value => { $activeSet = $$value; $$invalidate('$activeSet', $activeSet); });
-    	validate_store(octaveShift, 'octaveShift');
-    	subscribe($$self, octaveShift, $$value => { $octaveShift = $$value; $$invalidate('$octaveShift', $octaveShift); });
     	validate_store(showAdsr, 'showAdsr');
     	subscribe($$self, showAdsr, $$value => { $showAdsr = $$value; $$invalidate('$showAdsr', $showAdsr); });
 
@@ -3432,7 +3423,7 @@ var app = (function () {
 
         let currentShift = currentSets[$activeSet].instruments[index].octave;
         currentSets[$activeSet].instruments[index].octave = clamp(
-          currentShift + $octaveShift + 1,
+          currentShift + 1,
           -3,
           3
         );
@@ -3447,7 +3438,7 @@ var app = (function () {
 
         let currentShift = currentSets[$activeSet].instruments[index].octave;
         currentSets[$activeSet].instruments[index].octave = clamp(
-          currentShift + $octaveShift - 1,
+          currentShift - 1,
           -3,
           3
         );
@@ -3703,15 +3694,16 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (33:4) {:else}
+    // (37:4) {:else}
     function create_else_block$1(ctx) {
     	var p;
 
     	return {
     		c: function create() {
     			p = element("p");
-    			p.textContent = "No instruments";
-    			add_location(p, file$8, 33, 6, 572);
+    			p.textContent = "🕳 No instruments";
+    			attr(p, "class", "error svelte-1yw2g1e");
+    			add_location(p, file$8, 37, 6, 636);
     		},
 
     		m: function mount(target, anchor) {
@@ -3726,7 +3718,7 @@ var app = (function () {
     	};
     }
 
-    // (31:4) {#each $instrumentSets[$activeSet].instruments as instrument, i (instrument.id)}
+    // (35:4) {#each $instrumentSets[$activeSet].instruments as instrument, i (instrument.id)}
     function create_each_block$1(key_1, ctx) {
     	var first, current;
 
@@ -3818,12 +3810,12 @@ var app = (function () {
     			div0 = element("div");
 
     			for (i = 0; i < each_blocks.length; i += 1) each_blocks[i].c();
-    			attr(h4, "class", "svelte-1empok6");
-    			add_location(h4, file$8, 25, 2, 350);
-    			attr(div0, "class", "list svelte-1empok6");
-    			add_location(div0, file$8, 29, 2, 405);
+    			attr(h4, "class", "svelte-1yw2g1e");
+    			add_location(h4, file$8, 29, 2, 414);
+    			attr(div0, "class", "list svelte-1yw2g1e");
+    			add_location(div0, file$8, 33, 2, 469);
     			set_style(div1, "width", "22rem");
-    			add_location(div1, file$8, 23, 0, 317);
+    			add_location(div1, file$8, 27, 0, 381);
     		},
 
     		l: function claim(nodes) {
@@ -3929,18 +3921,18 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (99:4) {:else}
+    // (106:4) {:else}
     function create_else_block$2(ctx) {
     	var p, t0, br, t1;
 
     	return {
     		c: function create() {
     			p = element("p");
-    			t0 = text("No instrument sets.\r\n        ");
+    			t0 = text("🕳 No instrument sets.\r\n        ");
     			br = element("br");
     			t1 = text("\r\n        This is an error.\r\n      ");
-    			add_location(br, file$9, 101, 8, 2038);
-    			add_location(p, file$9, 99, 6, 1996);
+    			add_location(br, file$9, 108, 8, 2174);
+    			add_location(p, file$9, 106, 6, 2129);
     		},
 
     		m: function mount(target, anchor) {
@@ -3958,7 +3950,7 @@ var app = (function () {
     	};
     }
 
-    // (86:12) {#each set.instruments as i (i.id)}
+    // (93:12) {#each set.instruments as i (i.id)}
     function create_each_block_1(key_1, ctx) {
     	var span, t0_value = normalizedName$1(ctx.i.name), t0, t1, span_transition, rect, stop_animation = noop, current;
 
@@ -3971,8 +3963,8 @@ var app = (function () {
     			span = element("span");
     			t0 = text(t0_value);
     			t1 = space();
-    			attr(span, "class", "instrument svelte-l8qzly");
-    			add_location(span, file$9, 86, 14, 1664);
+    			attr(span, "class", "instrument svelte-hrcdkc");
+    			add_location(span, file$9, 93, 14, 1797);
     			this.first = span;
     		},
 
@@ -4030,7 +4022,7 @@ var app = (function () {
     	};
     }
 
-    // (75:6) <Card          disabled={set.instruments.length < 1}          passive={false}          active={$activeSet === i}          on:click={() => {            activeSet.set(i);          }}>
+    // (82:6) <Card          disabled={set.instruments.length < 1}          passive={false}          active={$activeSet === i}          on:click={() => {            activeSet.set(i);          }}>
     function create_default_slot$1(ctx) {
     	var div2, div0, h5, t0_value = ctx.set.name, t0, t1, each_blocks = [], each_1_lookup = new Map(), t2, div1, t3, current;
 
@@ -4063,16 +4055,15 @@ var app = (function () {
     			div1 = element("div");
     			keyboardkey.$$.fragment.c();
     			t3 = space();
-    			set_style(h5, "font-weight", "400");
-    			attr(h5, "class", "svelte-l8qzly");
+    			attr(h5, "class", "uppercase svelte-hrcdkc");
     			toggle_class(h5, "act", ctx.$activeSet === ctx.i);
-    			add_location(h5, file$9, 83, 12, 1523);
-    			attr(div0, "class", "f-grow svelte-l8qzly");
-    			add_location(div0, file$9, 82, 10, 1489);
-    			attr(div1, "class", "f-shrink svelte-l8qzly");
-    			add_location(div1, file$9, 92, 10, 1837);
-    			attr(div2, "class", "fixed-card svelte-l8qzly");
-    			add_location(div2, file$9, 81, 8, 1453);
+    			add_location(h5, file$9, 90, 12, 1664);
+    			attr(div0, "class", "f-grow svelte-hrcdkc");
+    			add_location(div0, file$9, 89, 10, 1630);
+    			attr(div1, "class", "f-shrink svelte-hrcdkc");
+    			add_location(div1, file$9, 99, 10, 1970);
+    			attr(div2, "class", "fixed-card svelte-hrcdkc");
+    			add_location(div2, file$9, 88, 8, 1594);
     		},
 
     		m: function mount(target, anchor) {
@@ -4141,7 +4132,7 @@ var app = (function () {
     	};
     }
 
-    // (74:4) {#each $instrumentSets as set, i}
+    // (81:4) {#each $instrumentSets as set, i}
     function create_each_block$2(ctx) {
     	var current;
 
@@ -4232,12 +4223,12 @@ var app = (function () {
     				each_blocks[i].c();
     			}
     			set_style(h4, "font-weight", "600");
-    			attr(h4, "class", "svelte-l8qzly");
-    			add_location(h4, file$9, 71, 2, 1144);
-    			attr(div0, "class", "list svelte-l8qzly");
-    			add_location(div0, file$9, 72, 2, 1197);
-    			attr(div1, "class", "container svelte-l8qzly");
-    			add_location(div1, file$9, 69, 0, 1115);
+    			attr(h4, "class", "svelte-hrcdkc");
+    			add_location(h4, file$9, 78, 2, 1285);
+    			attr(div0, "class", "list svelte-hrcdkc");
+    			add_location(div0, file$9, 79, 2, 1338);
+    			attr(div1, "class", "container svelte-hrcdkc");
+    			add_location(div1, file$9, 76, 0, 1256);
     		},
 
     		l: function claim(nodes) {
@@ -6144,7 +6135,7 @@ var app = (function () {
 
     const file$b = "src\\App.svelte";
 
-    // (230:4) <h3 slot="left">
+    // (227:4) <h3 slot="left">
     function create_left_slot(ctx) {
     	var h3;
 
@@ -6154,7 +6145,7 @@ var app = (function () {
     			h3.textContent = "Piano";
     			attr(h3, "slot", "left");
     			attr(h3, "class", "svelte-14ara1v");
-    			add_location(h3, file$b, 229, 4, 5638);
+    			add_location(h3, file$b, 226, 4, 5483);
     		},
 
     		m: function mount(target, anchor) {
@@ -6169,7 +6160,7 @@ var app = (function () {
     	};
     }
 
-    // (232:4) <Button outline on:click={stopAllSounds}>
+    // (229:4) <Button outline on:click={stopAllSounds}>
     function create_default_slot_2$2(ctx) {
     	var t;
 
@@ -6190,7 +6181,7 @@ var app = (function () {
     	};
     }
 
-    // (233:4) <Button spaced outline on:click={switchDark}>
+    // (230:4) <Button spaced outline on:click={switchDark}>
     function create_default_slot_1$2(ctx) {
     	var t0, t1;
 
@@ -6220,7 +6211,7 @@ var app = (function () {
     	};
     }
 
-    // (229:2) <TitleBar>
+    // (226:2) <TitleBar>
     function create_default_slot$3(ctx) {
     	var t0, t1, current;
 
@@ -6342,9 +6333,9 @@ var app = (function () {
     			t4 = space();
     			setlist.$$.fragment.c();
     			attr(div0, "class", "split svelte-14ara1v");
-    			add_location(div0, file$b, 239, 2, 5872);
+    			add_location(div0, file$b, 236, 2, 5717);
     			attr(div1, "class", "container");
-    			add_location(div1, file$b, 226, 0, 5593);
+    			add_location(div1, file$b, 223, 0, 5438);
 
     			dispose = [
     				listen(window_1, "keydown", prevent_default(ctx.handleKeyDown)),
@@ -6435,7 +6426,7 @@ var app = (function () {
     }
 
     function instance$a($$self, $$props, $$invalidate) {
-    	let $instrumentSets, $activeSet, $keysPressed, $keysDown, $octaveShift, $volume;
+    	let $instrumentSets, $activeSet, $keysPressed, $keysDown, $volume, $octaveShift;
 
     	validate_store(instrumentSets, 'instrumentSets');
     	subscribe($$self, instrumentSets, $$value => { $instrumentSets = $$value; $$invalidate('$instrumentSets', $instrumentSets); });
@@ -6445,10 +6436,10 @@ var app = (function () {
     	subscribe($$self, keysPressed, $$value => { $keysPressed = $$value; $$invalidate('$keysPressed', $keysPressed); });
     	validate_store(keysDown, 'keysDown');
     	subscribe($$self, keysDown, $$value => { $keysDown = $$value; $$invalidate('$keysDown', $keysDown); });
-    	validate_store(octaveShift, 'octaveShift');
-    	subscribe($$self, octaveShift, $$value => { $octaveShift = $$value; $$invalidate('$octaveShift', $octaveShift); });
     	validate_store(volume, 'volume');
     	subscribe($$self, volume, $$value => { $volume = $$value; $$invalidate('$volume', $volume); });
+    	validate_store(octaveShift, 'octaveShift');
+    	subscribe($$self, octaveShift, $$value => { $octaveShift = $$value; $$invalidate('$octaveShift', $octaveShift); });
 
     	
 
@@ -6509,14 +6500,11 @@ var app = (function () {
         });
 
         for (let instrument of $instrumentSets[$activeSet].instruments) {
-          let octShift =
-                  instrument.octave === null
-                          ? $octaveShift
-                          : $octaveShift + instrument.octave;
+
           let vol =
                   instrument.volume > -1 ? (instrument.absoluteVolume ? ($volume * (instrument.volume / 100)) / 100 : instrument.volume / 100)  : $volume / 100;
 
-          let adjustedOctShift = clamp$1(octShift + instrument.octave, -3, 3);
+          let adjustedOctShift = clamp$1($octaveShift + instrument.octave, -3, 3);
 
           instrument.data.then(instr => {
             let newAdsr = instrument.adsr;

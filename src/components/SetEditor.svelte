@@ -18,6 +18,10 @@
     margin-bottom: 0.8rem;
   }
 
+  .error {
+    font-size: 0.9rem;
+    font-weight: 400;
+  }
 
 </style>
 
@@ -31,7 +35,7 @@
     {#each $instrumentSets[$activeSet].instruments as instrument, i (instrument.id)}
       <InstrumentCard {...instrument} />
     {:else}
-      <p>No instruments</p>
+      <p class="error">🕳 No instruments</p>
     {/each}
   </div>
 </div>
