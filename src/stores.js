@@ -125,6 +125,7 @@ export const activeSet = writable(0);
 export const volume = writable(25);
 export const octaveShift = writable(0);
 export const showAdsr = writable(false);
+export const isFocused = writable(false);
 
 export const instrumentSets = writable(
     [

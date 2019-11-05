@@ -1,5 +1,7 @@
 <script>
-
+  import {
+    isFocused
+  } from "../stores";
 </script>
 
 <style>
@@ -47,6 +49,7 @@
   .piano-grid-container {
     margin: 2rem auto;
     height: 12rem;
+    transition: 0.1s opacity;
   }
 
   .piano-grid-container .piano-grid:first-child {
@@ -60,9 +63,13 @@
     top: -13rem;
     left: 1rem;
   }
+
+  .transparent {
+    opacity: 0.4;
+  }
 </style>
 
-<div class="piano-grid-container">
+<div class="piano-grid-container {$isFocused ? 'transparent' : ''}">
   <div class="piano-grid">
     <div id="⇪" class="white-key">⇪</div>
     <div id="A" class="white-key">A</div>

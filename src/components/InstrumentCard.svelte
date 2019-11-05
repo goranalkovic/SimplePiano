@@ -162,6 +162,8 @@
     font-weight: 400 !important;
     letter-spacing: 1.2px;
   }
+
+
 </style>
 
 <Card
@@ -174,12 +176,12 @@
       <h4 class="uppercase">{normalizedName(name)}</h4>
       <span class="info-txt">{octShift}</span>
       {#if volume > -1}
-        <span transition:slide>{volTxt}</span>
+        <span class="info-txt" transition:slide>{volTxt}</span>
       {/if}
 
 
     </div>
-    <Button style="height: 1.6rem; width: 1.6rem; padding: 0; margin: 0.2rem;" outline on:click={removeInstrument}><span style="font-family: 'Inter'; font-size: 1.2rem;">✗</span></Button>
+    <Button style="height: 1.6rem; width: 1.6rem; padding: 0; margin: 0.2rem; transform: translateY(0.15rem)" outline on:click={removeInstrument}><span style="font-family: 'Inter', sans-serif; font-size: 1.2rem;">✗</span></Button>
   </div>
 
   {#if optionsVisible}
@@ -201,9 +203,9 @@
                   title={'Volume'}
                   bind:value={volume}
                   on:change={setVolume}
-                  customValueDisplay={{ '-1': 'Default', '0': 'Muted' }} />
+                  customValueDisplay={{ '-1': absoluteVolume ? 'Current' : 'Default', '0': 'Muted' }} />
         </div>
-        <Button outline on:click={toggleAbsoluteVolume} spaced>{absoluteVolume ? '% current' : 'Absolute'}</Button>
+        <Button style="transform: translateY(0.8rem)" outline on:click={toggleAbsoluteVolume} spaced>{absoluteVolume ? '% of current' : 'Absolute'}</Button>
 
       </div>
 

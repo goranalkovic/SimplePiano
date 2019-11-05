@@ -2,14 +2,15 @@
     import {
         soundFont,
         currentSoundFont,
-        activeSet,
         instrumentSets,
         ac,
-        defaultAdsr,
-        showAdsr
+        showAdsr,
+        isFocused,
+            activeSet
     } from "../stores";
 
     import Button from "./Button.svelte";
+
 
     let selectedInstrument;
     let availInstruments = [];
@@ -60,7 +61,7 @@
             name: selectedInstrument,
             volume: -1,
             octave: 0,
-            absoluteVolume: false,
+            absoluteVolume: true,
             data: instrumentData,
             soundfont: $currentSoundFont,
             adsr: [-0.01, -0.01, -0.01, -0.01]
@@ -88,6 +89,14 @@
         let curr = $showAdsr;
 
         showAdsr.set(!curr);
+    }
+
+    function setFocused(){
+        isFocused.set(true);
+    }
+
+    function setUnfocused() {
+        isFocused.set(false);
     }
 </script>
 
@@ -147,6 +156,7 @@
         width: 12rem;
         margin-bottom: 1rem;
         font-family: var(--font-family);
+        margin-top: 0.5rem;
     }
 
     .mini-column {
@@ -154,8 +164,8 @@
         flex-direction: column;
         font-size: 0.8rem;
         margin-top: 1rem;
-        width: 12rem;
-        margin-left: 0.3rem;
+        width: 11.4rem;
+        margin-left: 0.5rem;
     }
 
     .mini-column span {
@@ -175,7 +185,7 @@
 
   <div class="selector">
 
-      <input class="search-box" placeholder="Search..." type="search" bind:value={filterString} />
+      <input on:focus={setFocused} on:blur={setUnfocused} class="search-box" placeholder="Search..." type="search" bind:value={filterString} />
 
       <div class="scrollList">
       {#each filteredList as item (item)}

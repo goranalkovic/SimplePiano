@@ -19,7 +19,8 @@
     octaveShift,
     currentSoundFont,
     ac,
-    defaultAdsr
+    defaultAdsr,
+    isFocused
   } from "./stores.js";
 
   import Soundfont from "soundfont-player";
@@ -70,6 +71,8 @@
   }
 
   function handleKeyDown(e) {
+    if ($isFocused) {return;}
+
     let kCode = e.keyCode;
 
     if ($instrumentSets[$activeSet].instruments.length < 1) return;
@@ -122,10 +125,11 @@
         }
       });
     }
-
   }
 
   function handleKeyUp(e) {
+    if ($isFocused) {return;}
+
     let kCode = e.keyCode;
 
     if (kCode >= 48 && kCode <= 58) {
@@ -205,10 +209,10 @@
       kp[kCode] = [];
       return kp;
     });
-
   }
 
   applyTheme();
+
 </script>
 
 <style>
@@ -243,5 +247,5 @@
 </div>
 
 <svelte:window
-  on:keydown|preventDefault={handleKeyDown}
-  on:keyup|preventDefault={handleKeyUp} />
+  on:keydown={handleKeyDown}
+  on:keyup={handleKeyUp} />

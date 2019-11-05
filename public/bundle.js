@@ -125,13 +125,6 @@ var app = (function () {
         node.addEventListener(event, handler, options);
         return () => node.removeEventListener(event, handler, options);
     }
-    function prevent_default(fn) {
-        return function (event) {
-            event.preventDefault();
-            // @ts-ignore
-            return fn.call(this, event);
-        };
-    }
     function attr(node, attribute, value) {
         if (value == null)
             node.removeAttribute(attribute);
@@ -1175,6 +1168,7 @@ var app = (function () {
     const volume = writable(25);
     const octaveShift = writable(0);
     const showAdsr = writable(false);
+    const isFocused = writable(false);
 
     const instrumentSets = writable(
         [
@@ -1225,7 +1219,7 @@ var app = (function () {
 
     const file$2 = "src\\components\\KeyboardKey.svelte";
 
-    // (57:2) {#if label}
+    // (58:2) {#if label}
     function create_if_block(ctx) {
     	var span, t;
 
@@ -1233,8 +1227,8 @@ var app = (function () {
     		c: function create() {
     			span = element("span");
     			t = text(ctx.label);
-    			attr(span, "class", "label svelte-1xzgary");
-    			add_location(span, file$2, 57, 4, 1004);
+    			attr(span, "class", "label svelte-1yd4dop");
+    			add_location(span, file$2, 58, 4, 1032);
     		},
 
     		m: function mount(target, anchor) {
@@ -1267,11 +1261,11 @@ var app = (function () {
     			if (if_block) if_block.c();
     			t = space();
     			span = element("span");
-    			attr(span, "class", "keyboard-key svelte-1xzgary");
+    			attr(span, "class", "keyboard-key svelte-1yd4dop");
     			toggle_class(span, "square", ctx.square);
-    			add_location(span, file$2, 59, 2, 1051);
-    			attr(div, "class", "container svelte-1xzgary");
-    			add_location(div, file$2, 55, 0, 960);
+    			add_location(span, file$2, 60, 2, 1079);
+    			attr(div, "class", "container svelte-1yd4dop");
+    			add_location(div, file$2, 56, 0, 988);
     		},
 
     		l: function claim(nodes) {
@@ -1969,7 +1963,7 @@ var app = (function () {
     const file$5 = "src\\components\\PianoGrid.svelte";
 
     function create_fragment$5(ctx) {
-    	var div29, div14, div0, t1, div1, t3, div2, t5, div3, t7, div4, t9, div5, t11, div6, t13, div7, t15, div8, t17, div9, t19, div10, t21, div11, t23, div12, t25, div13, t27, div28, div15, t29, div16, t31, div17, t33, div18, t34, div19, t36, div20, t38, div21, t39, div22, t41, div23, t43, div24, t45, div25, t46, div26, t48, div27;
+    	var div29, div14, div0, t1, div1, t3, div2, t5, div3, t7, div4, t9, div5, t11, div6, t13, div7, t15, div8, t17, div9, t19, div10, t21, div11, t23, div12, t25, div13, t27, div28, div15, t29, div16, t31, div17, t33, div18, t34, div19, t36, div20, t38, div21, t39, div22, t41, div23, t43, div24, t45, div25, t46, div26, t48, div27, div29_class_value;
 
     	return {
     		c: function create() {
@@ -2054,89 +2048,89 @@ var app = (function () {
     			div27 = element("div");
     			div27.textContent = "⌫";
     			attr(div0, "id", "⇪");
-    			attr(div0, "class", "white-key svelte-13grzto");
-    			add_location(div0, file$5, 66, 4, 1230);
+    			attr(div0, "class", "white-key svelte-6c6krm");
+    			add_location(div0, file$5, 73, 4, 1387);
     			attr(div1, "id", "A");
-    			attr(div1, "class", "white-key svelte-13grzto");
-    			add_location(div1, file$5, 67, 4, 1273);
+    			attr(div1, "class", "white-key svelte-6c6krm");
+    			add_location(div1, file$5, 74, 4, 1430);
     			attr(div2, "id", "S");
-    			attr(div2, "class", "white-key svelte-13grzto");
-    			add_location(div2, file$5, 68, 4, 1316);
+    			attr(div2, "class", "white-key svelte-6c6krm");
+    			add_location(div2, file$5, 75, 4, 1473);
     			attr(div3, "id", "D");
-    			attr(div3, "class", "white-key svelte-13grzto");
-    			add_location(div3, file$5, 69, 4, 1359);
+    			attr(div3, "class", "white-key svelte-6c6krm");
+    			add_location(div3, file$5, 76, 4, 1516);
     			attr(div4, "id", "F");
-    			attr(div4, "class", "white-key svelte-13grzto");
-    			add_location(div4, file$5, 70, 4, 1402);
+    			attr(div4, "class", "white-key svelte-6c6krm");
+    			add_location(div4, file$5, 77, 4, 1559);
     			attr(div5, "id", "G");
-    			attr(div5, "class", "white-key svelte-13grzto");
-    			add_location(div5, file$5, 71, 4, 1445);
+    			attr(div5, "class", "white-key svelte-6c6krm");
+    			add_location(div5, file$5, 78, 4, 1602);
     			attr(div6, "id", "H");
-    			attr(div6, "class", "white-key svelte-13grzto");
-    			add_location(div6, file$5, 72, 4, 1488);
+    			attr(div6, "class", "white-key svelte-6c6krm");
+    			add_location(div6, file$5, 79, 4, 1645);
     			attr(div7, "id", "J");
-    			attr(div7, "class", "white-key svelte-13grzto");
-    			add_location(div7, file$5, 73, 4, 1531);
+    			attr(div7, "class", "white-key svelte-6c6krm");
+    			add_location(div7, file$5, 80, 4, 1688);
     			attr(div8, "id", "K");
-    			attr(div8, "class", "white-key svelte-13grzto");
-    			add_location(div8, file$5, 74, 4, 1574);
+    			attr(div8, "class", "white-key svelte-6c6krm");
+    			add_location(div8, file$5, 81, 4, 1731);
     			attr(div9, "id", "L");
-    			attr(div9, "class", "white-key svelte-13grzto");
-    			add_location(div9, file$5, 75, 4, 1617);
+    			attr(div9, "class", "white-key svelte-6c6krm");
+    			add_location(div9, file$5, 82, 4, 1774);
     			attr(div10, "id", "Č");
-    			attr(div10, "class", "white-key svelte-13grzto");
-    			add_location(div10, file$5, 76, 4, 1660);
+    			attr(div10, "class", "white-key svelte-6c6krm");
+    			add_location(div10, file$5, 83, 4, 1817);
     			attr(div11, "id", "Ć");
-    			attr(div11, "class", "white-key svelte-13grzto");
-    			add_location(div11, file$5, 77, 4, 1703);
+    			attr(div11, "class", "white-key svelte-6c6krm");
+    			add_location(div11, file$5, 84, 4, 1860);
     			attr(div12, "id", "Ž");
-    			attr(div12, "class", "white-key svelte-13grzto");
-    			add_location(div12, file$5, 78, 4, 1746);
+    			attr(div12, "class", "white-key svelte-6c6krm");
+    			add_location(div12, file$5, 85, 4, 1903);
     			attr(div13, "id", "↵");
-    			attr(div13, "class", "white-key svelte-13grzto");
-    			add_location(div13, file$5, 79, 4, 1789);
-    			attr(div14, "class", "piano-grid svelte-13grzto");
-    			add_location(div14, file$5, 65, 2, 1200);
+    			attr(div13, "class", "white-key svelte-6c6krm");
+    			add_location(div13, file$5, 86, 4, 1946);
+    			attr(div14, "class", "piano-grid svelte-6c6krm");
+    			add_location(div14, file$5, 72, 2, 1357);
     			attr(div15, "id", "Q");
-    			attr(div15, "class", "black-key svelte-13grzto");
-    			add_location(div15, file$5, 83, 4, 1872);
+    			attr(div15, "class", "black-key svelte-6c6krm");
+    			add_location(div15, file$5, 90, 4, 2029);
     			attr(div16, "id", "W");
-    			attr(div16, "class", "black-key svelte-13grzto");
-    			add_location(div16, file$5, 84, 4, 1915);
+    			attr(div16, "class", "black-key svelte-6c6krm");
+    			add_location(div16, file$5, 91, 4, 2072);
     			attr(div17, "id", "E");
-    			attr(div17, "class", "black-key svelte-13grzto");
-    			add_location(div17, file$5, 85, 4, 1958);
-    			attr(div18, "class", "blank-black-key svelte-13grzto");
-    			add_location(div18, file$5, 86, 4, 2001);
+    			attr(div17, "class", "black-key svelte-6c6krm");
+    			add_location(div17, file$5, 92, 4, 2115);
+    			attr(div18, "class", "blank-black-key svelte-6c6krm");
+    			add_location(div18, file$5, 93, 4, 2158);
     			attr(div19, "id", "T");
-    			attr(div19, "class", "black-key svelte-13grzto");
-    			add_location(div19, file$5, 87, 4, 2038);
+    			attr(div19, "class", "black-key svelte-6c6krm");
+    			add_location(div19, file$5, 94, 4, 2195);
     			attr(div20, "id", "Z");
-    			attr(div20, "class", "black-key svelte-13grzto");
-    			add_location(div20, file$5, 88, 4, 2081);
-    			attr(div21, "class", "blank-black-key svelte-13grzto");
-    			add_location(div21, file$5, 89, 4, 2124);
+    			attr(div20, "class", "black-key svelte-6c6krm");
+    			add_location(div20, file$5, 95, 4, 2238);
+    			attr(div21, "class", "blank-black-key svelte-6c6krm");
+    			add_location(div21, file$5, 96, 4, 2281);
     			attr(div22, "id", "I");
-    			attr(div22, "class", "black-key svelte-13grzto");
-    			add_location(div22, file$5, 90, 4, 2161);
+    			attr(div22, "class", "black-key svelte-6c6krm");
+    			add_location(div22, file$5, 97, 4, 2318);
     			attr(div23, "id", "O");
-    			attr(div23, "class", "black-key svelte-13grzto");
-    			add_location(div23, file$5, 91, 4, 2204);
+    			attr(div23, "class", "black-key svelte-6c6krm");
+    			add_location(div23, file$5, 98, 4, 2361);
     			attr(div24, "id", "P");
-    			attr(div24, "class", "black-key svelte-13grzto");
-    			add_location(div24, file$5, 92, 4, 2247);
-    			attr(div25, "class", "blank-black-key svelte-13grzto");
-    			add_location(div25, file$5, 93, 4, 2290);
+    			attr(div24, "class", "black-key svelte-6c6krm");
+    			add_location(div24, file$5, 99, 4, 2404);
+    			attr(div25, "class", "blank-black-key svelte-6c6krm");
+    			add_location(div25, file$5, 100, 4, 2447);
     			attr(div26, "id", "Đ");
-    			attr(div26, "class", "black-key svelte-13grzto");
-    			add_location(div26, file$5, 94, 4, 2327);
+    			attr(div26, "class", "black-key svelte-6c6krm");
+    			add_location(div26, file$5, 101, 4, 2484);
     			attr(div27, "id", "⌫");
-    			attr(div27, "class", "black-key svelte-13grzto");
-    			add_location(div27, file$5, 95, 4, 2370);
-    			attr(div28, "class", "piano-grid svelte-13grzto");
-    			add_location(div28, file$5, 82, 2, 1842);
-    			attr(div29, "class", "piano-grid-container svelte-13grzto");
-    			add_location(div29, file$5, 64, 0, 1162);
+    			attr(div27, "class", "black-key svelte-6c6krm");
+    			add_location(div27, file$5, 102, 4, 2527);
+    			attr(div28, "class", "piano-grid svelte-6c6krm");
+    			add_location(div28, file$5, 89, 2, 1999);
+    			attr(div29, "class", div29_class_value = "piano-grid-container " + (ctx.$isFocused ? 'transparent' : '') + " svelte-6c6krm");
+    			add_location(div29, file$5, 71, 0, 1285);
     		},
 
     		l: function claim(nodes) {
@@ -2202,7 +2196,12 @@ var app = (function () {
     			append(div28, div27);
     		},
 
-    		p: noop,
+    		p: function update(changed, ctx) {
+    			if ((changed.$isFocused) && div29_class_value !== (div29_class_value = "piano-grid-container " + (ctx.$isFocused ? 'transparent' : '') + " svelte-6c6krm")) {
+    				attr(div29, "class", div29_class_value);
+    			}
+    		},
+
     		i: noop,
     		o: noop,
 
@@ -2214,10 +2213,19 @@ var app = (function () {
     	};
     }
 
+    function instance$5($$self, $$props, $$invalidate) {
+    	let $isFocused;
+
+    	validate_store(isFocused, 'isFocused');
+    	subscribe($$self, isFocused, $$value => { $isFocused = $$value; $$invalidate('$isFocused', $isFocused); });
+
+    	return { $isFocused };
+    }
+
     class PianoGrid extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, null, create_fragment$5, safe_not_equal, []);
+    		init(this, options, instance$5, create_fragment$5, safe_not_equal, []);
     	}
     }
 
@@ -2271,9 +2279,9 @@ var app = (function () {
 
     const file$6 = "src\\components\\Card.svelte";
 
-    // (55:0) {:else}
+    // (58:0) {:else}
     function create_else_block(ctx) {
-    	var div, div_transition, current, dispose;
+    	var div, div_class_value, div_transition, current, dispose;
 
     	const default_slot_1 = ctx.$$slots.default;
     	const default_slot = create_slot(default_slot_1, ctx, null);
@@ -2285,11 +2293,11 @@ var app = (function () {
     			if (default_slot) default_slot.c();
 
     			attr(div, "animation:flip", { duration: 300 });
-    			attr(div, "class", "card svelte-kgtaad");
+    			attr(div, "class", div_class_value = "card " + ctx.addClass + " svelte-1tei9xx");
     			toggle_class(div, "active", ctx.active);
     			toggle_class(div, "disabled", ctx.disabled && !ctx.active);
     			toggle_class(div, "selectable", ctx.selectable);
-    			add_location(div, file$6, 55, 2, 1072);
+    			add_location(div, file$6, 58, 2, 1199);
 
     			dispose = [
     				listen(div, "click", ctx.click_handler),
@@ -2317,15 +2325,19 @@ var app = (function () {
     				default_slot.p(get_slot_changes(default_slot_1, ctx, changed, null), get_slot_context(default_slot_1, ctx, null));
     			}
 
-    			if (changed.active) {
+    			if ((!current || changed.addClass) && div_class_value !== (div_class_value = "card " + ctx.addClass + " svelte-1tei9xx")) {
+    				attr(div, "class", div_class_value);
+    			}
+
+    			if ((changed.addClass || changed.active)) {
     				toggle_class(div, "active", ctx.active);
     			}
 
-    			if ((changed.disabled || changed.active)) {
+    			if ((changed.addClass || changed.disabled || changed.active)) {
     				toggle_class(div, "disabled", ctx.disabled && !ctx.active);
     			}
 
-    			if (changed.selectable) {
+    			if ((changed.addClass || changed.selectable)) {
     				toggle_class(div, "selectable", ctx.selectable);
     			}
     		},
@@ -2367,9 +2379,9 @@ var app = (function () {
     	};
     }
 
-    // (43:0) {#if passive}
+    // (46:0) {#if passive}
     function create_if_block$2(ctx) {
-    	var div, div_transition, current, dispose;
+    	var div, div_class_value, div_transition, current, dispose;
 
     	const default_slot_1 = ctx.$$slots.default;
     	const default_slot = create_slot(default_slot_1, ctx, null);
@@ -2381,11 +2393,11 @@ var app = (function () {
     			if (default_slot) default_slot.c();
 
     			attr(div, "animation:flip", { duration: 300 });
-    			attr(div, "class", "card passive svelte-kgtaad");
+    			attr(div, "class", div_class_value = "card passive " + ctx.addClass + " svelte-1tei9xx");
     			toggle_class(div, "active", ctx.active);
     			toggle_class(div, "disabled", ctx.disabled);
     			toggle_class(div, "selectable", ctx.selectable);
-    			add_location(div, file$6, 43, 2, 845);
+    			add_location(div, file$6, 46, 2, 961);
 
     			dispose = [
     				listen(div, "mouseover", ctx.mouseover_handler),
@@ -2412,15 +2424,19 @@ var app = (function () {
     				default_slot.p(get_slot_changes(default_slot_1, ctx, changed, null), get_slot_context(default_slot_1, ctx, null));
     			}
 
-    			if (changed.active) {
+    			if ((!current || changed.addClass) && div_class_value !== (div_class_value = "card passive " + ctx.addClass + " svelte-1tei9xx")) {
+    				attr(div, "class", div_class_value);
+    			}
+
+    			if ((changed.addClass || changed.active)) {
     				toggle_class(div, "active", ctx.active);
     			}
 
-    			if (changed.disabled) {
+    			if ((changed.addClass || changed.disabled)) {
     				toggle_class(div, "disabled", ctx.disabled);
     			}
 
-    			if (changed.selectable) {
+    			if ((changed.addClass || changed.selectable)) {
     				toggle_class(div, "selectable", ctx.selectable);
     			}
     		},
@@ -2539,12 +2555,12 @@ var app = (function () {
     	};
     }
 
-    function instance$5($$self, $$props, $$invalidate) {
+    function instance$6($$self, $$props, $$invalidate) {
     	
 
-      let { disabled = false, active = false, selectable = false, passive = true } = $$props;
+      let { disabled = false, active = false, selectable = false, passive = true, addClass = "" } = $$props;
 
-    	const writable_props = ['disabled', 'active', 'selectable', 'passive'];
+    	const writable_props = ['disabled', 'active', 'selectable', 'passive', 'addClass'];
     	Object.keys($$props).forEach(key => {
     		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Card> was created with unknown prop '${key}'`);
     	});
@@ -2576,6 +2592,7 @@ var app = (function () {
     		if ('active' in $$props) $$invalidate('active', active = $$props.active);
     		if ('selectable' in $$props) $$invalidate('selectable', selectable = $$props.selectable);
     		if ('passive' in $$props) $$invalidate('passive', passive = $$props.passive);
+    		if ('addClass' in $$props) $$invalidate('addClass', addClass = $$props.addClass);
     		if ('$$scope' in $$props) $$invalidate('$$scope', $$scope = $$props.$$scope);
     	};
 
@@ -2584,6 +2601,7 @@ var app = (function () {
     		active,
     		selectable,
     		passive,
+    		addClass,
     		mouseover_handler,
     		mouseleave_handler,
     		click_handler,
@@ -2597,7 +2615,7 @@ var app = (function () {
     class Card extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$5, create_fragment$6, safe_not_equal, ["disabled", "active", "selectable", "passive"]);
+    		init(this, options, instance$6, create_fragment$6, safe_not_equal, ["disabled", "active", "selectable", "passive", "addClass"]);
     	}
 
     	get disabled() {
@@ -2631,13 +2649,21 @@ var app = (function () {
     	set passive(value) {
     		throw new Error("<Card>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
+
+    	get addClass() {
+    		throw new Error("<Card>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set addClass(value) {
+    		throw new Error("<Card>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
     }
 
     /* src\components\InstrumentCard.svelte generated by Svelte v3.6.4 */
 
     const file$7 = "src\\components\\InstrumentCard.svelte";
 
-    // (176:6) {#if volume > -1}
+    // (178:6) {#if volume > -1}
     function create_if_block_2(ctx) {
     	var span, t, span_transition, current;
 
@@ -2645,7 +2671,8 @@ var app = (function () {
     		c: function create() {
     			span = element("span");
     			t = text(ctx.volTxt);
-    			add_location(span, file$7, 176, 8, 3990);
+    			attr(span, "class", "info-txt svelte-1cd8m9g");
+    			add_location(span, file$7, 178, 8, 3994);
     		},
 
     		m: function mount(target, anchor) {
@@ -2686,7 +2713,7 @@ var app = (function () {
     	};
     }
 
-    // (182:4) <Button style="height: 1.6rem; width: 1.6rem; padding: 0; margin: 0.2rem;" outline on:click={removeInstrument}>
+    // (184:4) <Button style="height: 1.6rem; width: 1.6rem; padding: 0; margin: 0.2rem; transform: translateY(0.15rem)" outline on:click={removeInstrument}>
     function create_default_slot_4(ctx) {
     	var span;
 
@@ -2694,9 +2721,9 @@ var app = (function () {
     		c: function create() {
     			span = element("span");
     			span.textContent = "✗";
-    			set_style(span, "font-family", "'Inter'");
+    			set_style(span, "font-family", "'Inter', sans-serif");
     			set_style(span, "font-size", "1.2rem");
-    			add_location(span, file$7, 181, 115, 4174);
+    			add_location(span, file$7, 183, 146, 4226);
     		},
 
     		m: function mount(target, anchor) {
@@ -2711,7 +2738,7 @@ var app = (function () {
     	};
     }
 
-    // (185:2) {#if optionsVisible}
+    // (187:2) {#if optionsVisible}
     function create_if_block$3(ctx) {
     	var div3, p, t0, t1_value = normalizedName(ctx.soundfont), t1, t2, div0, t3, t4, div2, div1, updating_value, t5, t6, div3_transition, current;
 
@@ -2747,7 +2774,7 @@ var app = (function () {
     		max: 100,
     		step: 1,
     		title: 'Volume',
-    		customValueDisplay: { '-1': 'Default', '0': 'Muted' }
+    		customValueDisplay: { '-1': ctx.absoluteVolume ? 'Current' : 'Default', '0': 'Muted' }
     	};
     	if (ctx.volume !== void 0) {
     		slidecontrol_props.value = ctx.volume;
@@ -2762,6 +2789,7 @@ var app = (function () {
 
     	var button2 = new Button({
     		props: {
+    		style: "transform: translateY(0.8rem)",
     		outline: true,
     		spaced: true,
     		$$slots: { default: [create_default_slot_1] },
@@ -2792,17 +2820,17 @@ var app = (function () {
     			button2.$$.fragment.c();
     			t6 = space();
     			if (if_block) if_block.c();
-    			attr(p, "class", "info-txt svelte-1regomg");
-    			add_location(p, file$7, 188, 6, 4338);
+    			attr(p, "class", "info-txt svelte-1cd8m9g");
+    			add_location(p, file$7, 190, 6, 4402);
     			set_style(div0, "margin", "0.6rem 0");
-    			attr(div0, "class", "row svelte-1regomg");
-    			add_location(div0, file$7, 189, 6, 4409);
+    			attr(div0, "class", "row svelte-1cd8m9g");
+    			add_location(div0, file$7, 191, 6, 4473);
     			set_style(div1, "flex-grow", "1");
-    			add_location(div1, file$7, 195, 8, 4640);
-    			attr(div2, "class", "row svelte-1regomg");
-    			add_location(div2, file$7, 194, 6, 4613);
-    			attr(div3, "class", "toolbar svelte-1regomg");
-    			add_location(div3, file$7, 186, 4, 4290);
+    			add_location(div1, file$7, 197, 8, 4704);
+    			attr(div2, "class", "row svelte-1cd8m9g");
+    			add_location(div2, file$7, 196, 6, 4677);
+    			attr(div3, "class", "toolbar svelte-1cd8m9g");
+    			add_location(div3, file$7, 188, 4, 4354);
     		},
 
     		m: function mount(target, anchor) {
@@ -2840,6 +2868,7 @@ var app = (function () {
     			button1.$set(button1_changes);
 
     			var slidecontrol_changes = {};
+    			if (changed.absoluteVolume) slidecontrol_changes.customValueDisplay = { '-1': ctx.absoluteVolume ? 'Current' : 'Default', '0': 'Muted' };
     			if (!updating_value && changed.volume) {
     				slidecontrol_changes.value = ctx.volume;
     			}
@@ -2923,7 +2952,7 @@ var app = (function () {
     	};
     }
 
-    // (191:8) <Button outline on:click={octavePlus}>
+    // (193:8) <Button outline on:click={octavePlus}>
     function create_default_slot_3(ctx) {
     	var t;
 
@@ -2944,7 +2973,7 @@ var app = (function () {
     	};
     }
 
-    // (192:8) <Button outline on:click={octaveMinus} spaced>
+    // (194:8) <Button outline on:click={octaveMinus} spaced>
     function create_default_slot_2(ctx) {
     	var t;
 
@@ -2965,9 +2994,9 @@ var app = (function () {
     	};
     }
 
-    // (206:8) <Button outline on:click={toggleAbsoluteVolume} spaced>
+    // (208:8) <Button style="transform: translateY(0.8rem)" outline on:click={toggleAbsoluteVolume} spaced>
     function create_default_slot_1(ctx) {
-    	var t_value = ctx.absoluteVolume ? '% current' : 'Absolute', t;
+    	var t_value = ctx.absoluteVolume ? '% of current' : 'Absolute', t;
 
     	return {
     		c: function create() {
@@ -2979,7 +3008,7 @@ var app = (function () {
     		},
 
     		p: function update(changed, ctx) {
-    			if ((changed.absoluteVolume) && t_value !== (t_value = ctx.absoluteVolume ? '% current' : 'Absolute')) {
+    			if ((changed.absoluteVolume) && t_value !== (t_value = ctx.absoluteVolume ? '% of current' : 'Absolute')) {
     				set_data(t, t_value);
     			}
     		},
@@ -2992,7 +3021,7 @@ var app = (function () {
     	};
     }
 
-    // (210:8) {#if $showAdsr}
+    // (212:8) {#if $showAdsr}
     function create_if_block_1(ctx) {
     	var updating_value, t0, updating_value_1, t1, updating_value_2, t2, updating_value_3, current;
 
@@ -3185,7 +3214,7 @@ var app = (function () {
     	};
     }
 
-    // (167:0) <Card    on:mouseover={() => (optionsVisible = true)}    on:mouseleave={() => (optionsVisible = false)}>
+    // (169:0) <Card    on:mouseover={() => (optionsVisible = true)}    on:mouseleave={() => (optionsVisible = false)}>
     function create_default_slot(ctx) {
     	var div1, div0, h4, t0_value = normalizedName(ctx.name), t0, t1, span, t2, t3, t4, t5, if_block1_anchor, current;
 
@@ -3193,7 +3222,7 @@ var app = (function () {
 
     	var button = new Button({
     		props: {
-    		style: "height: 1.6rem; width: 1.6rem; padding: 0; margin: 0.2rem;",
+    		style: "height: 1.6rem; width: 1.6rem; padding: 0; margin: 0.2rem; transform: translateY(0.15rem)",
     		outline: true,
     		$$slots: { default: [create_default_slot_4] },
     		$$scope: { ctx }
@@ -3220,14 +3249,14 @@ var app = (function () {
     			t5 = space();
     			if (if_block1) if_block1.c();
     			if_block1_anchor = empty();
-    			attr(h4, "class", "uppercase svelte-1regomg");
-    			add_location(h4, file$7, 173, 6, 3858);
-    			attr(span, "class", "info-txt svelte-1regomg");
-    			add_location(span, file$7, 174, 6, 3915);
-    			attr(div0, "class", "status svelte-1regomg");
-    			add_location(div0, file$7, 172, 4, 3830);
-    			attr(div1, "class", "row svelte-1regomg");
-    			add_location(div1, file$7, 171, 2, 3807);
+    			attr(h4, "class", "uppercase svelte-1cd8m9g");
+    			add_location(h4, file$7, 175, 6, 3862);
+    			attr(span, "class", "info-txt svelte-1cd8m9g");
+    			add_location(span, file$7, 176, 6, 3919);
+    			attr(div0, "class", "status svelte-1cd8m9g");
+    			add_location(div0, file$7, 174, 4, 3834);
+    			attr(div1, "class", "row svelte-1cd8m9g");
+    			add_location(div1, file$7, 173, 2, 3811);
     		},
 
     		m: function mount(target, anchor) {
@@ -3400,7 +3429,7 @@ var app = (function () {
       return value;
     }
 
-    function instance$6($$self, $$props, $$invalidate) {
+    function instance$7($$self, $$props, $$invalidate) {
     	let $instrumentSets, $activeSet, $showAdsr;
 
     	validate_store(instrumentSets, 'instrumentSets');
@@ -3588,7 +3617,7 @@ var app = (function () {
     class InstrumentCard extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$6, create_fragment$7, safe_not_equal, ["id", "name", "volume", "octave", "data", "soundfont", "adsr", "absoluteVolume"]);
+    		init(this, options, instance$7, create_fragment$7, safe_not_equal, ["id", "name", "volume", "octave", "data", "soundfont", "adsr", "absoluteVolume"]);
 
     		const { ctx } = this.$$;
     		const props = options.props || {};
@@ -3701,7 +3730,7 @@ var app = (function () {
     	return {
     		c: function create() {
     			p = element("p");
-    			p.textContent = "🕳 No instruments";
+    			p.textContent = "No instruments";
     			attr(p, "class", "error svelte-1yw2g1e");
     			add_location(p, file$8, 37, 6, 636);
     		},
@@ -3886,7 +3915,7 @@ var app = (function () {
     	};
     }
 
-    function instance$7($$self, $$props, $$invalidate) {
+    function instance$8($$self, $$props, $$invalidate) {
     	let $instrumentSets, $activeSet;
 
     	validate_store(instrumentSets, 'instrumentSets');
@@ -3900,7 +3929,7 @@ var app = (function () {
     class SetEditor extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$7, create_fragment$8, safe_not_equal, []);
+    		init(this, options, instance$8, create_fragment$8, safe_not_equal, []);
     	}
     }
 
@@ -3921,7 +3950,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (106:4) {:else}
+    // (130:4) {:else}
     function create_else_block$2(ctx) {
     	var p, t0, br, t1;
 
@@ -3931,8 +3960,8 @@ var app = (function () {
     			t0 = text("🕳 No instrument sets.\r\n        ");
     			br = element("br");
     			t1 = text("\r\n        This is an error.\r\n      ");
-    			add_location(br, file$9, 108, 8, 2174);
-    			add_location(p, file$9, 106, 6, 2129);
+    			add_location(br, file$9, 132, 8, 2703);
+    			add_location(p, file$9, 130, 6, 2658);
     		},
 
     		m: function mount(target, anchor) {
@@ -3950,7 +3979,7 @@ var app = (function () {
     	};
     }
 
-    // (93:12) {#each set.instruments as i (i.id)}
+    // (117:12) {#each set.instruments as i (i.id)}
     function create_each_block_1(key_1, ctx) {
     	var span, t0_value = normalizedName$1(ctx.i.name), t0, t1, span_transition, rect, stop_animation = noop, current;
 
@@ -3963,8 +3992,8 @@ var app = (function () {
     			span = element("span");
     			t0 = text(t0_value);
     			t1 = space();
-    			attr(span, "class", "instrument svelte-hrcdkc");
-    			add_location(span, file$9, 93, 14, 1797);
+    			attr(span, "class", "info-txt svelte-18unuw0");
+    			add_location(span, file$9, 117, 14, 2314);
     			this.first = span;
     		},
 
@@ -4022,9 +4051,9 @@ var app = (function () {
     	};
     }
 
-    // (82:6) <Card          disabled={set.instruments.length < 1}          passive={false}          active={$activeSet === i}          on:click={() => {            activeSet.set(i);          }}>
+    // (106:6) <Card          disabled={set.instruments.length < 1}          passive={false}          active={$activeSet === i}          on:click={() => {            activeSet.set(i);          }}>
     function create_default_slot$1(ctx) {
-    	var div2, div0, h5, t0_value = ctx.set.name, t0, t1, each_blocks = [], each_1_lookup = new Map(), t2, div1, t3, current;
+    	var div2, div0, h5, t0_value = ctx.set.name, t0, h5_class_value, t1, each_blocks = [], each_1_lookup = new Map(), t2, div1, div2_class_value, t3, current;
 
     	var each_value_1 = ctx.set.instruments;
 
@@ -4055,15 +4084,15 @@ var app = (function () {
     			div1 = element("div");
     			keyboardkey.$$.fragment.c();
     			t3 = space();
-    			attr(h5, "class", "uppercase svelte-hrcdkc");
+    			attr(h5, "class", h5_class_value = "uppercase " + (ctx.set.instruments.length > 0 ? '' : 'shift-name') + " svelte-18unuw0");
     			toggle_class(h5, "act", ctx.$activeSet === ctx.i);
-    			add_location(h5, file$9, 90, 12, 1664);
-    			attr(div0, "class", "f-grow svelte-hrcdkc");
-    			add_location(div0, file$9, 89, 10, 1630);
-    			attr(div1, "class", "f-shrink svelte-hrcdkc");
-    			add_location(div1, file$9, 99, 10, 1970);
-    			attr(div2, "class", "fixed-card svelte-hrcdkc");
-    			add_location(div2, file$9, 88, 8, 1594);
+    			add_location(h5, file$9, 114, 12, 2132);
+    			attr(div0, "class", "f-grow svelte-18unuw0");
+    			add_location(div0, file$9, 113, 10, 2098);
+    			attr(div1, "class", "f-shrink transform-key svelte-18unuw0");
+    			add_location(div1, file$9, 123, 10, 2485);
+    			attr(div2, "class", div2_class_value = "fixed-card " + (ctx.set.instruments.length > 0 ? '' : 'remove-btm-margin') + " svelte-18unuw0");
+    			add_location(div2, file$9, 112, 8, 2006);
     		},
 
     		m: function mount(target, anchor) {
@@ -4087,7 +4116,11 @@ var app = (function () {
     				set_data(t0, t0_value);
     			}
 
-    			if (changed.$activeSet) {
+    			if ((!current || changed.$instrumentSets) && h5_class_value !== (h5_class_value = "uppercase " + (ctx.set.instruments.length > 0 ? '' : 'shift-name') + " svelte-18unuw0")) {
+    				attr(h5, "class", h5_class_value);
+    			}
+
+    			if ((changed.$instrumentSets || changed.$activeSet)) {
     				toggle_class(h5, "act", ctx.$activeSet === ctx.i);
     			}
 
@@ -4098,6 +4131,10 @@ var app = (function () {
     			each_blocks = update_keyed_each(each_blocks, changed, get_key, 1, ctx, each_value_1, each_1_lookup, div0, fix_and_outro_and_destroy_block, create_each_block_1, null, get_each_context_1);
     			for (let i = 0; i < each_blocks.length; i += 1) each_blocks[i].a();
     			check_outros();
+
+    			if ((!current || changed.$instrumentSets) && div2_class_value !== (div2_class_value = "fixed-card " + (ctx.set.instruments.length > 0 ? '' : 'remove-btm-margin') + " svelte-18unuw0")) {
+    				attr(div2, "class", div2_class_value);
+    			}
     		},
 
     		i: function intro(local) {
@@ -4132,7 +4169,7 @@ var app = (function () {
     	};
     }
 
-    // (81:4) {#each $instrumentSets as set, i}
+    // (105:4) {#each $instrumentSets as set, i}
     function create_each_block$2(ctx) {
     	var current;
 
@@ -4222,13 +4259,13 @@ var app = (function () {
     			for (var i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].c();
     			}
-    			set_style(h4, "font-weight", "600");
-    			attr(h4, "class", "svelte-hrcdkc");
-    			add_location(h4, file$9, 78, 2, 1285);
-    			attr(div0, "class", "list svelte-hrcdkc");
-    			add_location(div0, file$9, 79, 2, 1338);
-    			attr(div1, "class", "container svelte-hrcdkc");
-    			add_location(div1, file$9, 76, 0, 1256);
+    			set_style(h4, "font-weight", "400");
+    			attr(h4, "class", "svelte-18unuw0");
+    			add_location(h4, file$9, 102, 2, 1697);
+    			attr(div0, "class", "list svelte-18unuw0");
+    			add_location(div0, file$9, 103, 2, 1750);
+    			attr(div1, "class", "container svelte-18unuw0");
+    			add_location(div1, file$9, 100, 0, 1668);
     		},
 
     		l: function claim(nodes) {
@@ -4319,7 +4356,7 @@ var app = (function () {
       return name.charAt(0).toUpperCase() + name.slice(1);
     }
 
-    function instance$8($$self, $$props, $$invalidate) {
+    function instance$9($$self, $$props, $$invalidate) {
     	let $instrumentSets, $activeSet;
 
     	validate_store(instrumentSets, 'instrumentSets');
@@ -4341,7 +4378,7 @@ var app = (function () {
     class SetList extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$8, create_fragment$9, safe_not_equal, []);
+    		init(this, options, instance$9, create_fragment$9, safe_not_equal, []);
     	}
     }
 
@@ -4355,7 +4392,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (182:10) <Button style="width: 12rem; height: 2rem; margin-bottom: 0.4rem; text-align: left;" on:click={e => addPickedInstrument(item)}>
+    // (192:10) <Button style="width: 12rem; height: 2rem; margin-bottom: 0.4rem; text-align: left;" on:click={e => addPickedInstrument(item)}>
     function create_default_slot_2$1(ctx) {
     	var t0_value = normalizeInstrumentName(ctx.item), t0, t1;
 
@@ -4385,7 +4422,7 @@ var app = (function () {
     	};
     }
 
-    // (181:6) {#each filteredList as item (item)}
+    // (191:6) {#each filteredList as item (item)}
     function create_each_block$3(key_1, ctx) {
     	var first, current;
 
@@ -4449,7 +4486,7 @@ var app = (function () {
     	};
     }
 
-    // (193:12) <Button on:click={switchSf}>
+    // (203:12) <Button on:click={switchSf}>
     function create_default_slot_1$1(ctx) {
     	var t;
 
@@ -4476,7 +4513,7 @@ var app = (function () {
     	};
     }
 
-    // (198:12) <Button style="font-family: 'Inter', sans-serif;" on:click={switchAdsrOpt}>
+    // (208:12) <Button style="font-family: 'Inter', sans-serif;" on:click={switchAdsrOpt}>
     function create_default_slot$2(ctx) {
     	var t_value = ctx.$showAdsr ? '✓' : '✗', t;
 
@@ -4561,30 +4598,35 @@ var app = (function () {
     			span1.textContent = "Show ADSR controls";
     			t8 = space();
     			button1.$$.fragment.c();
-    			attr(h4, "class", "svelte-1l33ung");
-    			add_location(h4, file$a, 173, 0, 4172);
-    			attr(input, "class", "search-box svelte-1l33ung");
+    			attr(h4, "class", "svelte-1cb2r0y");
+    			add_location(h4, file$a, 183, 0, 4344);
+    			attr(input, "class", "search-box svelte-1cb2r0y");
     			attr(input, "placeholder", "Search...");
     			attr(input, "type", "search");
-    			add_location(input, file$a, 177, 6, 4230);
-    			attr(div0, "class", "scrollList svelte-1l33ung");
-    			add_location(div0, file$a, 179, 6, 4332);
+    			add_location(input, file$a, 187, 6, 4402);
+    			attr(div0, "class", "scrollList svelte-1cb2r0y");
+    			add_location(div0, file$a, 189, 6, 4549);
     			attr(div1, "class", "selector");
-    			add_location(div1, file$a, 175, 2, 4198);
-    			attr(span0, "class", "svelte-1l33ung");
-    			add_location(span0, file$a, 191, 12, 4719);
-    			attr(div2, "class", "row svelte-1l33ung");
-    			add_location(div2, file$a, 190, 8, 4688);
+    			add_location(div1, file$a, 185, 2, 4370);
+    			attr(span0, "class", "svelte-1cb2r0y");
+    			add_location(span0, file$a, 201, 12, 4936);
+    			attr(div2, "class", "row svelte-1cb2r0y");
+    			add_location(div2, file$a, 200, 8, 4905);
     			set_style(span1, "margin-top", "0.8rem");
-    			attr(span1, "class", "svelte-1l33ung");
-    			add_location(span1, file$a, 196, 12, 4872);
-    			attr(div3, "class", "row svelte-1l33ung");
-    			add_location(div3, file$a, 195, 8, 4841);
-    			attr(div4, "class", "mini-column svelte-1l33ung");
-    			add_location(div4, file$a, 189, 2, 4653);
-    			attr(div5, "class", "column svelte-1l33ung");
-    			add_location(div5, file$a, 172, 0, 4150);
-    			dispose = listen(input, "input", ctx.input_input_handler);
+    			attr(span1, "class", "svelte-1cb2r0y");
+    			add_location(span1, file$a, 206, 12, 5089);
+    			attr(div3, "class", "row svelte-1cb2r0y");
+    			add_location(div3, file$a, 205, 8, 5058);
+    			attr(div4, "class", "mini-column svelte-1cb2r0y");
+    			add_location(div4, file$a, 199, 2, 4870);
+    			attr(div5, "class", "column svelte-1cb2r0y");
+    			add_location(div5, file$a, 182, 0, 4322);
+
+    			dispose = [
+    				listen(input, "input", ctx.input_input_handler),
+    				listen(input, "focus", setFocused),
+    				listen(input, "blur", setUnfocused)
+    			];
     		},
 
     		l: function claim(nodes) {
@@ -4667,7 +4709,7 @@ var app = (function () {
 
     			destroy_component(button1, );
 
-    			dispose();
+    			run_all(dispose);
     		}
     	};
     }
@@ -4685,7 +4727,15 @@ var app = (function () {
                   .substr(2, 10);
       }
 
-    function instance$9($$self, $$props, $$invalidate) {
+    function setFocused(){
+          isFocused.set(true);
+      }
+
+    function setUnfocused() {
+          isFocused.set(false);
+      }
+
+    function instance$a($$self, $$props, $$invalidate) {
     	let $currentSoundFont, $instrumentSets, $activeSet, $showAdsr;
 
     	validate_store(currentSoundFont, 'currentSoundFont');
@@ -4698,6 +4748,7 @@ var app = (function () {
     	subscribe($$self, showAdsr, $$value => { $showAdsr = $$value; $$invalidate('$showAdsr', $showAdsr); });
 
     	
+
 
         let selectedInstrument;
         let availInstruments = [];
@@ -4733,7 +4784,7 @@ var app = (function () {
                 name: selectedInstrument,
                 volume: -1,
                 octave: 0,
-                absoluteVolume: false,
+                absoluteVolume: true,
                 data: instrumentData,
                 soundfont: $currentSoundFont,
                 adsr: [-0.01, -0.01, -0.01, -0.01]
@@ -4794,7 +4845,7 @@ var app = (function () {
     class InstrumentList extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$9, create_fragment$a, safe_not_equal, []);
+    		init(this, options, instance$a, create_fragment$a, safe_not_equal, []);
     	}
     }
 
@@ -6135,7 +6186,7 @@ var app = (function () {
 
     const file$b = "src\\App.svelte";
 
-    // (227:4) <h3 slot="left">
+    // (231:4) <h3 slot="left">
     function create_left_slot(ctx) {
     	var h3;
 
@@ -6145,7 +6196,7 @@ var app = (function () {
     			h3.textContent = "Piano";
     			attr(h3, "slot", "left");
     			attr(h3, "class", "svelte-14ara1v");
-    			add_location(h3, file$b, 226, 4, 5483);
+    			add_location(h3, file$b, 230, 4, 5563);
     		},
 
     		m: function mount(target, anchor) {
@@ -6160,7 +6211,7 @@ var app = (function () {
     	};
     }
 
-    // (229:4) <Button outline on:click={stopAllSounds}>
+    // (233:4) <Button outline on:click={stopAllSounds}>
     function create_default_slot_2$2(ctx) {
     	var t;
 
@@ -6181,7 +6232,7 @@ var app = (function () {
     	};
     }
 
-    // (230:4) <Button spaced outline on:click={switchDark}>
+    // (234:4) <Button spaced outline on:click={switchDark}>
     function create_default_slot_1$2(ctx) {
     	var t0, t1;
 
@@ -6211,7 +6262,7 @@ var app = (function () {
     	};
     }
 
-    // (226:2) <TitleBar>
+    // (230:2) <TitleBar>
     function create_default_slot$3(ctx) {
     	var t0, t1, current;
 
@@ -6333,13 +6384,13 @@ var app = (function () {
     			t4 = space();
     			setlist.$$.fragment.c();
     			attr(div0, "class", "split svelte-14ara1v");
-    			add_location(div0, file$b, 236, 2, 5717);
+    			add_location(div0, file$b, 240, 2, 5797);
     			attr(div1, "class", "container");
-    			add_location(div1, file$b, 223, 0, 5438);
+    			add_location(div1, file$b, 227, 0, 5518);
 
     			dispose = [
-    				listen(window_1, "keydown", prevent_default(ctx.handleKeyDown)),
-    				listen(window_1, "keyup", prevent_default(ctx.handleKeyUp))
+    				listen(window_1, "keydown", ctx.handleKeyDown),
+    				listen(window_1, "keyup", ctx.handleKeyUp)
     			];
     		},
 
@@ -6425,13 +6476,15 @@ var app = (function () {
       return value;
     }
 
-    function instance$a($$self, $$props, $$invalidate) {
-    	let $instrumentSets, $activeSet, $keysPressed, $keysDown, $volume, $octaveShift;
+    function instance$b($$self, $$props, $$invalidate) {
+    	let $instrumentSets, $activeSet, $isFocused, $keysPressed, $keysDown, $volume, $octaveShift;
 
     	validate_store(instrumentSets, 'instrumentSets');
     	subscribe($$self, instrumentSets, $$value => { $instrumentSets = $$value; $$invalidate('$instrumentSets', $instrumentSets); });
     	validate_store(activeSet, 'activeSet');
     	subscribe($$self, activeSet, $$value => { $activeSet = $$value; $$invalidate('$activeSet', $activeSet); });
+    	validate_store(isFocused, 'isFocused');
+    	subscribe($$self, isFocused, $$value => { $isFocused = $$value; $$invalidate('$isFocused', $isFocused); });
     	validate_store(keysPressed, 'keysPressed');
     	subscribe($$self, keysPressed, $$value => { $keysPressed = $$value; $$invalidate('$keysPressed', $keysPressed); });
     	validate_store(keysDown, 'keysDown');
@@ -6482,6 +6535,8 @@ var app = (function () {
       }
 
       function handleKeyDown(e) {
+        if ($isFocused) {return;}
+
         let kCode = e.keyCode;
 
         if ($instrumentSets[$activeSet].instruments.length < 1) return;
@@ -6534,10 +6589,11 @@ var app = (function () {
             }
           });
         }
-
       }
 
       function handleKeyUp(e) {
+        if ($isFocused) {return;}
+
         let kCode = e.keyCode;
 
         if (kCode >= 48 && kCode <= 58) {
@@ -6617,7 +6673,6 @@ var app = (function () {
           kp[kCode] = [];
           return kp;
         });
-
       }
 
       applyTheme();
@@ -6640,7 +6695,7 @@ var app = (function () {
     class App extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$a, create_fragment$b, safe_not_equal, []);
+    		init(this, options, instance$b, create_fragment$b, safe_not_equal, []);
     	}
     }
 

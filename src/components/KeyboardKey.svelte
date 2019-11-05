@@ -50,6 +50,7 @@
     width: 1.4rem;
     text-align: center;
     padding: 0;
+    transform: scale(0.8);
   }
 </style>
 

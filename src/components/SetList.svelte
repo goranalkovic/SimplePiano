@@ -47,6 +47,14 @@
     margin: 0;
   }
 
+  .remove-btm-margin {
+    margin-bottom: -0.6rem;
+  }
+
+  .shift-name {
+    transform: translateY(0.2rem);
+  }
+
   .instrument {
     display: block;
     opacity: 0.6;
@@ -56,6 +64,8 @@
 
   .f-grow {
     flex-grow: 1;
+    margin: 0;
+    padding: 0;
   }
   .f-shrink {
     margin: 0;
@@ -71,12 +81,26 @@
     font-size: 0.8rem;
     font-weight: 400 !important;
     letter-spacing: 1.2px;
+    margin: 0;
+    padding: 0;
+    transition: 0.2s transform;
+  }
+
+  .info-txt {
+    display: block;
+    font-size: 0.8rem;
+    opacity: 0.6;
+    margin: 0.05rem 0;
+  }
+
+  .transform-key {
+    transform: translateX(0.6rem) translateY(-0.1rem);
   }
 </style>
 
 <div class="container">
 
-  <h4 style="font-weight: 600">Instrument sets</h4>
+  <h4 style="font-weight: 400">Instrument sets</h4>
   <div class="list">
     {#each $instrumentSets as set, i}
       <Card
@@ -86,18 +110,18 @@
         on:click={() => {
           activeSet.set(i);
         }}>
-        <div class="fixed-card">
+        <div class="fixed-card {set.instruments.length > 0 ? '' : 'remove-btm-margin'}">
           <div class="f-grow">
-            <h5 class="uppercase" class:act={$activeSet === i}>{set.name}</h5>
+            <h5 class="uppercase {set.instruments.length > 0 ? '' : 'shift-name'}" class:act={$activeSet === i}>{set.name}</h5>
 
             {#each set.instruments as i (i.id)}
-              <span transition:slide animate:flip class="instrument">
+              <span transition:slide animate:flip class="info-txt">
                 {normalizedName(i.name)}
               </span>
             {/each}
 
           </div>
-          <div class="f-shrink">
+          <div class="f-shrink transform-key">
             <KeyboardKey square key={i + 1 < 10 ? i + 1 : 0} />
           </div>
         </div>

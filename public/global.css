@@ -41,6 +41,10 @@ h1, h2, h3, h4, h5, h6, b {
 	font-weight: 500 !important;
 }
 
+h1, h2, h3, h4, h5, h6, p, b, span, button, label {
+	user-select: none;
+}
+
 body, html {
 	margin: 0;
 	padding: 0;

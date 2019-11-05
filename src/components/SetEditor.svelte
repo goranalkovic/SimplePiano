@@ -35,7 +35,7 @@
     {#each $instrumentSets[$activeSet].instruments as instrument, i (instrument.id)}
       <InstrumentCard {...instrument} />
     {:else}
-      <p class="error">🕳 No instruments</p>
+      <p class="error">No instruments</p>
     {/each}
   </div>
 </div>

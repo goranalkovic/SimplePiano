@@ -6,6 +6,7 @@
   export let active = false;
   export let selectable = false;
   export let passive = true;
+  export let addClass = "";
 </script>
 
 <style>
@@ -15,10 +16,11 @@
     padding: 8px;
     border-radius: var(--border-radius);
     background: var(--white-key-color);
-    margin: 8px 0;
+    margin: 0.4rem 0;
     transition: var(--transition);
     user-select: none;
     box-sizing: border-box;
+    border: 1px solid transparent;
   }
 
   .card:not(.passive) {
@@ -27,7 +29,8 @@
   }
 
   .card.active {
-    box-shadow: var(--shadow-big-accent);
+    /*box-shadow: var(--shadow-big-accent);*/
+    border: 1px solid var(--accent-color);
   }
 
   .card.disabled {
@@ -46,7 +49,7 @@
     on:mouseleave
     transition:slide
     animation:flip={{ duration: 300 }}
-    class="card passive"
+    class="card passive {addClass}"
     class:active
     class:disabled
     class:selectable>
@@ -59,7 +62,7 @@
     on:mouseleave
     transition:slide
     animation:flip={{ duration: 300 }}
-    class="card"
+    class="card {addClass}"
     class:active
     class:disabled={disabled && !active}
     class:selectable>
