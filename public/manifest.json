@@ -1,6 +1,4 @@
 {
-	"background_color": "#ffffff",
-	"theme_color": "#ffffff",
 	"name": "Simple piano",
 	"short_name": "Piano",
 	"display": "standalone",
