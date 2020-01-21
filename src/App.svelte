@@ -20,10 +20,18 @@
     currentSoundFont,
     ac,
     defaultAdsr,
-    isFocused
+    isFocused,
+    showAdsr
   } from "./stores.js";
 
   import Soundfont from "soundfont-player";
+
+  instrumentSets.useLocalStorage();
+  showAdsr.useLocalStorage();
+  currentSoundFont.useLocalStorage();
+  activeSet.useLocalStorage();
+  volume.useLocalStorage();
+  octaveShift.useLocalStorage();
 
   let theme = 0;
   $: themeName = theme === 0 ? 'Auto' : (theme === 1 ? 'Light' : 'Dark');

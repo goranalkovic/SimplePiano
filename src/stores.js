@@ -1,5 +1,24 @@
 import { writable, readable } from 'svelte/store';
 
+const createWritableStore = (key, startValue) => {
+    const { subscribe, set } = writable(startValue);
+
+    return {
+        subscribe,
+        set,
+        useLocalStorage: () => {
+            const json = localStorage.getItem(key);
+            if (json) {
+                set(JSON.parse(json));
+            }
+
+            subscribe(current => {
+                localStorage.setItem(key, JSON.stringify(current));
+            });
+        }
+    };
+}
+
 export const soundFont = {
     fluid: 'FluidR3_GM',
     mk: 'MusyngKite',
@@ -120,14 +139,14 @@ export const keysDown = writable(
 
 export let ac = new AudioContext();
 
-export const currentSoundFont = writable(soundFont.fatboy);
-export const activeSet = writable(0);
-export const volume = writable(25);
-export const octaveShift = writable(0);
-export const showAdsr = writable(false);
+export const currentSoundFont = createWritableStore('currentSoundFont',soundFont.fatboy);
+export const activeSet = createWritableStore('activeSet',0);
+export const volume = createWritableStore('volume',25);
+export const octaveShift = createWritableStore('octaveShift',0);
+export const showAdsr = createWritableStore('showAdsr',false);
 export const isFocused = writable(false);
 
-export const instrumentSets = writable(
+export const instrumentSets = createWritableStore('instruments',
     [
         {
             name: 'Set 1',
