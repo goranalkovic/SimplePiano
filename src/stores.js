@@ -1,4 +1,6 @@
 import { writable, readable } from 'svelte/store';
+import store from "store";
+import cloneDeep from "lodash.clonedeep";
 
 const createWritableStore = (key, startValue) => {
     const { subscribe, set } = writable(startValue);
@@ -7,13 +9,35 @@ const createWritableStore = (key, startValue) => {
         subscribe,
         set,
         useLocalStorage: () => {
-            const json = localStorage.getItem(key);
+            const json = store.get(key);
+
+           if(key === 'instruments' && json){
+               let updateable = [...json]
+
+               for (let instrSet of updateable) {
+                   if(instrSet.instruments.length < 1) continue;
+                   for (let instr of instrSet.instruments){
+
+                       let instrumentData = Soundfont.instrument(ac, instr.name, {
+                           soundfont: instr.soundfont
+                       });
+
+                       instr.data = instrumentData;
+
+                   }
+               }
+
+               set(updateable);
+           }
+
+            // const json = localStorage.getItem(key);
             if (json) {
-                set(JSON.parse(json));
+                set(json);
             }
 
             subscribe(current => {
-                localStorage.setItem(key, JSON.stringify(current));
+                store.set(key, cloneDeep(current));
+                // localStorage.setItem(key, JSON.stringify(current));
             });
         }
     };

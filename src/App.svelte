@@ -46,6 +46,7 @@
     if ($instrumentSets[$activeSet].instruments.length < 1) return;
 
     for (let instr of $instrumentSets[$activeSet].instruments) {
+      console.log(instr);
       instr.data.then(k => {
         k.stop();
       });
@@ -93,10 +94,11 @@
             .querySelector("#" + keyCodes[kCode])
             .classList.add("piano-key-highlight");
 
-    keysDown.update(kd => {
-      kd[kCode] = true;
-      return kd;
-    });
+    $keysDown[kCode] = true;
+    // keysDown.update(kd => {
+    //   kd[kCode] = true;
+    //   return kd;
+    // });
 
     for (let instrument of $instrumentSets[$activeSet].instruments) {
 
@@ -126,10 +128,11 @@
         if ($keysPressed[kCode].indexOf(inst) === -1) {
           let currentPressed = $keysPressed[kCode];
 
-          keysPressed.update(kp => {
-            kp[kCode] = [...currentPressed, inst];
-            return kp;
-          });
+          $keysPressed[kCode] = [...currentPressed, inst];
+          // keysPressed.update(kp => {
+          //   kp[kCode] = [...currentPressed, inst];
+          //   return kp;
+          // });
         }
       });
     }
@@ -154,37 +157,45 @@
 
     if (kCode === 16) {
       if ($octaveShift <= 2) {
-        octaveShift.update(os => os + 1);
+        // octaveShift.update(os => os + 1);
+        octaveShift.set($octaveShift + 1);
       }
       return;
     }
 
     if (kCode === 17) {
       if ($octaveShift >= -2) {
-        octaveShift.update(os => os - 1);
+        // octaveShift.update(os => os - 1);
+        octaveShift.set($octaveShift - 1);
       }
       return;
     }
 
     if (kCode === 37) {
-      if ($volume >= 1) volume.update(v => v - 1);
+      // if ($volume >= 1) volume.update(v => v - 1);
+      if ($volume >= 1) volume.set($volume + 1);
       return;
     }
 
     if (kCode === 40) {
-      if ($volume >= 10) volume.update(v => v - 10);
-      if ($volume - 10 < 0) volume.update(v => v = 0);
+      // if ($volume >= 10) volume.update(v => v - 10);
+      // if ($volume - 10 < 0) volume.update(v => v = 0);
+      if ($volume >= 10) volume.set($volume - 10);
+      if ($volume -10 < 0) volume.set(0);
       return;
     }
 
     if (kCode === 39) {
-      if ($volume < 99) volume.update(v => v + 1);
+      // if ($volume < 99) volume.update(v => v + 1);
+      if ($volume < 99) volume.set($volume + 1);
       return;
     }
 
     if (kCode === 38) {
-      if ($volume <= 90) volume.update(v => v + 10);
-      if($volume + 10 > 100) volume.update(v => v = 100);
+      // if ($volume <= 90) volume.update(v => v + 10);
+      // if($volume + 10 > 100) volume.update(v => v = 100);
+      if ($volume <= 90) volume.set($volume + 10);
+      if ($volume + 10 > 100) volume.set(100);
       return;
     }
 
@@ -198,10 +209,11 @@
             .querySelector("#" + keyCodes[kCode])
             .classList.remove("piano-key-highlight");
 
-    keysDown.update(kd => {
-      kd[kCode] = false;
-      return kd;
-    });
+    $keysDown[kCode] = false;
+    // keysDown.update(kd => {
+    //   kd[kCode] = false;
+    //   return kd;
+    // });
 
     for (var i of $keysPressed[kCode]) {
       try {
@@ -213,10 +225,11 @@
       }
     }
 
-    keysPressed.update(kp => {
-      kp[kCode] = [];
-      return kp;
-    });
+    $keysPressed[kCode] = [];
+    // keysPressed.update(kp => {
+    //   kp[kCode] = [];
+    //   return kp;
+    // });
   }
 
   applyTheme();
