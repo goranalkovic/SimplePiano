@@ -230,6 +230,8 @@
     //   kp[kCode] = [];
     //   return kp;
     // });
+
+    // console.log('Pressed key ' + keyCodes[kCode] + ' (key code ' + kCode + ', note ' + keyNotes[kCode] + ')')
   }
 
   applyTheme();

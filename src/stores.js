@@ -77,7 +77,6 @@ export const keyCodes = {
 };
 
 export const keyNotes = {
-    20: "52",
     65: "55",
     83: "57",
     68: "59",
@@ -100,7 +99,8 @@ export const keyNotes = {
     79: "68",
     80: "70",
     221: "73",
-    8: "75"
+    8: "75",
+    20: "53"
 };
 
 export const keysPressed = writable({
