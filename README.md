@@ -1,2 +1,2 @@
 # SimplePiano
-[![Netlify Status](https://api.netlify.com/api/v1/badges/e92756cc-9c41-4fe9-a1e0-2be692e39b60/deploy-status)](https://app.netlify.com/sites/hopeful-benz-c1fb62/deploys)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/03439634-49ff-4336-b3a0-dc2760d48428/deploy-status)](https://app.netlify.com/sites/jolly-babbage-e8dd33/deploys)
