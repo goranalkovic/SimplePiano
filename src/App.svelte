@@ -1,4 +1,6 @@
 <script>
+  import { onMount } from "svelte";
+
   import Button from "./components/Button.svelte";
   import TitleBar from "./components/TitleBar.svelte";
   import Controls from "./components/Controls.svelte";
@@ -6,6 +8,7 @@
   import SetEditor from "./components/SetEditor.svelte";
   import SetList from "./components/SetList.svelte";
   import InstrumentList from "./components/InstrumentList.svelte";
+  import ThemeSwitcher from "./components/ThemeSwitcher.svelte";
 
   import {
     soundFont,
@@ -21,7 +24,9 @@
     ac,
     defaultAdsr,
     isFocused,
-    showAdsr
+    showAdsr,
+    editMode,
+    theme
   } from "./stores.js";
 
   import Soundfont from "soundfont-player";
@@ -32,9 +37,10 @@
   activeSet.useLocalStorage();
   volume.useLocalStorage();
   octaveShift.useLocalStorage();
+  editMode.useLocalStorage();
+  theme.useLocalStorage();
 
-  let theme = 0;
-  $: themeName = theme === 0 ? 'Auto' : (theme === 1 ? 'Light' : 'Dark');
+  $: themeName = $theme === 0 ? "Auto" : $theme === 1 ? "Light" : "Dark";
 
   function clamp(value, min, max) {
     if (value <= min) return min;
@@ -54,23 +60,27 @@
 
     for (let i in keyCodes) {
       document
-              .querySelector("#" + keyCodes[i])
-              .classList.remove("piano-key-highlight");
+        .querySelector("#" + keyCodes[i])
+        .classList.remove("piano-key-highlight");
     }
   }
 
   function switchDark() {
-    theme++;
+    theme.set($theme++);
 
-    if (theme === 3) {
-      theme = 0;
+    if ($theme === 3) {
+      theme.set(0);
     }
 
     applyTheme();
   }
 
   function applyTheme() {
-    if ((theme === 0 && window.matchMedia("(prefers-color-scheme: dark)").matches) || theme === 2) {
+    if (
+      ($theme === 0 &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches) ||
+      $theme === 2
+    ) {
       document.querySelector("html").className = "dark";
     } else {
       document.querySelector("html").className = "";
@@ -79,8 +89,18 @@
     // console.log(`Current theme: ${themeName}`);
   }
 
+  function toggleEditMode() {
+    editMode.set(!$editMode);
+    instrumentSets.set([...$instrumentSets]);
+  }
+
   function handleKeyDown(e) {
-    if ($isFocused) {return;}
+    if ($isFocused || $editMode) {
+      return;
+    } else if (e.keyCode !== 116) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
 
     let kCode = e.keyCode;
 
@@ -91,8 +111,8 @@
     if ($keysDown[kCode] === true) return;
 
     document
-            .querySelector("#" + keyCodes[kCode])
-            .classList.add("piano-key-highlight");
+      .querySelector("#" + keyCodes[kCode])
+      .classList.add("piano-key-highlight");
 
     $keysDown[kCode] = true;
     // keysDown.update(kd => {
@@ -101,9 +121,12 @@
     // });
 
     for (let instrument of $instrumentSets[$activeSet].instruments) {
-
       let vol =
-              instrument.volume > -1 ? (instrument.absoluteVolume ? ($volume * (instrument.volume / 100)) / 100 : instrument.volume / 100)  : $volume / 100;
+        instrument.volume > -1
+          ? instrument.absoluteVolume
+            ? ($volume * (instrument.volume / 100)) / 100
+            : instrument.volume / 100
+          : $volume / 100;
 
       let adjustedOctShift = clamp($octaveShift + instrument.octave, -3, 3);
 
@@ -116,8 +139,8 @@
         if (newAdsr[3] < 0) newAdsr[3] = defaultAdsr[3];
 
         let note = (
-                parseInt(keyNotes[kCode]) +
-                12 * adjustedOctShift
+          parseInt(keyNotes[kCode]) +
+          12 * adjustedOctShift
         ).toString();
 
         let inst = instr.play(note, ac.currentTime, {
@@ -139,9 +162,16 @@
   }
 
   function handleKeyUp(e) {
-    if ($isFocused) {return;}
+    if ($isFocused || $editMode) {
+      return;
+    } else if (e.keyCode !== 116) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
 
     let kCode = e.keyCode;
+
+    // alert(kCode);
 
     if (kCode >= 48 && kCode <= 58) {
       stopAllSounds();
@@ -173,7 +203,7 @@
 
     if (kCode === 37) {
       // if ($volume >= 1) volume.update(v => v - 1);
-      if ($volume >= 1) volume.set($volume + 1);
+      if ($volume >= 1) volume.set($volume - 1);
       return;
     }
 
@@ -181,7 +211,7 @@
       // if ($volume >= 10) volume.update(v => v - 10);
       // if ($volume - 10 < 0) volume.update(v => v = 0);
       if ($volume >= 10) volume.set($volume - 10);
-      if ($volume -10 < 0) volume.set(0);
+      if ($volume - 10 < 0) volume.set(0);
       return;
     }
 
@@ -206,8 +236,8 @@
     if ($keysDown[kCode] === false) return;
 
     document
-            .querySelector("#" + keyCodes[kCode])
-            .classList.remove("piano-key-highlight");
+      .querySelector("#" + keyCodes[kCode])
+      .classList.remove("piano-key-highlight");
 
     $keysDown[kCode] = false;
     // keysDown.update(kd => {
@@ -234,8 +264,11 @@
     // console.log('Pressed key ' + keyCodes[kCode] + ' (key code ' + kCode + ', note ' + keyNotes[kCode] + ')')
   }
 
-  applyTheme();
-
+  onMount(() => {
+    applyTheme();
+    let colorSchemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    colorSchemeQuery.addEventListener("change", applyTheme);
+  });
 </script>
 
 <style>
@@ -243,7 +276,8 @@
     display: flex;
   }
 
-  h3, h4 {
+  h3,
+  h4 {
     font-weight: 400;
   }
 </style>
@@ -253,8 +287,11 @@
   <TitleBar>
     <h3 slot="left">Piano</h3>
 
-    <Button outline on:click={stopAllSounds}>Stop all sounds</Button>
-    <Button spaced outline on:click={switchDark}>{themeName} theme</Button>
+    <Button on:click={stopAllSounds}>Stop all sounds</Button>
+    <Button spaced toggled={$editMode} on:click={toggleEditMode}>
+      Editing mode
+    </Button>
+    <Button spaced on:click={switchDark}>{themeName} theme</Button>
   </TitleBar>
 
   <Controls />
@@ -269,6 +306,4 @@
 
 </div>
 
-<svelte:window
-  on:keydown={handleKeyDown}
-  on:keyup={handleKeyUp} />
+<svelte:window on:keydown={handleKeyDown} on:keyup={handleKeyUp} />

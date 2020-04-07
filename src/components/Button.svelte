@@ -1,7 +1,8 @@
 <script>
-    export let spaced = false;
-    export let style = null;
-    export let outline = false;
+  export let spaced = false;
+  export let style = null;
+  export let outline = false;
+  export let toggled = false;
 </script>
 
 <style>
@@ -14,7 +15,7 @@
     border-radius: 3px;
     transition: var(--transition);
     cursor: pointer;
-	font-family: var(--font-family);
+    font-family: var(--font-family);
   }
 
   button:hover {
@@ -31,18 +32,34 @@
     box-shadow: none;
   }
 
-button.outline:hover {
-  background: var(--accent-color);
+  button.outline:hover {
+    background: var(--accent-color);
     color: var(--black-key-color);
     border: 1px solid var(--accent-color);
-}
+  }
 
   .spaced {
-      margin-left: 6px;
-      margin-right: 6px;
+    margin-left: 6px;
+    margin-right: 6px;
+  }
+
+  button:not(.outline).toggled {
+    border-bottom: 2px solid var(--accent-color);
+  }
+
+  button:not(.outline).toggled:hover {
+    border-bottom: 2px solid var(--body-text);
+  }
+
+  button.outline.toggled {
+    border: 1px solid var(--accent-color);
+  }
+
+  button.outline.toggled:hover {
+    border: 1px solid rgba(var(--body-text-values), 0.6);
   }
 </style>
 
-<button class:spaced class:outline {style} on:click>
+<button class:spaced class:outline class:toggled {style} on:click>
   <slot />
 </button>

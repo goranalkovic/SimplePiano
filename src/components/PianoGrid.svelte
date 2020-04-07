@@ -1,7 +1,6 @@
 <script>
-  import {
-    isFocused
-  } from "../stores";
+  import { isFocused, editMode } from "../stores";
+  import { fade } from "svelte/transition";
 </script>
 
 <style>
@@ -50,6 +49,7 @@
     margin: 2rem auto;
     height: 12rem;
     transition: 0.1s opacity;
+    position: relative;
   }
 
   .piano-grid-container .piano-grid:first-child {
@@ -58,18 +58,36 @@
     left: 0;
   }
 
-  .piano-grid-container .piano-grid:last-child {
+  .piano-grid-container .piano-grid:nth-child(2) {
     position: relative;
     top: -13rem;
     left: 1rem;
   }
 
-  .transparent {
-    opacity: 0.4;
+  .transparent .piano-grid {
+    opacity: 0.2;
+  }
+
+  .edit-mode-warn {
+    position: absolute;
+
+    left: 40%;
+    top: 40%;
+
+    font-weight: 500;
+    z-index: 2000;
+    opacity: 1;
+    letter-spacing: -0.2px;
+    color: var(--bg-color);
+    background: var(--body-text);
+    border-radius: 2px;
+    text-align: center;
+    padding: 4px 6px;
   }
 </style>
 
-<div class="piano-grid-container {$isFocused ? 'transparent' : ''}">
+<div
+  class="piano-grid-container {$isFocused || $editMode ? 'transparent' : ''}">
   <div class="piano-grid">
     <div id="⇪" class="white-key">⇪</div>
     <div id="A" class="white-key">A</div>
@@ -102,4 +120,8 @@
     <div id="Đ" class="black-key">Đ</div>
     <div id="⌫" class="black-key">⌫</div>
   </div>
+
+  {#if $editMode}
+    <p class="edit-mode-warn" transition:fade>Editing mode</p>
+  {/if}
 </div>

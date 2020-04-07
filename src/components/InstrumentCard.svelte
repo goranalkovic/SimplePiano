@@ -1,5 +1,5 @@
 <script>
-  import { slide } from "svelte/transition";
+  import { slide, fade } from "svelte/transition";
 
   import Card from "./Card.svelte";
   import Button from "./Button.svelte";
@@ -11,7 +11,8 @@
     octaveShift,
     currentSoundFont,
     defaultAdsr,
-    showAdsr
+    showAdsr,
+    editMode
   } from "../stores";
 
   export let id;
@@ -42,9 +43,8 @@
     volume > -1
       ? volume < 1
         ? "Muted"
-        : `Volume ${volume}${absoluteVolume ? '%' : ''}`
+        : `Volume ${volume}${absoluteVolume ? "%" : ""}`
       : "Custom volume not set";
-
 
   function clamp(value, min, max) {
     if (value <= min) return min;
@@ -107,7 +107,9 @@
 
     let index = currentSets[$activeSet].instruments.findIndex(i => i.id === id);
 
-    currentSets[$activeSet].instruments[index].absoluteVolume = !currentSets[$activeSet].instruments[index].absoluteVolume;
+    currentSets[$activeSet].instruments[index].absoluteVolume = !currentSets[
+      $activeSet
+    ].instruments[index].absoluteVolume;
 
     instrumentSets.set(currentSets);
   }
@@ -162,14 +164,11 @@
     font-weight: 400 !important;
     letter-spacing: 1.2px;
   }
-
-
 </style>
 
 <Card
   on:mouseover={() => (optionsVisible = true)}
   on:mouseleave={() => (optionsVisible = false)}>
-
 
   <div class="row">
     <div class="status">
@@ -179,13 +178,23 @@
         <span class="info-txt" transition:slide>{volTxt}</span>
       {/if}
 
-
     </div>
-    <Button style="height: 1.6rem; width: 1.6rem; padding: 0; margin: 0.2rem; transform: translateY(0.15rem)" outline on:click={removeInstrument}><span style="font-family: 'Inter', sans-serif; font-size: 1.2rem;">✗</span></Button>
+    {#if $editMode}
+      <div transition:fade>
+        <Button
+          style="height: 1.6rem; width: 1.6rem; padding: 0; margin: 0.2rem;
+          transform: translateY(0.15rem)"
+          outline
+          on:click={removeInstrument}>
+          <span style="font-family: 'Inter', sans-serif; font-size: 1.2rem;">
+            ✗
+          </span>
+        </Button>
+      </div>
+    {/if}
   </div>
 
-  {#if optionsVisible}
-
+  {#if optionsVisible && $editMode}
     <div transition:slide class="toolbar">
 
       <p class="info-txt">Sound font: {normalizedName(soundfont)}</p>
@@ -197,19 +206,25 @@
       <div class="row">
         <div style="flex-grow: 1">
           <SlideControl
-                  min={-1}
-                  max={100}
-                  step={1}
-                  title={'Volume'}
-                  bind:value={volume}
-                  on:change={setVolume}
-                  customValueDisplay={{ '-1': absoluteVolume ? 'Current' : 'Default', '0': 'Muted' }} />
+            min={-1}
+            max={100}
+            step={1}
+            title={'Volume'}
+            bind:value={volume}
+            on:change={setVolume}
+            customValueDisplay={{ '-1': absoluteVolume ? 'Current' : 'Default', '0': 'Muted' }} />
         </div>
-        <Button style="transform: translateY(0.8rem)" outline on:click={toggleAbsoluteVolume} spaced>{absoluteVolume ? '% of current' : 'Absolute'}</Button>
+        <Button
+          style="transform: translateY(0.8rem)"
+          outline
+          on:click={toggleAbsoluteVolume}
+          spaced>
+          {absoluteVolume ? '% of current' : 'Absolute'}
+        </Button>
 
       </div>
 
-        {#if $showAdsr}
+      {#if $showAdsr && $editMode}
         <SlideControl
           min={-0.01}
           max={1}

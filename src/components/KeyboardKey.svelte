@@ -1,7 +1,45 @@
 <script>
   export let label = null;
   export let key;
-  export let square = true;
+  export let square = false;
+
+  function convertToInter(key) {
+    switch (key) {
+      case 0:
+        return square ? "" : "⓪";
+        break;
+      case 1:
+        return square ? "" : "①";
+        break;
+      case 2:
+        return square ? "" : "②";
+        break;
+      case 3:
+        return square ? "" : "③";
+        break;
+      case 4:
+        return square ? "" : "④";
+        break;
+      case 5:
+        return square ? "" : "⑤";
+        break;
+      case 6:
+        return square ? "" : "⑥";
+        break;
+      case 7:
+        return square ? "" : "⑦";
+        break;
+      case 8:
+        return square ? "" : "⑧";
+        break;
+      case 9:
+        return square ? "" : "⑨";
+        break;
+      default:
+        return key;
+        break;
+    }
+  }
 </script>
 
 <style>
@@ -52,13 +90,24 @@
     padding: 0;
     transform: scale(0.8);
   }
+
+  .inter-key {
+    display: block;
+    font-family: "Inter", sans-serif;
+    font-size: 0.8rem;
+    transform: translateX(-10px) translateY(3px);
+    margin-bottom: 4px;
+    height: 1.4rem;
+    font-weight: 500;
+    opacity: 0.7;
+  }
 </style>
 
 <div class="container">
   {#if label}
     <span class="label">{label}</span>
   {/if}
-  <span class="keyboard-key" class:square>
-    {@html key}
+  <span class="inter-key">
+    {@html convertToInter(key)}
   </span>
 </div>

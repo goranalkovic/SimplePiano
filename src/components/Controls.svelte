@@ -1,49 +1,52 @@
 <script>
-    import {volume, octaveShift} from '../stores';
-    import SlideControl from './SlideControl.svelte';
+  import { volume, octaveShift, editMode } from "../stores";
+  import SlideControl from "./SlideControl.svelte";
 
-    let volumeControl = {
-        title: 'Volume',
-        min: 0,
-        max: 100,
-        step: 1,
-        keyboardKeys: [
-            {label: '-1', key: '←'},
-            {label: '+1', key: '→'},
-            {label: '+10', key: '↑'},
-            {label: '-10', key: '↓'},
-        ]
-    };
+  let volumeControl = {
+    title: "Volume",
+    min: 0,
+    max: 100,
+    step: 1,
+    keyboardKeys: [
+      { label: "-1", key: "←" },
+      { label: "+1", key: "→" },
+      { label: "+10", key: "↑" },
+      { label: "-10", key: "↓" }
+    ]
+  };
 
-    let octaveControl = {
-        title: 'Octave shift',
-        min: -3,
-        max: 3,
-        step: 0.5,
-        keyboardKeys: [
-            {label: 'Up', key: '⇧', square: false},
-            {label: 'Dn', key: '<small>Ctrl</small>', square: false}
-        ]
-    };
-
-     
+  let octaveControl = {
+    title: "Octave shift",
+    min: -3,
+    max: 3,
+    step: 0.5,
+    keyboardKeys: [
+      { label: "Up", key: "⇧", square: false },
+      { label: "Dn", key: "<small>Ctrl</small>", square: false }
+    ]
+  };
 </script>
 
 <style>
-    .flex {
-        display: flex;
-        justify-content: space-between;
-    }
+  .flex {
+    display: flex;
+    justify-content: space-between;
+  }
 
-    .spacer {
-        display: inline-block;
-        content: "";
-        width: 2rem;
-    }
+  .spacer {
+    display: inline-block;
+    content: "";
+    width: 2rem;
+  }
+
+  .transparent {
+    opacity: 0.2;
+    pointer-events: none;
+  }
 </style>
 
-<div class="flex">
-    <SlideControl {...volumeControl} bind:value={$volume}  />
-    <div class="spacer"></div>
-    <SlideControl {...octaveControl} bind:value={$octaveShift}  />
+<div class="flex" class:transparent={$editMode}>
+  <SlideControl {...volumeControl} bind:value={$volume} />
+  <div class="spacer" />
+  <SlideControl {...octaveControl} bind:value={$octaveShift} />
 </div>

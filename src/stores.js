@@ -11,24 +11,24 @@ const createWritableStore = (key, startValue) => {
         useLocalStorage: () => {
             const json = store.get(key);
 
-           if(key === 'instruments' && json){
-               let updateable = [...json]
+            if (key === 'instruments' && json) {
+                let updateable = [...json]
 
-               for (let instrSet of updateable) {
-                   if(instrSet.instruments.length < 1) continue;
-                   for (let instr of instrSet.instruments){
+                for (let instrSet of updateable) {
+                    if (instrSet.instruments.length < 1) continue;
+                    for (let instr of instrSet.instruments) {
 
-                       let instrumentData = Soundfont.instrument(ac, instr.name, {
-                           soundfont: instr.soundfont
-                       });
+                        let instrumentData = Soundfont.instrument(ac, instr.name, {
+                            soundfont: instr.soundfont
+                        });
 
-                       instr.data = instrumentData;
+                        instr.data = instrumentData;
 
-                   }
-               }
+                    }
+                }
 
-               set(updateable);
-           }
+                set(updateable);
+            }
 
             // const json = localStorage.getItem(key);
             if (json) {
@@ -163,11 +163,13 @@ export const keysDown = writable(
 
 export let ac = new AudioContext();
 
-export const currentSoundFont = createWritableStore('currentSoundFont',soundFont.fatboy);
-export const activeSet = createWritableStore('activeSet',0);
-export const volume = createWritableStore('volume',25);
-export const octaveShift = createWritableStore('octaveShift',0);
-export const showAdsr = createWritableStore('showAdsr',false);
+export const currentSoundFont = createWritableStore('currentSoundFont', soundFont.fatboy);
+export const activeSet = createWritableStore('activeSet', 0);
+export const volume = createWritableStore('volume', 25);
+export const octaveShift = createWritableStore('octaveShift', 0);
+export const showAdsr = createWritableStore('showAdsr', false);
+export const editMode = createWritableStore('editMode', false);
+export const theme = createWritableStore('theme', 0);
 export const isFocused = writable(false);
 
 export const instrumentSets = createWritableStore('instruments',
