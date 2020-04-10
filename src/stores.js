@@ -170,48 +170,13 @@ export const octaveShift = createWritableStore('octaveShift', 0);
 export const showAdsr = createWritableStore('showAdsr', false);
 export const editMode = createWritableStore('editMode', false);
 export const theme = createWritableStore('theme', 0);
+export const isReordering = createWritableStore('isReordering', false);
 export const isFocused = writable(false);
 
 export const instrumentSets = createWritableStore('instruments',
     [
         {
             name: 'Set 1',
-            instruments: []
-        },
-        {
-            name: 'Set 2',
-            instruments: []
-        },
-        {
-            name: 'Set 3',
-            instruments: []
-        },
-        {
-            name: 'Set 4',
-            instruments: []
-        },
-        {
-            name: 'Set 5',
-            instruments: []
-        },
-        {
-            name: 'Set 6',
-            instruments: []
-        },
-        {
-            name: 'Set 7',
-            instruments: []
-        },
-        {
-            name: 'Set 8',
-            instruments: []
-        },
-        {
-            name: 'Set 9',
-            instruments: []
-        },
-        {
-            name: 'Set 10',
             instruments: []
         }
     ]

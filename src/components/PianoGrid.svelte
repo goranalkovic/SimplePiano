@@ -122,6 +122,6 @@
   </div>
 
   {#if $editMode}
-    <p class="edit-mode-warn" transition:fade>Editing mode</p>
+    <p class="edit-mode-warn" transition:fade>Edit mode</p>
   {/if}
 </div>

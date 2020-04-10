@@ -3,6 +3,8 @@
   export let style = null;
   export let outline = false;
   export let toggled = false;
+  export let active = false;
+  export let rectangular = false;
 </script>
 
 <style>
@@ -18,7 +20,8 @@
     font-family: var(--font-family);
   }
 
-  button:hover {
+  button:hover,
+  button.active {
     /*font-weight: 600;*/
     background: var(--accent-color);
     color: var(--black-key-color);
@@ -32,7 +35,8 @@
     box-shadow: none;
   }
 
-  button.outline:hover {
+  button.outline:hover,
+  button.outline.active {
     background: var(--accent-color);
     color: var(--black-key-color);
     border: 1px solid var(--accent-color);
@@ -58,8 +62,19 @@
   button.outline.toggled:hover {
     border: 1px solid rgba(var(--body-text-values), 0.6);
   }
+
+  button.rectangular {
+    border-radius: 0;
+  }
 </style>
 
-<button class:spaced class:outline class:toggled {style} on:click>
+<button
+  class:spaced
+  class:outline
+  class:toggled
+  class:active
+  class:rectangular
+  {style}
+  on:click>
   <slot />
 </button>

@@ -1,4 +1,5 @@
 <script>
+  import { slide } from "svelte/transition";
   import {
     soundFont,
     currentSoundFont,
@@ -7,10 +8,12 @@
     showAdsr,
     isFocused,
     activeSet,
-    editMode
+    editMode,
+    isReordering
   } from "../stores";
 
   import Button from "./Button.svelte";
+  import Toast from "./Toast.svelte";
 
   let selectedInstrument;
   let availInstruments = [];
@@ -25,11 +28,15 @@
         );
 
   async function getInstruments() {
-    let data = await fetch(
-      `https://gleitz.github.io/midi-js-soundfonts/${$currentSoundFont}/names.json`
-    );
-    availInstruments = await data.json();
-    selectedInstrument = availInstruments[0];
+    try {
+      let data = await fetch(
+        `https://gleitz.github.io/midi-js-soundfonts/${$currentSoundFont}/names.json`
+      );
+      availInstruments = await data.json();
+      selectedInstrument = availInstruments[0];
+    } catch (error) {
+      window.popToast("Error loading instruments: " + error.message);
+    }
   }
 
   getInstruments();
@@ -114,7 +121,8 @@
   }
 
   h4 {
-    margin-bottom: 0.8rem;
+    margin: 0;
+    padding: 0.8rem 0;
   }
 
   select {
@@ -187,6 +195,38 @@
     opacity: 0.2;
     pointer-events: none;
   }
+
+  ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    width: 7rem;
+    border-radius: 3px;
+    box-shadow: var(--shadow-small);
+    width: 12rem;
+    background: var(--white-key-color);
+  }
+
+  li {
+    font-size: 0.85rem;
+    padding: 0.5rem 0.8rem;
+    transition: var(--transition);
+  }
+
+  li:hover {
+    background: rgba(var(--body-text-values), 0.06);
+    cursor: pointer;
+  }
+
+  .info-msg {
+    font-size: 0.85rem;
+    line-height: 150%;
+    transform: translateY(-10px);
+  }
+
+  .info-msg span {
+    font-weight: bold;
+  }
 </style>
 
 <div class="column" class:transparent={!$editMode}>
@@ -203,14 +243,21 @@
       bind:value={filterString} />
 
     <div class="scrollList">
-      {#each filteredList as item (item)}
-        <Button
-          style="width: 12rem; height: 2rem; margin-bottom: 0.4rem; text-align:
-          left;"
-          on:click={e => addPickedInstrument(item)}>
-          {normalizeInstrumentName(item)}
-        </Button>
-      {/each}
+      {#if filteredList.length > 0}
+        <ul transition:slide={{ duration: 200 }}>
+          {#each filteredList as item (item)}
+            <li on:click={e => addPickedInstrument(item)}>
+              {normalizeInstrumentName(item)}
+            </li>
+          {/each}
+        </ul>
+      {:else}
+        <p class="info-msg" transition:slide={{ duration: 200 }}>
+          No instruments match
+          <br />
+          <span>{filterString}</span>
+        </p>
+      {/if}
     </div>
 
   </div>
@@ -229,3 +276,5 @@
     </div>
   </div>
 </div>
+
+<Toast />

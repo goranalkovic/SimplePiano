@@ -9,7 +9,10 @@
   export let keyboardKeys = null;
   export let customValueDisplay = null;
 
-  $: formattedValue = (customValueDisplay != null && customValueDisplay[value] != null) ? customValueDisplay[value] : value;
+  $: formattedValue =
+    customValueDisplay != null && customValueDisplay[value] != null
+      ? customValueDisplay[value]
+      : value;
 
   let hovering = false;
 </script>
@@ -27,6 +30,7 @@
     margin-bottom: 0.4rem;
     margin-left: 0.05rem;
     font-size: 0.9rem;
+    transform: translateY(-2px);
   }
 
   .value {
@@ -84,8 +88,8 @@
   }
 </style>
 
-<div class="slide-ctrl" >
-  <label  >
+<div class="slide-ctrl">
+  <label>
     <span class="title">{title}</span>
     <input type="range" {min} {max} {step} bind:value on:change />
     <span class="value">{formattedValue}</span>

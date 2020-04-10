@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
 
   import Button from "./components/Button.svelte";
   import TitleBar from "./components/TitleBar.svelte";
@@ -9,6 +9,7 @@
   import SetList from "./components/SetList.svelte";
   import InstrumentList from "./components/InstrumentList.svelte";
   import ThemeSwitcher from "./components/ThemeSwitcher.svelte";
+  import Toast from "./components/Toast.svelte";
 
   import {
     soundFont,
@@ -26,7 +27,8 @@
     isFocused,
     showAdsr,
     editMode,
-    theme
+    theme,
+    isReordering
   } from "./stores.js";
 
   import Soundfont from "soundfont-player";
@@ -39,6 +41,7 @@
   octaveShift.useLocalStorage();
   editMode.useLocalStorage();
   theme.useLocalStorage();
+  isReordering.useLocalStorage();
 
   $: themeName = $theme === 0 ? "Auto" : $theme === 1 ? "Light" : "Dark";
 
@@ -49,30 +52,24 @@
   }
 
   function stopAllSounds() {
-    if ($instrumentSets[$activeSet].instruments.length < 1) return;
+    try {
+      if ($instrumentSets[$activeSet].instruments.length < 1) return;
 
-    for (let instr of $instrumentSets[$activeSet].instruments) {
-      console.log(instr);
-      instr.data.then(k => {
-        k.stop();
-      });
-    }
+      for (let instr of $instrumentSets[$activeSet].instruments) {
+        console.log(instr);
+        instr.data.then(k => {
+          k.stop();
+        });
+      }
 
-    for (let i in keyCodes) {
-      document
-        .querySelector("#" + keyCodes[i])
-        .classList.remove("piano-key-highlight");
-    }
-  }
+      for (let i in keyCodes) {
+        document
+          .querySelector("#" + keyCodes[i])
+          .classList.remove("piano-key-highlight");
+      }
 
-  function switchDark() {
-    theme.set($theme++);
-
-    if ($theme === 3) {
-      theme.set(0);
-    }
-
-    applyTheme();
+      window.pushToast("Stopped all sounds", "error");
+    } catch (error) {}
   }
 
   function applyTheme() {
@@ -85,13 +82,14 @@
     } else {
       document.querySelector("html").className = "";
     }
-
-    // console.log(`Current theme: ${themeName}`);
   }
 
   function toggleEditMode() {
     editMode.set(!$editMode);
     instrumentSets.set([...$instrumentSets]);
+    if ($editMode === false) isReordering.set(false);
+
+    window.pushToast("Edit mode " + ($editMode ? "on" : "off"));
   }
 
   function handleKeyDown(e) {
@@ -143,19 +141,23 @@
           12 * adjustedOctShift
         ).toString();
 
-        let inst = instr.play(note, ac.currentTime, {
-          loop: true,
-          adsr: newAdsr,
-          gain: vol
-        });
-        if ($keysPressed[kCode].indexOf(inst) === -1) {
-          let currentPressed = $keysPressed[kCode];
+        try {
+          let inst = instr.play(note, ac.currentTime, {
+            loop: true,
+            adsr: newAdsr,
+            gain: vol
+          });
+          if ($keysPressed[kCode].indexOf(inst) === -1) {
+            let currentPressed = $keysPressed[kCode];
 
-          $keysPressed[kCode] = [...currentPressed, inst];
-          // keysPressed.update(kp => {
-          //   kp[kCode] = [...currentPressed, inst];
-          //   return kp;
-          // });
+            $keysPressed[kCode] = [...currentPressed, inst];
+            // keysPressed.update(kp => {
+            //   kp[kCode] = [...currentPressed, inst];
+            //   return kp;
+            // });
+          }
+        } catch (error) {
+          window.popToast("Error: " + error.message);
         }
       });
     }
@@ -171,8 +173,6 @@
 
     let kCode = e.keyCode;
 
-    // alert(kCode);
-
     if (kCode >= 48 && kCode <= 58) {
       stopAllSounds();
 
@@ -182,7 +182,8 @@
         newCode = 9;
       }
 
-      activeSet.set(newCode);
+      if ($instrumentSets[newCode] != undefined) activeSet.set(newCode);
+      else activeSet.set(0);
     }
 
     if (kCode === 16) {
@@ -265,10 +266,24 @@
   }
 
   onMount(() => {
-    applyTheme();
     let colorSchemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
     colorSchemeQuery.addEventListener("change", applyTheme);
+
+    applyTheme();
+
+    for (let set of $instrumentSets) {
+      if (set.id == null) {
+        set.id = randId();
+      }
+    }
   });
+
+  function randId() {
+    return Math.random()
+      .toString(36)
+      .replace(/[^a-z]+/g, "")
+      .substr(2, 10);
+  }
 </script>
 
 <style>
@@ -276,8 +291,7 @@
     display: flex;
   }
 
-  h3,
-  h4 {
+  h3 {
     font-weight: 400;
   }
 </style>
@@ -289,9 +303,10 @@
 
     <Button on:click={stopAllSounds}>Stop all sounds</Button>
     <Button spaced toggled={$editMode} on:click={toggleEditMode}>
-      Editing mode
+      Edit mode
     </Button>
-    <Button spaced on:click={switchDark}>{themeName} theme</Button>
+    <!-- <Button spaced on:click={switchDark}>{themeName} theme</Button> -->
+    <ThemeSwitcher />
   </TitleBar>
 
   <Controls />
@@ -307,3 +322,5 @@
 </div>
 
 <svelte:window on:keydown={handleKeyDown} on:keyup={handleKeyUp} />
+
+<Toast />

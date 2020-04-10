@@ -68,29 +68,6 @@
     text-align: right;
   }
 
-  .keyboard-key {
-    font-family: "Inter", sans-serif;
-    font-size: 0.9rem;
-    line-height: 1.3rem;
-    text-align: left;
-
-    border-radius: var(--border-radius);
-    border: 1px solid rgba(var(--body-text-values), 0.4);
-
-    height: 1.4rem;
-    width: 2.4rem;
-
-    padding: 0 0 0 0.3rem;
-    margin: 0 0.4rem;
-  }
-
-  .keyboard-key.square {
-    width: 1.4rem;
-    text-align: center;
-    padding: 0;
-    transform: scale(0.8);
-  }
-
   .inter-key {
     display: block;
     font-family: "Inter", sans-serif;

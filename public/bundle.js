@@ -1,5 +1,5 @@
 
-(function(l, i, v, e) { v = l.createElement(i); v.async = 1; v.src = '//' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1'; e = l.getElementsByTagName(i)[0]; e.parentNode.insertBefore(v, e)})(document, 'script');
+(function(l, r) { if (l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (window.location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.head.appendChild(r) })(window.document);
 var app = (function () {
     'use strict';
 
@@ -32,61 +32,82 @@ var app = (function () {
         return a != a ? b == b : a !== b || ((a && typeof a === 'object') || typeof a === 'function');
     }
     function validate_store(store, name) {
-        if (!store || typeof store.subscribe !== 'function') {
+        if (store != null && typeof store.subscribe !== 'function') {
             throw new Error(`'${name}' is not a store with a 'subscribe' method`);
         }
     }
-    function subscribe(component, store, callback) {
-        const unsub = store.subscribe(callback);
-        component.$$.on_destroy.push(unsub.unsubscribe
-            ? () => unsub.unsubscribe()
-            : unsub);
+    function subscribe(store, ...callbacks) {
+        if (store == null) {
+            return noop;
+        }
+        const unsub = store.subscribe(...callbacks);
+        return unsub.unsubscribe ? () => unsub.unsubscribe() : unsub;
     }
-    function create_slot(definition, ctx, fn) {
+    function component_subscribe(component, store, callback) {
+        component.$$.on_destroy.push(subscribe(store, callback));
+    }
+    function create_slot(definition, ctx, $$scope, fn) {
         if (definition) {
-            const slot_ctx = get_slot_context(definition, ctx, fn);
+            const slot_ctx = get_slot_context(definition, ctx, $$scope, fn);
             return definition[0](slot_ctx);
         }
     }
-    function get_slot_context(definition, ctx, fn) {
-        return definition[1]
-            ? assign({}, assign(ctx.$$scope.ctx, definition[1](fn ? fn(ctx) : {})))
-            : ctx.$$scope.ctx;
+    function get_slot_context(definition, ctx, $$scope, fn) {
+        return definition[1] && fn
+            ? assign($$scope.ctx.slice(), definition[1](fn(ctx)))
+            : $$scope.ctx;
     }
-    function get_slot_changes(definition, ctx, changed, fn) {
-        return definition[1]
-            ? assign({}, assign(ctx.$$scope.changed || {}, definition[1](fn ? fn(changed) : {})))
-            : ctx.$$scope.changed || {};
+    function get_slot_changes(definition, $$scope, dirty, fn) {
+        if (definition[2] && fn) {
+            const lets = definition[2](fn(dirty));
+            if ($$scope.dirty === undefined) {
+                return lets;
+            }
+            if (typeof lets === 'object') {
+                const merged = [];
+                const len = Math.max($$scope.dirty.length, lets.length);
+                for (let i = 0; i < len; i += 1) {
+                    merged[i] = $$scope.dirty[i] | lets[i];
+                }
+                return merged;
+            }
+            return $$scope.dirty | lets;
+        }
+        return $$scope.dirty;
+    }
+    function set_store_value(store, ret, value = ret) {
+        store.set(value);
+        return ret;
     }
 
     const is_client = typeof window !== 'undefined';
     let now = is_client
         ? () => window.performance.now()
         : () => Date.now();
-    let raf = cb => requestAnimationFrame(cb);
+    let raf = is_client ? cb => requestAnimationFrame(cb) : noop;
 
     const tasks = new Set();
-    let running = false;
-    function run_tasks() {
+    function run_tasks(now) {
         tasks.forEach(task => {
-            if (!task[0](now())) {
+            if (!task.c(now)) {
                 tasks.delete(task);
-                task[1]();
+                task.f();
             }
         });
-        running = tasks.size > 0;
-        if (running)
+        if (tasks.size !== 0)
             raf(run_tasks);
     }
-    function loop(fn) {
+    /**
+     * Creates a new task that runs on each raf frame
+     * until it returns a falsy value or is aborted
+     */
+    function loop(callback) {
         let task;
-        if (!running) {
-            running = true;
+        if (tasks.size === 0)
             raf(run_tasks);
-        }
         return {
-            promise: new Promise(fulfil => {
-                tasks.add(task = [fn, fulfil]);
+            promise: new Promise(fulfill => {
+                tasks.add(task = { c: callback, f: fulfill });
             }),
             abort() {
                 tasks.delete(task);
@@ -128,7 +149,7 @@ var app = (function () {
     function attr(node, attribute, value) {
         if (value == null)
             node.removeAttribute(attribute);
-        else
+        else if (node.getAttribute(attribute) !== value)
             node.setAttribute(attribute, value);
     }
     function to_number(value) {
@@ -137,13 +158,13 @@ var app = (function () {
     function children(element) {
         return Array.from(element.childNodes);
     }
-    function set_data(text, data) {
-        data = '' + data;
-        if (text.data !== data)
-            text.data = data;
+    function set_input_value(input, value) {
+        if (value != null || input.value) {
+            input.value = value;
+        }
     }
-    function set_style(node, key, value) {
-        node.style.setProperty(key, value);
+    function set_style(node, key, value, important) {
+        node.style.setProperty(key, value, important ? 'important' : '');
     }
     function toggle_class(element, name, toggle) {
         element.classList[toggle ? 'add' : 'remove'](name);
@@ -153,10 +174,34 @@ var app = (function () {
         e.initCustomEvent(type, false, false, detail);
         return e;
     }
+    class HtmlTag {
+        constructor(html, anchor = null) {
+            this.e = element('div');
+            this.a = anchor;
+            this.u(html);
+        }
+        m(target, anchor = null) {
+            for (let i = 0; i < this.n.length; i += 1) {
+                insert(target, this.n[i], anchor);
+            }
+            this.t = target;
+        }
+        u(html) {
+            this.e.innerHTML = html;
+            this.n = Array.from(this.e.childNodes);
+        }
+        p(html) {
+            this.d();
+            this.u(html);
+            this.m(this.t, this.a);
+        }
+        d() {
+            this.n.forEach(detach);
+        }
+    }
 
-    let stylesheet;
+    const active_docs = new Set();
     let active = 0;
-    let current_rules = {};
     // https://github.com/darkskyapp/string-hash/blob/master/index.js
     function hash(str) {
         let hash = 5381;
@@ -174,12 +219,11 @@ var app = (function () {
         }
         const rule = keyframes + `100% {${fn(b, 1 - b)}}\n}`;
         const name = `__svelte_${hash(rule)}_${uid}`;
+        const doc = node.ownerDocument;
+        active_docs.add(doc);
+        const stylesheet = doc.__svelte_stylesheet || (doc.__svelte_stylesheet = doc.head.appendChild(element('style')).sheet);
+        const current_rules = doc.__svelte_rules || (doc.__svelte_rules = {});
         if (!current_rules[name]) {
-            if (!stylesheet) {
-                const style = element('style');
-                document.head.appendChild(style);
-                stylesheet = style.sheet;
-            }
             current_rules[name] = true;
             stylesheet.insertRule(`@keyframes ${name} ${rule}`, stylesheet.cssRules.length);
         }
@@ -189,24 +233,31 @@ var app = (function () {
         return name;
     }
     function delete_rule(node, name) {
-        node.style.animation = (node.style.animation || '')
-            .split(', ')
-            .filter(name
+        const previous = (node.style.animation || '').split(', ');
+        const next = previous.filter(name
             ? anim => anim.indexOf(name) < 0 // remove specific animation
             : anim => anim.indexOf('__svelte') === -1 // remove all Svelte animations
-        )
-            .join(', ');
-        if (name && !--active)
-            clear_rules();
+        );
+        const deleted = previous.length - next.length;
+        if (deleted) {
+            node.style.animation = next.join(', ');
+            active -= deleted;
+            if (!active)
+                clear_rules();
+        }
     }
     function clear_rules() {
         raf(() => {
             if (active)
                 return;
-            let i = stylesheet.cssRules.length;
-            while (i--)
-                stylesheet.deleteRule(i);
-            current_rules = {};
+            active_docs.forEach(doc => {
+                const stylesheet = doc.__svelte_stylesheet;
+                let i = stylesheet.cssRules.length;
+                while (i--)
+                    stylesheet.deleteRule(i);
+                doc.__svelte_rules = {};
+            });
+            active_docs.clear();
         });
     }
 
@@ -237,11 +288,11 @@ var app = (function () {
                 delete_rule(node, name);
             running = false;
         }
-        loop(now$$1 => {
-            if (!started && now$$1 >= start_time) {
+        loop(now => {
+            if (!started && now >= start_time) {
                 started = true;
             }
-            if (started && now$$1 >= end) {
+            if (started && now >= end) {
                 tick(1, 0);
                 stop();
             }
@@ -249,7 +300,7 @@ var app = (function () {
                 return false;
             }
             if (started) {
-                const p = now$$1 - start_time;
+                const p = now - start_time;
                 const t = 0 + 1 * easing(p / duration);
                 tick(t, 1 - t);
             }
@@ -291,6 +342,23 @@ var app = (function () {
     function onMount(fn) {
         get_current_component().$$.on_mount.push(fn);
     }
+    function onDestroy(fn) {
+        get_current_component().$$.on_destroy.push(fn);
+    }
+    function createEventDispatcher() {
+        const component = get_current_component();
+        return (type, detail) => {
+            const callbacks = component.$$.callbacks[type];
+            if (callbacks) {
+                // TODO are there situations where events could be dispatched
+                // in a server (non-DOM) environment?
+                const event = custom_event(type, detail);
+                callbacks.slice().forEach(fn => {
+                    fn.call(component, event);
+                });
+            }
+        };
+    }
     // TODO figure out if we still want to support
     // shorthand events, or if we want to implement
     // a real bubbling mechanism
@@ -319,16 +387,21 @@ var app = (function () {
     function add_flush_callback(fn) {
         flush_callbacks.push(fn);
     }
+    let flushing = false;
+    const seen_callbacks = new Set();
     function flush() {
-        const seen_callbacks = new Set();
+        if (flushing)
+            return;
+        flushing = true;
         do {
             // first, call beforeUpdate functions
             // and update components
-            while (dirty_components.length) {
-                const component = dirty_components.shift();
+            for (let i = 0; i < dirty_components.length; i += 1) {
+                const component = dirty_components[i];
                 set_current_component(component);
                 update(component.$$);
             }
+            dirty_components.length = 0;
             while (binding_callbacks.length)
                 binding_callbacks.pop()();
             // then, once components are updated, call
@@ -337,9 +410,9 @@ var app = (function () {
             for (let i = 0; i < render_callbacks.length; i += 1) {
                 const callback = render_callbacks[i];
                 if (!seen_callbacks.has(callback)) {
-                    callback();
                     // ...so guard against infinite loops
                     seen_callbacks.add(callback);
+                    callback();
                 }
             }
             render_callbacks.length = 0;
@@ -348,13 +421,16 @@ var app = (function () {
             flush_callbacks.pop()();
         }
         update_scheduled = false;
+        flushing = false;
+        seen_callbacks.clear();
     }
     function update($$) {
-        if ($$.fragment) {
-            $$.update($$.dirty);
+        if ($$.fragment !== null) {
+            $$.update();
             run_all($$.before_update);
-            $$.fragment.p($$.dirty, $$.ctx);
-            $$.dirty = null;
+            const dirty = $$.dirty;
+            $$.dirty = [-1];
+            $$.fragment && $$.fragment.p($$.ctx, dirty);
             $$.after_update.forEach(add_render_callback);
         }
     }
@@ -376,14 +452,16 @@ var app = (function () {
     let outros;
     function group_outros() {
         outros = {
-            remaining: 0,
-            callbacks: []
+            r: 0,
+            c: [],
+            p: outros // parent group
         };
     }
     function check_outros() {
-        if (!outros.remaining) {
-            run_all(outros.callbacks);
+        if (!outros.r) {
+            run_all(outros.c);
         }
+        outros = outros.p;
     }
     function transition_in(block, local) {
         if (block && block.i) {
@@ -391,20 +469,140 @@ var app = (function () {
             block.i(local);
         }
     }
-    function transition_out(block, local, callback) {
+    function transition_out(block, local, detach, callback) {
         if (block && block.o) {
             if (outroing.has(block))
                 return;
             outroing.add(block);
-            outros.callbacks.push(() => {
+            outros.c.push(() => {
                 outroing.delete(block);
                 if (callback) {
-                    block.d(1);
+                    if (detach)
+                        block.d(1);
                     callback();
                 }
             });
             block.o(local);
         }
+    }
+    const null_transition = { duration: 0 };
+    function create_in_transition(node, fn, params) {
+        let config = fn(node, params);
+        let running = false;
+        let animation_name;
+        let task;
+        let uid = 0;
+        function cleanup() {
+            if (animation_name)
+                delete_rule(node, animation_name);
+        }
+        function go() {
+            const { delay = 0, duration = 300, easing = identity, tick = noop, css } = config || null_transition;
+            if (css)
+                animation_name = create_rule(node, 0, 1, duration, delay, easing, css, uid++);
+            tick(0, 1);
+            const start_time = now() + delay;
+            const end_time = start_time + duration;
+            if (task)
+                task.abort();
+            running = true;
+            add_render_callback(() => dispatch(node, true, 'start'));
+            task = loop(now => {
+                if (running) {
+                    if (now >= end_time) {
+                        tick(1, 0);
+                        dispatch(node, true, 'end');
+                        cleanup();
+                        return running = false;
+                    }
+                    if (now >= start_time) {
+                        const t = easing((now - start_time) / duration);
+                        tick(t, 1 - t);
+                    }
+                }
+                return running;
+            });
+        }
+        let started = false;
+        return {
+            start() {
+                if (started)
+                    return;
+                delete_rule(node);
+                if (is_function(config)) {
+                    config = config();
+                    wait().then(go);
+                }
+                else {
+                    go();
+                }
+            },
+            invalidate() {
+                started = false;
+            },
+            end() {
+                if (running) {
+                    cleanup();
+                    running = false;
+                }
+            }
+        };
+    }
+    function create_out_transition(node, fn, params) {
+        let config = fn(node, params);
+        let running = true;
+        let animation_name;
+        const group = outros;
+        group.r += 1;
+        function go() {
+            const { delay = 0, duration = 300, easing = identity, tick = noop, css } = config || null_transition;
+            if (css)
+                animation_name = create_rule(node, 1, 0, duration, delay, easing, css);
+            const start_time = now() + delay;
+            const end_time = start_time + duration;
+            add_render_callback(() => dispatch(node, false, 'start'));
+            loop(now => {
+                if (running) {
+                    if (now >= end_time) {
+                        tick(0, 1);
+                        dispatch(node, false, 'end');
+                        if (!--group.r) {
+                            // this will result in `end()` being called,
+                            // so we don't need to clean up here
+                            run_all(group.c);
+                        }
+                        return false;
+                    }
+                    if (now >= start_time) {
+                        const t = easing((now - start_time) / duration);
+                        tick(1 - t, t);
+                    }
+                }
+                return running;
+            });
+        }
+        if (is_function(config)) {
+            wait().then(() => {
+                // @ts-ignore
+                config = config();
+                go();
+            });
+        }
+        else {
+            go();
+        }
+        return {
+            end(reset) {
+                if (reset && config.tick) {
+                    config.tick(1, 0);
+                }
+                if (running) {
+                    if (animation_name)
+                        delete_rule(node, animation_name);
+                    running = false;
+                }
+            }
+        };
     }
     function create_bidirectional_transition(node, fn, params, intro) {
         let config = fn(node, params);
@@ -430,7 +628,7 @@ var app = (function () {
             };
         }
         function go(b) {
-            const { delay = 0, duration = 300, easing = identity, tick: tick$$1 = noop, css } = config;
+            const { delay = 0, duration = 300, easing = identity, tick = noop, css } = config || null_transition;
             const program = {
                 start: now() + delay,
                 b
@@ -438,7 +636,7 @@ var app = (function () {
             if (!b) {
                 // @ts-ignore todo: improve typings
                 program.group = outros;
-                outros.remaining += 1;
+                outros.r += 1;
             }
             if (running_program) {
                 pending_program = program;
@@ -451,11 +649,11 @@ var app = (function () {
                     animation_name = create_rule(node, t, b, duration, delay, easing, css);
                 }
                 if (b)
-                    tick$$1(0, 1);
+                    tick(0, 1);
                 running_program = init(program, duration);
                 add_render_callback(() => dispatch(node, b, 'start'));
-                loop(now$$1 => {
-                    if (pending_program && now$$1 > pending_program.start) {
+                loop(now => {
+                    if (pending_program && now > pending_program.start) {
                         running_program = init(pending_program, duration);
                         pending_program = null;
                         dispatch(node, running_program.b, 'start');
@@ -465,8 +663,8 @@ var app = (function () {
                         }
                     }
                     if (running_program) {
-                        if (now$$1 >= running_program.end) {
-                            tick$$1(t = running_program.b, 1 - t);
+                        if (now >= running_program.end) {
+                            tick(t = running_program.b, 1 - t);
                             dispatch(node, running_program.b, 'end');
                             if (!pending_program) {
                                 // we're done
@@ -476,16 +674,16 @@ var app = (function () {
                                 }
                                 else {
                                     // outro — needs to be coordinated
-                                    if (!--running_program.group.remaining)
-                                        run_all(running_program.group.callbacks);
+                                    if (!--running_program.group.r)
+                                        run_all(running_program.group.c);
                                 }
                             }
                             running_program = null;
                         }
-                        else if (now$$1 >= running_program.start) {
-                            const p = now$$1 - running_program.start;
+                        else if (now >= running_program.start) {
+                            const p = now - running_program.start;
                             t = running_program.a + running_program.d * easing(p / running_program.duration);
-                            tick$$1(t, 1 - t);
+                            tick(t, 1 - t);
                         }
                     }
                     return !!(running_program || pending_program);
@@ -513,8 +711,13 @@ var app = (function () {
     }
 
     const globals = (typeof window !== 'undefined' ? window : global);
+
+    function destroy_block(block, lookup) {
+        block.d(1);
+        lookup.delete(block.key);
+    }
     function outro_and_destroy_block(block, lookup) {
-        transition_out(block, 1, () => {
+        transition_out(block, 1, 1, () => {
             lookup.delete(block.key);
         });
     }
@@ -522,7 +725,7 @@ var app = (function () {
         block.f();
         outro_and_destroy_block(block, lookup);
     }
-    function update_keyed_each(old_blocks, changed, get_key, dynamic, ctx, list, lookup, node, destroy, create_each_block, next, get_context) {
+    function update_keyed_each(old_blocks, dirty, get_key, dynamic, ctx, list, lookup, node, destroy, create_each_block, next, get_context) {
         let o = old_blocks.length;
         let n = list.length;
         let i = o;
@@ -542,7 +745,7 @@ var app = (function () {
                 block.c();
             }
             else if (dynamic) {
-                block.p(changed, child_ctx);
+                block.p(child_ctx, dirty);
             }
             new_lookup.set(key, new_blocks[i] = block);
             if (key in old_indexes)
@@ -552,7 +755,7 @@ var app = (function () {
         const did_move = new Set();
         function insert(block) {
             transition_in(block, 1);
-            block.m(node, next);
+            block.m(node, next, lookup.has(block.key));
             lookup.set(block.key, block);
             next = block.first;
             n--;
@@ -597,6 +800,16 @@ var app = (function () {
             insert(new_blocks[n - 1]);
         return new_blocks;
     }
+    function validate_each_keys(ctx, list, get_context, get_key) {
+        const keys = new Set();
+        for (let i = 0; i < list.length; i++) {
+            const key = get_key(get_context(ctx, list, i));
+            if (keys.has(key)) {
+                throw new Error(`Cannot have duplicate keys in a keyed each`);
+            }
+            keys.add(key);
+        }
+    }
 
     function get_spread_update(levels, updates) {
         const update = {};
@@ -631,16 +844,23 @@ var app = (function () {
         }
         return update;
     }
+    function get_spread_object(spread_props) {
+        return typeof spread_props === 'object' && spread_props !== null ? spread_props : {};
+    }
 
     function bind(component, name, callback) {
-        if (component.$$.props.indexOf(name) === -1)
-            return;
-        component.$$.bound[name] = callback;
-        callback(component.$$.ctx[name]);
+        const index = component.$$.props[name];
+        if (index !== undefined) {
+            component.$$.bound[index] = callback;
+            callback(component.$$.ctx[index]);
+        }
+    }
+    function create_component(block) {
+        block && block.c();
     }
     function mount_component(component, target, anchor) {
         const { fragment, on_mount, on_destroy, after_update } = component.$$;
-        fragment.m(target, anchor);
+        fragment && fragment.m(target, anchor);
         // onMount happens before the initial afterUpdate
         add_render_callback(() => {
             const new_on_destroy = on_mount.map(run).filter(is_function);
@@ -657,34 +877,35 @@ var app = (function () {
         after_update.forEach(add_render_callback);
     }
     function destroy_component(component, detaching) {
-        if (component.$$.fragment) {
-            run_all(component.$$.on_destroy);
-            component.$$.fragment.d(detaching);
+        const $$ = component.$$;
+        if ($$.fragment !== null) {
+            run_all($$.on_destroy);
+            $$.fragment && $$.fragment.d(detaching);
             // TODO null out other refs, including component.$$ (but need to
             // preserve final state?)
-            component.$$.on_destroy = component.$$.fragment = null;
-            component.$$.ctx = {};
+            $$.on_destroy = $$.fragment = null;
+            $$.ctx = [];
         }
     }
-    function make_dirty(component, key) {
-        if (!component.$$.dirty) {
+    function make_dirty(component, i) {
+        if (component.$$.dirty[0] === -1) {
             dirty_components.push(component);
             schedule_update();
-            component.$$.dirty = blank_object();
+            component.$$.dirty.fill(0);
         }
-        component.$$.dirty[key] = true;
+        component.$$.dirty[(i / 31) | 0] |= (1 << (i % 31));
     }
-    function init(component, options, instance, create_fragment, not_equal$$1, prop_names) {
+    function init(component, options, instance, create_fragment, not_equal, props, dirty = [-1]) {
         const parent_component = current_component;
         set_current_component(component);
-        const props = options.props || {};
+        const prop_values = options.props || {};
         const $$ = component.$$ = {
             fragment: null,
             ctx: null,
             // state
-            props: prop_names,
+            props,
             update: noop,
-            not_equal: not_equal$$1,
+            not_equal,
             bound: blank_object(),
             // lifecycle
             on_mount: [],
@@ -694,31 +915,36 @@ var app = (function () {
             context: new Map(parent_component ? parent_component.$$.context : []),
             // everything else
             callbacks: blank_object(),
-            dirty: null
+            dirty
         };
         let ready = false;
         $$.ctx = instance
-            ? instance(component, props, (key, value) => {
-                if ($$.ctx && not_equal$$1($$.ctx[key], $$.ctx[key] = value)) {
-                    if ($$.bound[key])
-                        $$.bound[key](value);
+            ? instance(component, prop_values, (i, ret, ...rest) => {
+                const value = rest.length ? rest[0] : ret;
+                if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
+                    if ($$.bound[i])
+                        $$.bound[i](value);
                     if (ready)
-                        make_dirty(component, key);
+                        make_dirty(component, i);
                 }
+                return ret;
             })
-            : props;
+            : [];
         $$.update();
         ready = true;
         run_all($$.before_update);
-        $$.fragment = create_fragment($$.ctx);
+        // `false` as a special case of no DOM component
+        $$.fragment = create_fragment ? create_fragment($$.ctx) : false;
         if (options.target) {
             if (options.hydrate) {
+                const nodes = children(options.target);
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                $$.fragment.l(children(options.target));
+                $$.fragment && $$.fragment.l(nodes);
+                nodes.forEach(detach);
             }
             else {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                $$.fragment.c();
+                $$.fragment && $$.fragment.c();
             }
             if (options.intro)
                 transition_in(component.$$.fragment);
@@ -745,6 +971,69 @@ var app = (function () {
             // overridden by instance, if it has props
         }
     }
+
+    function dispatch_dev(type, detail) {
+        document.dispatchEvent(custom_event(type, Object.assign({ version: '3.20.1' }, detail)));
+    }
+    function append_dev(target, node) {
+        dispatch_dev("SvelteDOMInsert", { target, node });
+        append(target, node);
+    }
+    function insert_dev(target, node, anchor) {
+        dispatch_dev("SvelteDOMInsert", { target, node, anchor });
+        insert(target, node, anchor);
+    }
+    function detach_dev(node) {
+        dispatch_dev("SvelteDOMRemove", { node });
+        detach(node);
+    }
+    function listen_dev(node, event, handler, options, has_prevent_default, has_stop_propagation) {
+        const modifiers = options === true ? ["capture"] : options ? Array.from(Object.keys(options)) : [];
+        if (has_prevent_default)
+            modifiers.push('preventDefault');
+        if (has_stop_propagation)
+            modifiers.push('stopPropagation');
+        dispatch_dev("SvelteDOMAddEventListener", { node, event, handler, modifiers });
+        const dispose = listen(node, event, handler, options);
+        return () => {
+            dispatch_dev("SvelteDOMRemoveEventListener", { node, event, handler, modifiers });
+            dispose();
+        };
+    }
+    function attr_dev(node, attribute, value) {
+        attr(node, attribute, value);
+        if (value == null)
+            dispatch_dev("SvelteDOMRemoveAttribute", { node, attribute });
+        else
+            dispatch_dev("SvelteDOMSetAttribute", { node, attribute, value });
+    }
+    function prop_dev(node, property, value) {
+        node[property] = value;
+        dispatch_dev("SvelteDOMSetProperty", { node, property, value });
+    }
+    function set_data_dev(text, data) {
+        data = '' + data;
+        if (text.data === data)
+            return;
+        dispatch_dev("SvelteDOMSetData", { node: text, data });
+        text.data = data;
+    }
+    function validate_each_argument(arg) {
+        if (typeof arg !== 'string' && !(arg && typeof arg === 'object' && 'length' in arg)) {
+            let msg = '{#each} only iterates over array-like objects.';
+            if (typeof Symbol === 'function' && arg && Symbol.iterator in arg) {
+                msg += ' You can use a spread to convert this iterable into an array.';
+            }
+            throw new Error(msg);
+        }
+    }
+    function validate_slots(name, slot, keys) {
+        for (const slot_key of Object.keys(slot)) {
+            if (!~keys.indexOf(slot_key)) {
+                console.warn(`<${name}> received an unexpected slot "${slot_key}".`);
+            }
+        }
+    }
     class SvelteComponentDev extends SvelteComponent {
         constructor(options) {
             if (!options || (!options.target && !options.$$inline)) {
@@ -758,129 +1047,190 @@ var app = (function () {
                 console.warn(`Component was already destroyed`); // eslint-disable-line no-console
             };
         }
+        $capture_state() { }
+        $inject_state() { }
     }
 
-    /* src\components\Button.svelte generated by Svelte v3.6.4 */
+    /* src\components\Button.svelte generated by Svelte v3.20.1 */
 
     const file = "src\\components\\Button.svelte";
 
     function create_fragment(ctx) {
-    	var button, current, dispose;
+    	let button;
+    	let current;
+    	let dispose;
+    	const default_slot_template = /*$$slots*/ ctx[7].default;
+    	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[6], null);
 
-    	const default_slot_1 = ctx.$$slots.default;
-    	const default_slot = create_slot(default_slot_1, ctx, null);
-
-    	return {
+    	const block = {
     		c: function create() {
     			button = element("button");
-
     			if (default_slot) default_slot.c();
-
-    			attr(button, "style", ctx.style);
-    			attr(button, "class", "svelte-ovzxow");
-    			toggle_class(button, "spaced", ctx.spaced);
-    			toggle_class(button, "outline", ctx.outline);
-    			toggle_class(button, "toggled", ctx.toggled);
-    			add_location(button, file, 62, 0, 1386);
-    			dispose = listen(button, "click", ctx.click_handler);
+    			attr_dev(button, "style", /*style*/ ctx[1]);
+    			attr_dev(button, "class", "svelte-9juz8s");
+    			toggle_class(button, "spaced", /*spaced*/ ctx[0]);
+    			toggle_class(button, "outline", /*outline*/ ctx[2]);
+    			toggle_class(button, "toggled", /*toggled*/ ctx[3]);
+    			toggle_class(button, "active", /*active*/ ctx[4]);
+    			toggle_class(button, "rectangular", /*rectangular*/ ctx[5]);
+    			add_location(button, file, 70, 0, 1549);
     		},
-
     		l: function claim(nodes) {
-    			if (default_slot) default_slot.l(button_nodes);
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, button, anchor);
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, button, anchor);
 
     			if (default_slot) {
     				default_slot.m(button, null);
     			}
 
     			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(button, "click", /*click_handler*/ ctx[8], false, false, false);
     		},
-
-    		p: function update(changed, ctx) {
-    			if (default_slot && default_slot.p && changed.$$scope) {
-    				default_slot.p(get_slot_changes(default_slot_1, ctx, changed, null), get_slot_context(default_slot_1, ctx, null));
+    		p: function update(ctx, [dirty]) {
+    			if (default_slot) {
+    				if (default_slot.p && dirty & /*$$scope*/ 64) {
+    					default_slot.p(get_slot_context(default_slot_template, ctx, /*$$scope*/ ctx[6], null), get_slot_changes(default_slot_template, /*$$scope*/ ctx[6], dirty, null));
+    				}
     			}
 
-    			if (!current || changed.style) {
-    				attr(button, "style", ctx.style);
+    			if (!current || dirty & /*style*/ 2) {
+    				attr_dev(button, "style", /*style*/ ctx[1]);
     			}
 
-    			if (changed.spaced) {
-    				toggle_class(button, "spaced", ctx.spaced);
+    			if (dirty & /*spaced*/ 1) {
+    				toggle_class(button, "spaced", /*spaced*/ ctx[0]);
     			}
 
-    			if (changed.outline) {
-    				toggle_class(button, "outline", ctx.outline);
+    			if (dirty & /*outline*/ 4) {
+    				toggle_class(button, "outline", /*outline*/ ctx[2]);
     			}
 
-    			if (changed.toggled) {
-    				toggle_class(button, "toggled", ctx.toggled);
+    			if (dirty & /*toggled*/ 8) {
+    				toggle_class(button, "toggled", /*toggled*/ ctx[3]);
+    			}
+
+    			if (dirty & /*active*/ 16) {
+    				toggle_class(button, "active", /*active*/ ctx[4]);
+    			}
+
+    			if (dirty & /*rectangular*/ 32) {
+    				toggle_class(button, "rectangular", /*rectangular*/ ctx[5]);
     			}
     		},
-
     		i: function intro(local) {
     			if (current) return;
     			transition_in(default_slot, local);
     			current = true;
     		},
-
     		o: function outro(local) {
     			transition_out(default_slot, local);
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(button);
-    			}
-
+    			if (detaching) detach_dev(button);
     			if (default_slot) default_slot.d(detaching);
     			dispose();
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
     }
 
     function instance($$self, $$props, $$invalidate) {
-    	let { spaced = false, style = null, outline = false, toggled = false } = $$props;
+    	let { spaced = false } = $$props;
+    	let { style = null } = $$props;
+    	let { outline = false } = $$props;
+    	let { toggled = false } = $$props;
+    	let { active = false } = $$props;
+    	let { rectangular = false } = $$props;
+    	const writable_props = ["spaced", "style", "outline", "toggled", "active", "rectangular"];
 
-    	const writable_props = ['spaced', 'style', 'outline', 'toggled'];
     	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Button> was created with unknown prop '${key}'`);
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Button> was created with unknown prop '${key}'`);
     	});
 
     	let { $$slots = {}, $$scope } = $$props;
+    	validate_slots("Button", $$slots, ['default']);
 
     	function click_handler(event) {
     		bubble($$self, event);
     	}
 
     	$$self.$set = $$props => {
-    		if ('spaced' in $$props) $$invalidate('spaced', spaced = $$props.spaced);
-    		if ('style' in $$props) $$invalidate('style', style = $$props.style);
-    		if ('outline' in $$props) $$invalidate('outline', outline = $$props.outline);
-    		if ('toggled' in $$props) $$invalidate('toggled', toggled = $$props.toggled);
-    		if ('$$scope' in $$props) $$invalidate('$$scope', $$scope = $$props.$$scope);
+    		if ("spaced" in $$props) $$invalidate(0, spaced = $$props.spaced);
+    		if ("style" in $$props) $$invalidate(1, style = $$props.style);
+    		if ("outline" in $$props) $$invalidate(2, outline = $$props.outline);
+    		if ("toggled" in $$props) $$invalidate(3, toggled = $$props.toggled);
+    		if ("active" in $$props) $$invalidate(4, active = $$props.active);
+    		if ("rectangular" in $$props) $$invalidate(5, rectangular = $$props.rectangular);
+    		if ("$$scope" in $$props) $$invalidate(6, $$scope = $$props.$$scope);
     	};
 
-    	return {
+    	$$self.$capture_state = () => ({
     		spaced,
     		style,
     		outline,
     		toggled,
-    		click_handler,
-    		$$slots,
-    		$$scope
+    		active,
+    		rectangular
+    	});
+
+    	$$self.$inject_state = $$props => {
+    		if ("spaced" in $$props) $$invalidate(0, spaced = $$props.spaced);
+    		if ("style" in $$props) $$invalidate(1, style = $$props.style);
+    		if ("outline" in $$props) $$invalidate(2, outline = $$props.outline);
+    		if ("toggled" in $$props) $$invalidate(3, toggled = $$props.toggled);
+    		if ("active" in $$props) $$invalidate(4, active = $$props.active);
+    		if ("rectangular" in $$props) $$invalidate(5, rectangular = $$props.rectangular);
     	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	return [
+    		spaced,
+    		style,
+    		outline,
+    		toggled,
+    		active,
+    		rectangular,
+    		$$scope,
+    		$$slots,
+    		click_handler
+    	];
     }
 
     class Button extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance, create_fragment, safe_not_equal, ["spaced", "style", "outline", "toggled"]);
+
+    		init(this, options, instance, create_fragment, safe_not_equal, {
+    			spaced: 0,
+    			style: 1,
+    			outline: 2,
+    			toggled: 3,
+    			active: 4,
+    			rectangular: 5
+    		});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "Button",
+    			options,
+    			id: create_fragment.name
+    		});
     	}
 
     	get spaced() {
@@ -914,56 +1264,64 @@ var app = (function () {
     	set toggled(value) {
     		throw new Error("<Button>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
+
+    	get active() {
+    		throw new Error("<Button>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set active(value) {
+    		throw new Error("<Button>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get rectangular() {
+    		throw new Error("<Button>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set rectangular(value) {
+    		throw new Error("<Button>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
     }
 
-    /* src\components\TitleBar.svelte generated by Svelte v3.6.4 */
+    /* src\components\TitleBar.svelte generated by Svelte v3.20.1 */
 
     const file$1 = "src\\components\\TitleBar.svelte";
-
-    const get_left_slot_changes = () => ({});
-    const get_left_slot_context = () => ({});
+    const get_left_slot_changes = dirty => ({});
+    const get_left_slot_context = ctx => ({});
 
     function create_fragment$1(ctx) {
-    	var div1, t, div0, current;
+    	let div1;
+    	let t;
+    	let div0;
+    	let current;
+    	const left_slot_template = /*$$slots*/ ctx[1].left;
+    	const left_slot = create_slot(left_slot_template, ctx, /*$$scope*/ ctx[0], get_left_slot_context);
+    	const default_slot_template = /*$$slots*/ ctx[1].default;
+    	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[0], null);
 
-    	const left_slot_1 = ctx.$$slots.left;
-    	const left_slot = create_slot(left_slot_1, ctx, get_left_slot_context);
-
-    	const default_slot_1 = ctx.$$slots.default;
-    	const default_slot = create_slot(default_slot_1, ctx, null);
-
-    	return {
+    	const block = {
     		c: function create() {
     			div1 = element("div");
-
     			if (left_slot) left_slot.c();
     			t = space();
     			div0 = element("div");
-
     			if (default_slot) default_slot.c();
-
-    			attr(div0, "class", "right svelte-16m5xgj");
+    			attr_dev(div0, "class", "right svelte-16m5xgj");
     			add_location(div0, file$1, 20, 4, 318);
-    			attr(div1, "class", "titlebar svelte-16m5xgj");
+    			attr_dev(div1, "class", "titlebar svelte-16m5xgj");
     			add_location(div1, file$1, 18, 0, 264);
     		},
-
     		l: function claim(nodes) {
-    			if (left_slot) left_slot.l(div1_nodes);
-
-    			if (default_slot) default_slot.l(div0_nodes);
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, div1, anchor);
+    			insert_dev(target, div1, anchor);
 
     			if (left_slot) {
     				left_slot.m(div1, null);
     			}
 
-    			append(div1, t);
-    			append(div1, div0);
+    			append_dev(div1, t);
+    			append_dev(div1, div0);
 
     			if (default_slot) {
     				default_slot.m(div0, null);
@@ -971,59 +1329,80 @@ var app = (function () {
 
     			current = true;
     		},
-
-    		p: function update(changed, ctx) {
-    			if (left_slot && left_slot.p && changed.$$scope) {
-    				left_slot.p(get_slot_changes(left_slot_1, ctx, changed, get_left_slot_changes), get_slot_context(left_slot_1, ctx, get_left_slot_context));
+    		p: function update(ctx, [dirty]) {
+    			if (left_slot) {
+    				if (left_slot.p && dirty & /*$$scope*/ 1) {
+    					left_slot.p(get_slot_context(left_slot_template, ctx, /*$$scope*/ ctx[0], get_left_slot_context), get_slot_changes(left_slot_template, /*$$scope*/ ctx[0], dirty, get_left_slot_changes));
+    				}
     			}
 
-    			if (default_slot && default_slot.p && changed.$$scope) {
-    				default_slot.p(get_slot_changes(default_slot_1, ctx, changed, null), get_slot_context(default_slot_1, ctx, null));
+    			if (default_slot) {
+    				if (default_slot.p && dirty & /*$$scope*/ 1) {
+    					default_slot.p(get_slot_context(default_slot_template, ctx, /*$$scope*/ ctx[0], null), get_slot_changes(default_slot_template, /*$$scope*/ ctx[0], dirty, null));
+    				}
     			}
     		},
-
     		i: function intro(local) {
     			if (current) return;
     			transition_in(left_slot, local);
     			transition_in(default_slot, local);
     			current = true;
     		},
-
     		o: function outro(local) {
     			transition_out(left_slot, local);
     			transition_out(default_slot, local);
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div1);
-    			}
-
+    			if (detaching) detach_dev(div1);
     			if (left_slot) left_slot.d(detaching);
-
     			if (default_slot) default_slot.d(detaching);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$1.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
     }
 
     function instance$1($$self, $$props, $$invalidate) {
+    	const writable_props = [];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<TitleBar> was created with unknown prop '${key}'`);
+    	});
+
     	let { $$slots = {}, $$scope } = $$props;
+    	validate_slots("TitleBar", $$slots, ['left','default']);
 
     	$$self.$set = $$props => {
-    		if ('$$scope' in $$props) $$invalidate('$$scope', $$scope = $$props.$$scope);
+    		if ("$$scope" in $$props) $$invalidate(0, $$scope = $$props.$$scope);
     	};
 
-    	return { $$slots, $$scope };
+    	return [$$scope, $$slots];
     }
 
     class TitleBar extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$1, create_fragment$1, safe_not_equal, []);
+    		init(this, options, instance$1, create_fragment$1, safe_not_equal, {});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "TitleBar",
+    			options,
+    			id: create_fragment$1.name
+    		});
     	}
     }
 
+    const subscriber_queue = [];
     /**
      * Create a `Writable` store that allows both updating and reading by subscription.
      * @param {*=}value initial value
@@ -1035,11 +1414,20 @@ var app = (function () {
         function set(new_value) {
             if (safe_not_equal(value, new_value)) {
                 value = new_value;
-                if (!stop) {
-                    return; // not ready
+                if (stop) { // store is ready
+                    const run_queue = !subscriber_queue.length;
+                    for (let i = 0; i < subscribers.length; i += 1) {
+                        const s = subscribers[i];
+                        s[1]();
+                        subscriber_queue.push(s, value);
+                    }
+                    if (run_queue) {
+                        for (let i = 0; i < subscriber_queue.length; i += 2) {
+                            subscriber_queue[i][0](subscriber_queue[i + 1]);
+                        }
+                        subscriber_queue.length = 0;
+                    }
                 }
-                subscribers.forEach((s) => s[1]());
-                subscribers.forEach((s) => s[0](value));
             }
         }
         function update(fn) {
@@ -4233,6 +4621,7 @@ var app = (function () {
     const showAdsr = createWritableStore('showAdsr', false);
     const editMode = createWritableStore('editMode', false);
     const theme = createWritableStore('theme', 0);
+    const isReordering = createWritableStore('isReordering', false);
     const isFocused = writable(false);
 
     const instrumentSets = createWritableStore('instruments',
@@ -4240,114 +4629,81 @@ var app = (function () {
             {
                 name: 'Set 1',
                 instruments: []
-            },
-            {
-                name: 'Set 2',
-                instruments: []
-            },
-            {
-                name: 'Set 3',
-                instruments: []
-            },
-            {
-                name: 'Set 4',
-                instruments: []
-            },
-            {
-                name: 'Set 5',
-                instruments: []
-            },
-            {
-                name: 'Set 6',
-                instruments: []
-            },
-            {
-                name: 'Set 7',
-                instruments: []
-            },
-            {
-                name: 'Set 8',
-                instruments: []
-            },
-            {
-                name: 'Set 9',
-                instruments: []
-            },
-            {
-                name: 'Set 10',
-                instruments: []
             }
         ]
     );
 
-    /* src\components\KeyboardKey.svelte generated by Svelte v3.6.4 */
+    /* src\components\KeyboardKey.svelte generated by Svelte v3.20.1 */
 
     const file$2 = "src\\components\\KeyboardKey.svelte";
 
-    // (107:2) {#if label}
+    // (84:2) {#if label}
     function create_if_block(ctx) {
-    	var span, t;
+    	let span;
+    	let t;
 
-    	return {
+    	const block = {
     		c: function create() {
     			span = element("span");
-    			t = text(ctx.label);
-    			attr(span, "class", "label svelte-1p2fjo8");
-    			add_location(span, file$2, 107, 4, 2070);
+    			t = text(/*label*/ ctx[0]);
+    			attr_dev(span, "class", "label svelte-9c8zy");
+    			add_location(span, file$2, 84, 4, 1610);
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, span, anchor);
-    			append(span, t);
+    			insert_dev(target, span, anchor);
+    			append_dev(span, t);
     		},
-
-    		p: function update(changed, ctx) {
-    			if (changed.label) {
-    				set_data(t, ctx.label);
-    			}
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*label*/ 1) set_data_dev(t, /*label*/ ctx[0]);
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(span);
-    			}
+    			if (detaching) detach_dev(span);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block.name,
+    		type: "if",
+    		source: "(84:2) {#if label}",
+    		ctx
+    	});
+
+    	return block;
     }
 
     function create_fragment$2(ctx) {
-    	var div, t, span, raw_value = ctx.convertToInter(ctx.key);
+    	let div;
+    	let t;
+    	let span;
+    	let raw_value = /*convertToInter*/ ctx[2](/*key*/ ctx[1]) + "";
+    	let if_block = /*label*/ ctx[0] && create_if_block(ctx);
 
-    	var if_block = (ctx.label) && create_if_block(ctx);
-
-    	return {
+    	const block = {
     		c: function create() {
     			div = element("div");
     			if (if_block) if_block.c();
     			t = space();
     			span = element("span");
-    			attr(span, "class", "inter-key svelte-1p2fjo8");
-    			add_location(span, file$2, 109, 2, 2117);
-    			attr(div, "class", "container svelte-1p2fjo8");
-    			add_location(div, file$2, 105, 0, 2026);
+    			attr_dev(span, "class", "inter-key svelte-9c8zy");
+    			add_location(span, file$2, 86, 2, 1657);
+    			attr_dev(div, "class", "container svelte-9c8zy");
+    			add_location(div, file$2, 82, 0, 1566);
     		},
-
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
+    			insert_dev(target, div, anchor);
     			if (if_block) if_block.m(div, null);
-    			append(div, t);
-    			append(div, span);
+    			append_dev(div, t);
+    			append_dev(div, span);
     			span.innerHTML = raw_value;
     		},
-
-    		p: function update(changed, ctx) {
-    			if (ctx.label) {
+    		p: function update(ctx, [dirty]) {
+    			if (/*label*/ ctx[0]) {
     				if (if_block) {
-    					if_block.p(changed, ctx);
+    					if_block.p(ctx, dirty);
     				} else {
     					if_block = create_if_block(ctx);
     					if_block.c();
@@ -4358,87 +4714,104 @@ var app = (function () {
     				if_block = null;
     			}
 
-    			if ((changed.key) && raw_value !== (raw_value = ctx.convertToInter(ctx.key))) {
-    				span.innerHTML = raw_value;
-    			}
-    		},
-
+    			if (dirty & /*key*/ 2 && raw_value !== (raw_value = /*convertToInter*/ ctx[2](/*key*/ ctx[1]) + "")) span.innerHTML = raw_value;		},
     		i: noop,
     		o: noop,
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div);
-    			}
-
+    			if (detaching) detach_dev(div);
     			if (if_block) if_block.d();
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$2.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
     }
 
     function instance$2($$self, $$props, $$invalidate) {
-    	let { label = null, key, square = false } = $$props;
+    	let { label = null } = $$props;
+    	let { key } = $$props;
+    	let { square = false } = $$props;
 
-      function convertToInter(key) {
-        switch (key) {
-          case 0:
-            return square ? "" : "⓪";
-            break;
-          case 1:
-            return square ? "" : "①";
-            break;
-          case 2:
-            return square ? "" : "②";
-            break;
-          case 3:
-            return square ? "" : "③";
-            break;
-          case 4:
-            return square ? "" : "④";
-            break;
-          case 5:
-            return square ? "" : "⑤";
-            break;
-          case 6:
-            return square ? "" : "⑥";
-            break;
-          case 7:
-            return square ? "" : "⑦";
-            break;
-          case 8:
-            return square ? "" : "⑧";
-            break;
-          case 9:
-            return square ? "" : "⑨";
-            break;
-          default:
-            return key;
-            break;
-        }
-      }
+    	function convertToInter(key) {
+    		switch (key) {
+    			case 0:
+    				return square ? "" : "⓪";
+    			case 1:
+    				return square ? "" : "①";
+    			case 2:
+    				return square ? "" : "②";
+    			case 3:
+    				return square ? "" : "③";
+    			case 4:
+    				return square ? "" : "④";
+    			case 5:
+    				return square ? "" : "⑤";
+    			case 6:
+    				return square ? "" : "⑥";
+    			case 7:
+    				return square ? "" : "⑦";
+    			case 8:
+    				return square ? "" : "⑧";
+    			case 9:
+    				return square ? "" : "⑨";
+    			default:
+    				return key;
+    		}
+    	}
 
-    	const writable_props = ['label', 'key', 'square'];
+    	const writable_props = ["label", "key", "square"];
+
     	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<KeyboardKey> was created with unknown prop '${key}'`);
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<KeyboardKey> was created with unknown prop '${key}'`);
     	});
 
+    	let { $$slots = {}, $$scope } = $$props;
+    	validate_slots("KeyboardKey", $$slots, []);
+
     	$$self.$set = $$props => {
-    		if ('label' in $$props) $$invalidate('label', label = $$props.label);
-    		if ('key' in $$props) $$invalidate('key', key = $$props.key);
-    		if ('square' in $$props) $$invalidate('square', square = $$props.square);
+    		if ("label" in $$props) $$invalidate(0, label = $$props.label);
+    		if ("key" in $$props) $$invalidate(1, key = $$props.key);
+    		if ("square" in $$props) $$invalidate(3, square = $$props.square);
     	};
 
-    	return { label, key, square, convertToInter };
+    	$$self.$capture_state = () => ({ label, key, square, convertToInter });
+
+    	$$self.$inject_state = $$props => {
+    		if ("label" in $$props) $$invalidate(0, label = $$props.label);
+    		if ("key" in $$props) $$invalidate(1, key = $$props.key);
+    		if ("square" in $$props) $$invalidate(3, square = $$props.square);
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	return [label, key, convertToInter, square];
     }
 
     class KeyboardKey extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$2, create_fragment$2, safe_not_equal, ["label", "key", "square"]);
+    		init(this, options, instance$2, create_fragment$2, safe_not_equal, { label: 0, key: 1, square: 3 });
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "KeyboardKey",
+    			options,
+    			id: create_fragment$2.name
+    		});
 
     		const { ctx } = this.$$;
     		const props = options.props || {};
-    		if (ctx.key === undefined && !('key' in props)) {
+
+    		if (/*key*/ ctx[1] === undefined && !("key" in props)) {
     			console.warn("<KeyboardKey> was created without expected prop 'key'");
     		}
     	}
@@ -4468,62 +4841,62 @@ var app = (function () {
     	}
     }
 
-    /* src\components\SlideControl.svelte generated by Svelte v3.6.4 */
-
+    /* src\components\SlideControl.svelte generated by Svelte v3.20.1 */
     const file$3 = "src\\components\\SlideControl.svelte";
 
     function get_each_context(ctx, list, i) {
-    	const child_ctx = Object.create(ctx);
-    	child_ctx.kbKey = list[i];
+    	const child_ctx = ctx.slice();
+    	child_ctx[11] = list[i];
     	return child_ctx;
     }
 
-    // (94:2) {#if keyboardKeys && hovering}
+    // (98:2) {#if keyboardKeys && hovering}
     function create_if_block$1(ctx) {
-    	var div, current;
+    	let div;
+    	let current;
+    	let each_value = /*keyboardKeys*/ ctx[5];
+    	validate_each_argument(each_value);
+    	let each_blocks = [];
 
-    	var each_value = ctx.keyboardKeys;
-
-    	var each_blocks = [];
-
-    	for (var i = 0; i < each_value.length; i += 1) {
+    	for (let i = 0; i < each_value.length; i += 1) {
     		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
     	}
 
-    	const out = i => transition_out(each_blocks[i], 1, () => {
+    	const out = i => transition_out(each_blocks[i], 1, 1, () => {
     		each_blocks[i] = null;
     	});
 
-    	return {
+    	const block = {
     		c: function create() {
     			div = element("div");
 
-    			for (var i = 0; i < each_blocks.length; i += 1) {
+    			for (let i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].c();
     			}
-    			attr(div, "class", "hints svelte-aqi3n7");
-    			add_location(div, file$3, 94, 4, 1970);
+
+    			attr_dev(div, "class", "hints svelte-6pd3ro");
+    			add_location(div, file$3, 98, 4, 2018);
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
+    			insert_dev(target, div, anchor);
 
-    			for (var i = 0; i < each_blocks.length; i += 1) {
+    			for (let i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].m(div, null);
     			}
 
     			current = true;
     		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*keyboardKeys*/ 32) {
+    				each_value = /*keyboardKeys*/ ctx[5];
+    				validate_each_argument(each_value);
+    				let i;
 
-    		p: function update(changed, ctx) {
-    			if (changed.keyboardKeys) {
-    				each_value = ctx.keyboardKeys;
-
-    				for (var i = 0; i < each_value.length; i += 1) {
+    				for (i = 0; i < each_value.length; i += 1) {
     					const child_ctx = get_each_context(ctx, each_value, i);
 
     					if (each_blocks[i]) {
-    						each_blocks[i].p(changed, child_ctx);
+    						each_blocks[i].p(child_ctx, dirty);
     						transition_in(each_blocks[i], 1);
     					} else {
     						each_blocks[i] = create_each_block(child_ctx);
@@ -4534,171 +4907,192 @@ var app = (function () {
     				}
 
     				group_outros();
-    				for (i = each_value.length; i < each_blocks.length; i += 1) out(i);
+
+    				for (i = each_value.length; i < each_blocks.length; i += 1) {
+    					out(i);
+    				}
+
     				check_outros();
     			}
     		},
-
     		i: function intro(local) {
     			if (current) return;
-    			for (var i = 0; i < each_value.length; i += 1) transition_in(each_blocks[i]);
+
+    			for (let i = 0; i < each_value.length; i += 1) {
+    				transition_in(each_blocks[i]);
+    			}
 
     			current = true;
     		},
-
     		o: function outro(local) {
     			each_blocks = each_blocks.filter(Boolean);
-    			for (let i = 0; i < each_blocks.length; i += 1) transition_out(each_blocks[i]);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				transition_out(each_blocks[i]);
+    			}
 
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div);
-    			}
-
+    			if (detaching) detach_dev(div);
     			destroy_each(each_blocks, detaching);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block$1.name,
+    		type: "if",
+    		source: "(98:2) {#if keyboardKeys && hovering}",
+    		ctx
+    	});
+
+    	return block;
     }
 
-    // (96:6) {#each keyboardKeys as kbKey}
+    // (100:6) {#each keyboardKeys as kbKey}
     function create_each_block(ctx) {
-    	var current;
-
-    	var keyboardkey_spread_levels = [
-    		ctx.kbKey
-    	];
-
+    	let current;
+    	const keyboardkey_spread_levels = [/*kbKey*/ ctx[11]];
     	let keyboardkey_props = {};
-    	for (var i = 0; i < keyboardkey_spread_levels.length; i += 1) {
+
+    	for (let i = 0; i < keyboardkey_spread_levels.length; i += 1) {
     		keyboardkey_props = assign(keyboardkey_props, keyboardkey_spread_levels[i]);
     	}
-    	var keyboardkey = new KeyboardKey({ props: keyboardkey_props, $$inline: true });
 
-    	return {
+    	const keyboardkey = new KeyboardKey({ props: keyboardkey_props, $$inline: true });
+
+    	const block = {
     		c: function create() {
-    			keyboardkey.$$.fragment.c();
+    			create_component(keyboardkey.$$.fragment);
     		},
-
     		m: function mount(target, anchor) {
     			mount_component(keyboardkey, target, anchor);
     			current = true;
     		},
+    		p: function update(ctx, dirty) {
+    			const keyboardkey_changes = (dirty & /*keyboardKeys*/ 32)
+    			? get_spread_update(keyboardkey_spread_levels, [get_spread_object(/*kbKey*/ ctx[11])])
+    			: {};
 
-    		p: function update(changed, ctx) {
-    			var keyboardkey_changes = changed.keyboardKeys ? get_spread_update(keyboardkey_spread_levels, [
-    				ctx.kbKey
-    			]) : {};
     			keyboardkey.$set(keyboardkey_changes);
     		},
-
     		i: function intro(local) {
     			if (current) return;
     			transition_in(keyboardkey.$$.fragment, local);
-
     			current = true;
     		},
-
     		o: function outro(local) {
     			transition_out(keyboardkey.$$.fragment, local);
     			current = false;
     		},
-
     		d: function destroy(detaching) {
     			destroy_component(keyboardkey, detaching);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block.name,
+    		type: "each",
+    		source: "(100:6) {#each keyboardKeys as kbKey}",
+    		ctx
+    	});
+
+    	return block;
     }
 
     function create_fragment$3(ctx) {
-    	var div, label, span0, t0, t1, input, t2, span1, t3, t4, current, dispose;
+    	let div;
+    	let label;
+    	let span0;
+    	let t0;
+    	let t1;
+    	let input;
+    	let t2;
+    	let span1;
+    	let t3;
+    	let t4;
+    	let current;
+    	let dispose;
+    	let if_block = /*keyboardKeys*/ ctx[5] && /*hovering*/ ctx[7] && create_if_block$1(ctx);
 
-    	var if_block = (ctx.keyboardKeys && hovering) && create_if_block$1(ctx);
-
-    	return {
+    	const block = {
     		c: function create() {
     			div = element("div");
     			label = element("label");
     			span0 = element("span");
-    			t0 = text(ctx.title);
+    			t0 = text(/*title*/ ctx[1]);
     			t1 = space();
     			input = element("input");
     			t2 = space();
     			span1 = element("span");
-    			t3 = text(ctx.formattedValue);
+    			t3 = text(/*formattedValue*/ ctx[6]);
     			t4 = space();
     			if (if_block) if_block.c();
-    			attr(span0, "class", "title svelte-aqi3n7");
-    			add_location(span0, file$3, 88, 4, 1765);
-    			attr(input, "type", "range");
-    			attr(input, "min", ctx.min);
-    			attr(input, "max", ctx.max);
-    			attr(input, "step", ctx.step);
-    			attr(input, "class", "svelte-aqi3n7");
-    			add_location(input, file$3, 89, 4, 1805);
-    			attr(span1, "class", "value svelte-aqi3n7");
-    			add_location(span1, file$3, 90, 4, 1873);
-    			add_location(label, file$3, 87, 2, 1750);
-    			attr(div, "class", "slide-ctrl svelte-aqi3n7");
-    			add_location(div, file$3, 86, 0, 1721);
-
-    			dispose = [
-    				listen(input, "change", ctx.input_change_input_handler),
-    				listen(input, "input", ctx.input_change_input_handler),
-    				listen(input, "change", ctx.change_handler)
-    			];
+    			attr_dev(span0, "class", "title svelte-6pd3ro");
+    			add_location(span0, file$3, 92, 4, 1813);
+    			attr_dev(input, "type", "range");
+    			attr_dev(input, "min", /*min*/ ctx[2]);
+    			attr_dev(input, "max", /*max*/ ctx[3]);
+    			attr_dev(input, "step", /*step*/ ctx[4]);
+    			attr_dev(input, "class", "svelte-6pd3ro");
+    			add_location(input, file$3, 93, 4, 1853);
+    			attr_dev(span1, "class", "value svelte-6pd3ro");
+    			add_location(span1, file$3, 94, 4, 1921);
+    			add_location(label, file$3, 91, 2, 1800);
+    			attr_dev(div, "class", "slide-ctrl svelte-6pd3ro");
+    			add_location(div, file$3, 90, 0, 1772);
     		},
-
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
-    			append(div, label);
-    			append(label, span0);
-    			append(span0, t0);
-    			append(label, t1);
-    			append(label, input);
-
-    			input.value = ctx.value;
-
-    			append(label, t2);
-    			append(label, span1);
-    			append(span1, t3);
-    			append(div, t4);
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, div, anchor);
+    			append_dev(div, label);
+    			append_dev(label, span0);
+    			append_dev(span0, t0);
+    			append_dev(label, t1);
+    			append_dev(label, input);
+    			set_input_value(input, /*value*/ ctx[0]);
+    			append_dev(label, t2);
+    			append_dev(label, span1);
+    			append_dev(span1, t3);
+    			append_dev(div, t4);
     			if (if_block) if_block.m(div, null);
     			current = true;
+    			if (remount) run_all(dispose);
+
+    			dispose = [
+    				listen_dev(input, "change", /*input_change_input_handler*/ ctx[10]),
+    				listen_dev(input, "input", /*input_change_input_handler*/ ctx[10]),
+    				listen_dev(input, "change", /*change_handler*/ ctx[9], false, false, false)
+    			];
     		},
+    		p: function update(ctx, [dirty]) {
+    			if (!current || dirty & /*title*/ 2) set_data_dev(t0, /*title*/ ctx[1]);
 
-    		p: function update(changed, ctx) {
-    			if (!current || changed.title) {
-    				set_data(t0, ctx.title);
+    			if (!current || dirty & /*min*/ 4) {
+    				attr_dev(input, "min", /*min*/ ctx[2]);
     			}
 
-    			if (changed.value) input.value = ctx.value;
-
-    			if (!current || changed.min) {
-    				attr(input, "min", ctx.min);
+    			if (!current || dirty & /*max*/ 8) {
+    				attr_dev(input, "max", /*max*/ ctx[3]);
     			}
 
-    			if (!current || changed.max) {
-    				attr(input, "max", ctx.max);
+    			if (!current || dirty & /*step*/ 16) {
+    				attr_dev(input, "step", /*step*/ ctx[4]);
     			}
 
-    			if (!current || changed.step) {
-    				attr(input, "step", ctx.step);
+    			if (dirty & /*value*/ 1) {
+    				set_input_value(input, /*value*/ ctx[0]);
     			}
 
-    			if (!current || changed.formattedValue) {
-    				set_data(t3, ctx.formattedValue);
-    			}
+    			if (!current || dirty & /*formattedValue*/ 64) set_data_dev(t3, /*formattedValue*/ ctx[6]);
 
-    			if (ctx.keyboardKeys && hovering) {
+    			if (/*keyboardKeys*/ ctx[5] && /*hovering*/ ctx[7]) {
     				if (if_block) {
-    					if_block.p(changed, ctx);
+    					if_block.p(ctx, dirty);
     					transition_in(if_block, 1);
     				} else {
     					if_block = create_if_block$1(ctx);
@@ -4708,44 +5102,58 @@ var app = (function () {
     				}
     			} else if (if_block) {
     				group_outros();
-    				transition_out(if_block, 1, () => {
+
+    				transition_out(if_block, 1, 1, () => {
     					if_block = null;
     				});
+
     				check_outros();
     			}
     		},
-
     		i: function intro(local) {
     			if (current) return;
     			transition_in(if_block);
     			current = true;
     		},
-
     		o: function outro(local) {
     			transition_out(if_block);
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div);
-    			}
-
+    			if (detaching) detach_dev(div);
     			if (if_block) if_block.d();
     			run_all(dispose);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$3.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
     }
 
-    let hovering = false;
-
     function instance$3($$self, $$props, $$invalidate) {
-    	let { title, min, max, step, value, keyboardKeys = null, customValueDisplay = null } = $$props;
+    	let { title } = $$props;
+    	let { min } = $$props;
+    	let { max } = $$props;
+    	let { step } = $$props;
+    	let { value } = $$props;
+    	let { keyboardKeys = null } = $$props;
+    	let { customValueDisplay = null } = $$props;
+    	let hovering = false;
+    	const writable_props = ["title", "min", "max", "step", "value", "keyboardKeys", "customValueDisplay"];
 
-    	const writable_props = ['title', 'min', 'max', 'step', 'value', 'keyboardKeys', 'customValueDisplay'];
     	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<SlideControl> was created with unknown prop '${key}'`);
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<SlideControl> was created with unknown prop '${key}'`);
     	});
+
+    	let { $$slots = {}, $$scope } = $$props;
+    	validate_slots("SlideControl", $$slots, []);
 
     	function change_handler(event) {
     		bubble($$self, event);
@@ -4753,26 +5161,21 @@ var app = (function () {
 
     	function input_change_input_handler() {
     		value = to_number(this.value);
-    		$$invalidate('value', value);
+    		$$invalidate(0, value);
     	}
 
     	$$self.$set = $$props => {
-    		if ('title' in $$props) $$invalidate('title', title = $$props.title);
-    		if ('min' in $$props) $$invalidate('min', min = $$props.min);
-    		if ('max' in $$props) $$invalidate('max', max = $$props.max);
-    		if ('step' in $$props) $$invalidate('step', step = $$props.step);
-    		if ('value' in $$props) $$invalidate('value', value = $$props.value);
-    		if ('keyboardKeys' in $$props) $$invalidate('keyboardKeys', keyboardKeys = $$props.keyboardKeys);
-    		if ('customValueDisplay' in $$props) $$invalidate('customValueDisplay', customValueDisplay = $$props.customValueDisplay);
+    		if ("title" in $$props) $$invalidate(1, title = $$props.title);
+    		if ("min" in $$props) $$invalidate(2, min = $$props.min);
+    		if ("max" in $$props) $$invalidate(3, max = $$props.max);
+    		if ("step" in $$props) $$invalidate(4, step = $$props.step);
+    		if ("value" in $$props) $$invalidate(0, value = $$props.value);
+    		if ("keyboardKeys" in $$props) $$invalidate(5, keyboardKeys = $$props.keyboardKeys);
+    		if ("customValueDisplay" in $$props) $$invalidate(8, customValueDisplay = $$props.customValueDisplay);
     	};
 
-    	let formattedValue;
-
-    	$$self.$$.update = ($$dirty = { customValueDisplay: 1, value: 1 }) => {
-    		if ($$dirty.customValueDisplay || $$dirty.value) { $$invalidate('formattedValue', formattedValue = (customValueDisplay != null && customValueDisplay[value] != null) ? customValueDisplay[value] : value); }
-    	};
-
-    	return {
+    	$$self.$capture_state = () => ({
+    		KeyboardKey,
     		title,
     		min,
     		max,
@@ -4780,32 +5183,92 @@ var app = (function () {
     		value,
     		keyboardKeys,
     		customValueDisplay,
+    		hovering,
+    		formattedValue
+    	});
+
+    	$$self.$inject_state = $$props => {
+    		if ("title" in $$props) $$invalidate(1, title = $$props.title);
+    		if ("min" in $$props) $$invalidate(2, min = $$props.min);
+    		if ("max" in $$props) $$invalidate(3, max = $$props.max);
+    		if ("step" in $$props) $$invalidate(4, step = $$props.step);
+    		if ("value" in $$props) $$invalidate(0, value = $$props.value);
+    		if ("keyboardKeys" in $$props) $$invalidate(5, keyboardKeys = $$props.keyboardKeys);
+    		if ("customValueDisplay" in $$props) $$invalidate(8, customValueDisplay = $$props.customValueDisplay);
+    		if ("hovering" in $$props) $$invalidate(7, hovering = $$props.hovering);
+    		if ("formattedValue" in $$props) $$invalidate(6, formattedValue = $$props.formattedValue);
+    	};
+
+    	let formattedValue;
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	$$self.$$.update = () => {
+    		if ($$self.$$.dirty & /*customValueDisplay, value*/ 257) {
+    			 $$invalidate(6, formattedValue = customValueDisplay != null && customValueDisplay[value] != null
+    			? customValueDisplay[value]
+    			: value);
+    		}
+    	};
+
+    	return [
+    		value,
+    		title,
+    		min,
+    		max,
+    		step,
+    		keyboardKeys,
     		formattedValue,
+    		hovering,
+    		customValueDisplay,
     		change_handler,
     		input_change_input_handler
-    	};
+    	];
     }
 
     class SlideControl extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$3, create_fragment$3, safe_not_equal, ["title", "min", "max", "step", "value", "keyboardKeys", "customValueDisplay"]);
+
+    		init(this, options, instance$3, create_fragment$3, safe_not_equal, {
+    			title: 1,
+    			min: 2,
+    			max: 3,
+    			step: 4,
+    			value: 0,
+    			keyboardKeys: 5,
+    			customValueDisplay: 8
+    		});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "SlideControl",
+    			options,
+    			id: create_fragment$3.name
+    		});
 
     		const { ctx } = this.$$;
     		const props = options.props || {};
-    		if (ctx.title === undefined && !('title' in props)) {
+
+    		if (/*title*/ ctx[1] === undefined && !("title" in props)) {
     			console.warn("<SlideControl> was created without expected prop 'title'");
     		}
-    		if (ctx.min === undefined && !('min' in props)) {
+
+    		if (/*min*/ ctx[2] === undefined && !("min" in props)) {
     			console.warn("<SlideControl> was created without expected prop 'min'");
     		}
-    		if (ctx.max === undefined && !('max' in props)) {
+
+    		if (/*max*/ ctx[3] === undefined && !("max" in props)) {
     			console.warn("<SlideControl> was created without expected prop 'max'");
     		}
-    		if (ctx.step === undefined && !('step' in props)) {
+
+    		if (/*step*/ ctx[4] === undefined && !("step" in props)) {
     			console.warn("<SlideControl> was created without expected prop 'step'");
     		}
-    		if (ctx.value === undefined && !('value' in props)) {
+
+    		if (/*value*/ ctx[0] === undefined && !("value" in props)) {
     			console.warn("<SlideControl> was created without expected prop 'value'");
     		}
     	}
@@ -4867,214 +5330,309 @@ var app = (function () {
     	}
     }
 
-    /* src\components\Controls.svelte generated by Svelte v3.6.4 */
-
+    /* src\components\Controls.svelte generated by Svelte v3.20.1 */
     const file$4 = "src\\components\\Controls.svelte";
 
     function create_fragment$4(ctx) {
-    	var div1, updating_value, t0, div0, t1, updating_value_1, current;
-
-    	var slidecontrol0_spread_levels = [
-    		ctx.volumeControl
-    	];
+    	let div1;
+    	let updating_value;
+    	let t0;
+    	let div0;
+    	let t1;
+    	let updating_value_1;
+    	let current;
+    	const slidecontrol0_spread_levels = [/*volumeControl*/ ctx[3]];
 
     	function slidecontrol0_value_binding(value) {
-    		ctx.slidecontrol0_value_binding.call(null, value);
-    		updating_value = true;
-    		add_flush_callback(() => updating_value = false);
+    		/*slidecontrol0_value_binding*/ ctx[5].call(null, value);
     	}
 
     	let slidecontrol0_props = {};
-    	for (var i = 0; i < slidecontrol0_spread_levels.length; i += 1) {
+
+    	for (let i = 0; i < slidecontrol0_spread_levels.length; i += 1) {
     		slidecontrol0_props = assign(slidecontrol0_props, slidecontrol0_spread_levels[i]);
     	}
-    	if (ctx.$volume !== void 0) {
-    		slidecontrol0_props.value = ctx.$volume;
+
+    	if (/*$volume*/ ctx[1] !== void 0) {
+    		slidecontrol0_props.value = /*$volume*/ ctx[1];
     	}
-    	var slidecontrol0 = new SlideControl({
-    		props: slidecontrol0_props,
-    		$$inline: true
-    	});
 
-    	binding_callbacks.push(() => bind(slidecontrol0, 'value', slidecontrol0_value_binding));
+    	const slidecontrol0 = new SlideControl({
+    			props: slidecontrol0_props,
+    			$$inline: true
+    		});
 
-    	var slidecontrol1_spread_levels = [
-    		ctx.octaveControl
-    	];
+    	binding_callbacks.push(() => bind(slidecontrol0, "value", slidecontrol0_value_binding));
+    	const slidecontrol1_spread_levels = [/*octaveControl*/ ctx[4]];
 
-    	function slidecontrol1_value_binding(value_1) {
-    		ctx.slidecontrol1_value_binding.call(null, value_1);
-    		updating_value_1 = true;
-    		add_flush_callback(() => updating_value_1 = false);
+    	function slidecontrol1_value_binding(value) {
+    		/*slidecontrol1_value_binding*/ ctx[6].call(null, value);
     	}
 
     	let slidecontrol1_props = {};
-    	for (var i = 0; i < slidecontrol1_spread_levels.length; i += 1) {
+
+    	for (let i = 0; i < slidecontrol1_spread_levels.length; i += 1) {
     		slidecontrol1_props = assign(slidecontrol1_props, slidecontrol1_spread_levels[i]);
     	}
-    	if (ctx.$octaveShift !== void 0) {
-    		slidecontrol1_props.value = ctx.$octaveShift;
+
+    	if (/*$octaveShift*/ ctx[2] !== void 0) {
+    		slidecontrol1_props.value = /*$octaveShift*/ ctx[2];
     	}
-    	var slidecontrol1 = new SlideControl({
-    		props: slidecontrol1_props,
-    		$$inline: true
-    	});
 
-    	binding_callbacks.push(() => bind(slidecontrol1, 'value', slidecontrol1_value_binding));
+    	const slidecontrol1 = new SlideControl({
+    			props: slidecontrol1_props,
+    			$$inline: true
+    		});
 
-    	return {
+    	binding_callbacks.push(() => bind(slidecontrol1, "value", slidecontrol1_value_binding));
+
+    	const block = {
     		c: function create() {
     			div1 = element("div");
-    			slidecontrol0.$$.fragment.c();
+    			create_component(slidecontrol0.$$.fragment);
     			t0 = space();
     			div0 = element("div");
     			t1 = space();
-    			slidecontrol1.$$.fragment.c();
-    			attr(div0, "class", "spacer svelte-1hgu01z");
+    			create_component(slidecontrol1.$$.fragment);
+    			attr_dev(div0, "class", "spacer svelte-1hgu01z");
     			add_location(div0, file$4, 49, 2, 1008);
-    			attr(div1, "class", "flex svelte-1hgu01z");
-    			toggle_class(div1, "transparent", ctx.$editMode);
+    			attr_dev(div1, "class", "flex svelte-1hgu01z");
+    			toggle_class(div1, "transparent", /*$editMode*/ ctx[0]);
     			add_location(div1, file$4, 47, 0, 896);
     		},
-
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, div1, anchor);
+    			insert_dev(target, div1, anchor);
     			mount_component(slidecontrol0, div1, null);
-    			append(div1, t0);
-    			append(div1, div0);
-    			append(div1, t1);
+    			append_dev(div1, t0);
+    			append_dev(div1, div0);
+    			append_dev(div1, t1);
     			mount_component(slidecontrol1, div1, null);
     			current = true;
     		},
+    		p: function update(ctx, [dirty]) {
+    			const slidecontrol0_changes = (dirty & /*volumeControl*/ 8)
+    			? get_spread_update(slidecontrol0_spread_levels, [get_spread_object(/*volumeControl*/ ctx[3])])
+    			: {};
 
-    		p: function update(changed, ctx) {
-    			var slidecontrol0_changes = changed.volumeControl ? get_spread_update(slidecontrol0_spread_levels, [
-    				ctx.volumeControl
-    			]) : {};
-    			if (!updating_value && changed.$volume) {
-    				slidecontrol0_changes.value = ctx.$volume;
+    			if (!updating_value && dirty & /*$volume*/ 2) {
+    				updating_value = true;
+    				slidecontrol0_changes.value = /*$volume*/ ctx[1];
+    				add_flush_callback(() => updating_value = false);
     			}
+
     			slidecontrol0.$set(slidecontrol0_changes);
 
-    			var slidecontrol1_changes = changed.octaveControl ? get_spread_update(slidecontrol1_spread_levels, [
-    				ctx.octaveControl
-    			]) : {};
-    			if (!updating_value_1 && changed.$octaveShift) {
-    				slidecontrol1_changes.value = ctx.$octaveShift;
+    			const slidecontrol1_changes = (dirty & /*octaveControl*/ 16)
+    			? get_spread_update(slidecontrol1_spread_levels, [get_spread_object(/*octaveControl*/ ctx[4])])
+    			: {};
+
+    			if (!updating_value_1 && dirty & /*$octaveShift*/ 4) {
+    				updating_value_1 = true;
+    				slidecontrol1_changes.value = /*$octaveShift*/ ctx[2];
+    				add_flush_callback(() => updating_value_1 = false);
     			}
+
     			slidecontrol1.$set(slidecontrol1_changes);
 
-    			if (changed.$editMode) {
-    				toggle_class(div1, "transparent", ctx.$editMode);
+    			if (dirty & /*$editMode*/ 1) {
+    				toggle_class(div1, "transparent", /*$editMode*/ ctx[0]);
     			}
     		},
-
     		i: function intro(local) {
     			if (current) return;
     			transition_in(slidecontrol0.$$.fragment, local);
-
     			transition_in(slidecontrol1.$$.fragment, local);
-
     			current = true;
     		},
-
     		o: function outro(local) {
     			transition_out(slidecontrol0.$$.fragment, local);
     			transition_out(slidecontrol1.$$.fragment, local);
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div1);
-    			}
-
-    			destroy_component(slidecontrol0, );
-
-    			destroy_component(slidecontrol1, );
+    			if (detaching) detach_dev(div1);
+    			destroy_component(slidecontrol0);
+    			destroy_component(slidecontrol1);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$4.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
     }
 
     function instance$4($$self, $$props, $$invalidate) {
-    	let $editMode, $volume, $octaveShift;
+    	let $editMode;
+    	let $volume;
+    	let $octaveShift;
+    	validate_store(editMode, "editMode");
+    	component_subscribe($$self, editMode, $$value => $$invalidate(0, $editMode = $$value));
+    	validate_store(volume, "volume");
+    	component_subscribe($$self, volume, $$value => $$invalidate(1, $volume = $$value));
+    	validate_store(octaveShift, "octaveShift");
+    	component_subscribe($$self, octaveShift, $$value => $$invalidate(2, $octaveShift = $$value));
 
-    	validate_store(editMode, 'editMode');
-    	subscribe($$self, editMode, $$value => { $editMode = $$value; $$invalidate('$editMode', $editMode); });
-    	validate_store(volume, 'volume');
-    	subscribe($$self, volume, $$value => { $volume = $$value; $$invalidate('$volume', $volume); });
-    	validate_store(octaveShift, 'octaveShift');
-    	subscribe($$self, octaveShift, $$value => { $octaveShift = $$value; $$invalidate('$octaveShift', $octaveShift); });
+    	let volumeControl = {
+    		title: "Volume",
+    		min: 0,
+    		max: 100,
+    		step: 1,
+    		keyboardKeys: [
+    			{ label: "-1", key: "←" },
+    			{ label: "+1", key: "→" },
+    			{ label: "+10", key: "↑" },
+    			{ label: "-10", key: "↓" }
+    		]
+    	};
 
-    	
+    	let octaveControl = {
+    		title: "Octave shift",
+    		min: -3,
+    		max: 3,
+    		step: 0.5,
+    		keyboardKeys: [
+    			{ label: "Up", key: "⇧", square: false },
+    			{
+    				label: "Dn",
+    				key: "<small>Ctrl</small>",
+    				square: false
+    			}
+    		]
+    	};
 
-      let volumeControl = {
-        title: "Volume",
-        min: 0,
-        max: 100,
-        step: 1,
-        keyboardKeys: [
-          { label: "-1", key: "←" },
-          { label: "+1", key: "→" },
-          { label: "+10", key: "↑" },
-          { label: "-10", key: "↓" }
-        ]
-      };
+    	const writable_props = [];
 
-      let octaveControl = {
-        title: "Octave shift",
-        min: -3,
-        max: 3,
-        step: 0.5,
-        keyboardKeys: [
-          { label: "Up", key: "⇧", square: false },
-          { label: "Dn", key: "<small>Ctrl</small>", square: false }
-        ]
-      };
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Controls> was created with unknown prop '${key}'`);
+    	});
+
+    	let { $$slots = {}, $$scope } = $$props;
+    	validate_slots("Controls", $$slots, []);
 
     	function slidecontrol0_value_binding(value) {
     		$volume = value;
     		volume.set($volume);
     	}
 
-    	function slidecontrol1_value_binding(value_1) {
-    		$octaveShift = value_1;
+    	function slidecontrol1_value_binding(value) {
+    		$octaveShift = value;
     		octaveShift.set($octaveShift);
     	}
 
-    	return {
+    	$$self.$capture_state = () => ({
+    		volume,
+    		octaveShift,
+    		editMode,
+    		SlideControl,
     		volumeControl,
     		octaveControl,
     		$editMode,
     		$volume,
+    		$octaveShift
+    	});
+
+    	$$self.$inject_state = $$props => {
+    		if ("volumeControl" in $$props) $$invalidate(3, volumeControl = $$props.volumeControl);
+    		if ("octaveControl" in $$props) $$invalidate(4, octaveControl = $$props.octaveControl);
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	return [
+    		$editMode,
+    		$volume,
     		$octaveShift,
+    		volumeControl,
+    		octaveControl,
     		slidecontrol0_value_binding,
     		slidecontrol1_value_binding
-    	};
+    	];
     }
 
     class Controls extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$4, create_fragment$4, safe_not_equal, []);
+    		init(this, options, instance$4, create_fragment$4, safe_not_equal, {});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "Controls",
+    			options,
+    			id: create_fragment$4.name
+    		});
     	}
     }
 
+    function backOut(t) {
+        const s = 1.70158;
+        return --t * t * ((s + 1) * t + s) + 1;
+    }
     function cubicOut(t) {
         const f = t - 1.0;
         return f * f * f + 1.0;
     }
+    function quintOut(t) {
+        return --t * t * t * t * t + 1;
+    }
 
-    function fade(node, { delay = 0, duration = 400 }) {
+    /*! *****************************************************************************
+    Copyright (c) Microsoft Corporation. All rights reserved.
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+    this file except in compliance with the License. You may obtain a copy of the
+    License at http://www.apache.org/licenses/LICENSE-2.0
+
+    THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+    WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+    MERCHANTABLITY OR NON-INFRINGEMENT.
+
+    See the Apache Version 2.0 License for specific language governing permissions
+    and limitations under the License.
+    ***************************************************************************** */
+
+    function __rest(s, e) {
+        var t = {};
+        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+            t[p] = s[p];
+        if (s != null && typeof Object.getOwnPropertySymbols === "function")
+            for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+                if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                    t[p[i]] = s[p[i]];
+            }
+        return t;
+    }
+    function fade(node, { delay = 0, duration = 400, easing = identity }) {
         const o = +getComputedStyle(node).opacity;
         return {
             delay,
             duration,
+            easing,
             css: t => `opacity: ${t * o}`
+        };
+    }
+    function fly(node, { delay = 0, duration = 400, easing = cubicOut, x = 0, y = 0, opacity = 0 }) {
+        const style = getComputedStyle(node);
+        const target_opacity = +style.opacity;
+        const transform = style.transform === 'none' ? '' : style.transform;
+        const od = target_opacity * (1 - opacity);
+        return {
+            delay,
+            duration,
+            easing,
+            css: (t, u) => `
+			transform: ${transform} translate(${(1 - t) * x}px, ${(1 - t) * y}px);
+			opacity: ${target_opacity - (od * u)}`
         };
     }
     function slide(node, { delay = 0, duration = 400, easing = cubicOut }) {
@@ -5102,30 +5660,96 @@ var app = (function () {
                 `border-bottom-width: ${t * border_bottom_width}px;`
         };
     }
+    function scale(node, { delay = 0, duration = 400, easing = cubicOut, start = 0, opacity = 0 }) {
+        const style = getComputedStyle(node);
+        const target_opacity = +style.opacity;
+        const transform = style.transform === 'none' ? '' : style.transform;
+        const sd = 1 - start;
+        const od = target_opacity * (1 - opacity);
+        return {
+            delay,
+            duration,
+            easing,
+            css: (_t, u) => `
+			transform: ${transform} scale(${1 - (sd * u)});
+			opacity: ${target_opacity - (od * u)}
+		`
+        };
+    }
+    function crossfade(_a) {
+        var { fallback } = _a, defaults = __rest(_a, ["fallback"]);
+        const to_receive = new Map();
+        const to_send = new Map();
+        function crossfade(from, node, params) {
+            const { delay = 0, duration = d => Math.sqrt(d) * 30, easing = cubicOut } = assign(assign({}, defaults), params);
+            const to = node.getBoundingClientRect();
+            const dx = from.left - to.left;
+            const dy = from.top - to.top;
+            const dw = from.width / to.width;
+            const dh = from.height / to.height;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            const style = getComputedStyle(node);
+            const transform = style.transform === 'none' ? '' : style.transform;
+            const opacity = +style.opacity;
+            return {
+                delay,
+                duration: is_function(duration) ? duration(d) : duration,
+                easing,
+                css: (t, u) => `
+				opacity: ${t * opacity};
+				transform-origin: top left;
+				transform: ${transform} translate(${u * dx}px,${u * dy}px) scale(${t + (1 - t) * dw}, ${t + (1 - t) * dh});
+			`
+            };
+        }
+        function transition(items, counterparts, intro) {
+            return (node, params) => {
+                items.set(params.key, {
+                    rect: node.getBoundingClientRect()
+                });
+                return () => {
+                    if (counterparts.has(params.key)) {
+                        const { rect } = counterparts.get(params.key);
+                        counterparts.delete(params.key);
+                        return crossfade(rect, node, params);
+                    }
+                    // if the node is disappearing altogether
+                    // (i.e. wasn't claimed by the other list)
+                    // then we need to supply an outro
+                    items.delete(params.key);
+                    return fallback && fallback(node, params, intro);
+                };
+            };
+        }
+        return [
+            transition(to_send, to_receive, false),
+            transition(to_receive, to_send, true)
+        ];
+    }
 
-    /* src\components\PianoGrid.svelte generated by Svelte v3.6.4 */
-
+    /* src\components\PianoGrid.svelte generated by Svelte v3.20.1 */
     const file$5 = "src\\components\\PianoGrid.svelte";
 
     // (124:2) {#if $editMode}
     function create_if_block$2(ctx) {
-    	var p, p_transition, current;
+    	let p;
+    	let p_transition;
+    	let current;
 
-    	return {
+    	const block = {
     		c: function create() {
     			p = element("p");
-    			p.textContent = "Editing mode";
-    			attr(p, "class", "edit-mode-warn svelte-1y50mx7");
+    			p.textContent = "Edit mode";
+    			attr_dev(p, "class", "edit-mode-warn svelte-1y50mx7");
     			add_location(p, file$5, 124, 4, 3017);
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, p, anchor);
+    			insert_dev(target, p, anchor);
     			current = true;
     		},
-
     		i: function intro(local) {
     			if (current) return;
+
     			add_render_callback(() => {
     				if (!p_transition) p_transition = create_bidirectional_transition(p, fade, {}, true);
     				p_transition.run(1);
@@ -5133,29 +5757,91 @@ var app = (function () {
 
     			current = true;
     		},
-
     		o: function outro(local) {
     			if (!p_transition) p_transition = create_bidirectional_transition(p, fade, {}, false);
     			p_transition.run(0);
-
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(p);
-    				if (p_transition) p_transition.end();
-    			}
+    			if (detaching) detach_dev(p);
+    			if (detaching && p_transition) p_transition.end();
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block$2.name,
+    		type: "if",
+    		source: "(124:2) {#if $editMode}",
+    		ctx
+    	});
+
+    	return block;
     }
 
     function create_fragment$5(ctx) {
-    	var div29, div14, div0, t1, div1, t3, div2, t5, div3, t7, div4, t9, div5, t11, div6, t13, div7, t15, div8, t17, div9, t19, div10, t21, div11, t23, div12, t25, div13, t27, div28, div15, t29, div16, t31, div17, t33, div18, t34, div19, t36, div20, t38, div21, t39, div22, t41, div23, t43, div24, t45, div25, t46, div26, t48, div27, t50, div29_class_value, current;
+    	let div29;
+    	let div14;
+    	let div0;
+    	let t1;
+    	let div1;
+    	let t3;
+    	let div2;
+    	let t5;
+    	let div3;
+    	let t7;
+    	let div4;
+    	let t9;
+    	let div5;
+    	let t11;
+    	let div6;
+    	let t13;
+    	let div7;
+    	let t15;
+    	let div8;
+    	let t17;
+    	let div9;
+    	let t19;
+    	let div10;
+    	let t21;
+    	let div11;
+    	let t23;
+    	let div12;
+    	let t25;
+    	let div13;
+    	let t27;
+    	let div28;
+    	let div15;
+    	let t29;
+    	let div16;
+    	let t31;
+    	let div17;
+    	let t33;
+    	let div18;
+    	let t34;
+    	let div19;
+    	let t36;
+    	let div20;
+    	let t38;
+    	let div21;
+    	let t39;
+    	let div22;
+    	let t41;
+    	let div23;
+    	let t43;
+    	let div24;
+    	let t45;
+    	let div25;
+    	let t46;
+    	let div26;
+    	let t48;
+    	let div27;
+    	let t50;
+    	let div29_class_value;
+    	let current;
+    	let if_block = /*$editMode*/ ctx[1] && create_if_block$2(ctx);
 
-    	var if_block = (ctx.$editMode) && create_if_block$2();
-
-    	return {
+    	const block = {
     		c: function create() {
     			div29 = element("div");
     			div14 = element("div");
@@ -5239,227 +5925,261 @@ var app = (function () {
     			div27.textContent = "⌫";
     			t50 = space();
     			if (if_block) if_block.c();
-    			attr(div0, "id", "⇪");
-    			attr(div0, "class", "white-key svelte-1y50mx7");
+    			attr_dev(div0, "id", "⇪");
+    			attr_dev(div0, "class", "white-key svelte-1y50mx7");
     			add_location(div0, file$5, 91, 4, 1803);
-    			attr(div1, "id", "A");
-    			attr(div1, "class", "white-key svelte-1y50mx7");
+    			attr_dev(div1, "id", "A");
+    			attr_dev(div1, "class", "white-key svelte-1y50mx7");
     			add_location(div1, file$5, 92, 4, 1846);
-    			attr(div2, "id", "S");
-    			attr(div2, "class", "white-key svelte-1y50mx7");
+    			attr_dev(div2, "id", "S");
+    			attr_dev(div2, "class", "white-key svelte-1y50mx7");
     			add_location(div2, file$5, 93, 4, 1889);
-    			attr(div3, "id", "D");
-    			attr(div3, "class", "white-key svelte-1y50mx7");
+    			attr_dev(div3, "id", "D");
+    			attr_dev(div3, "class", "white-key svelte-1y50mx7");
     			add_location(div3, file$5, 94, 4, 1932);
-    			attr(div4, "id", "F");
-    			attr(div4, "class", "white-key svelte-1y50mx7");
+    			attr_dev(div4, "id", "F");
+    			attr_dev(div4, "class", "white-key svelte-1y50mx7");
     			add_location(div4, file$5, 95, 4, 1975);
-    			attr(div5, "id", "G");
-    			attr(div5, "class", "white-key svelte-1y50mx7");
+    			attr_dev(div5, "id", "G");
+    			attr_dev(div5, "class", "white-key svelte-1y50mx7");
     			add_location(div5, file$5, 96, 4, 2018);
-    			attr(div6, "id", "H");
-    			attr(div6, "class", "white-key svelte-1y50mx7");
+    			attr_dev(div6, "id", "H");
+    			attr_dev(div6, "class", "white-key svelte-1y50mx7");
     			add_location(div6, file$5, 97, 4, 2061);
-    			attr(div7, "id", "J");
-    			attr(div7, "class", "white-key svelte-1y50mx7");
+    			attr_dev(div7, "id", "J");
+    			attr_dev(div7, "class", "white-key svelte-1y50mx7");
     			add_location(div7, file$5, 98, 4, 2104);
-    			attr(div8, "id", "K");
-    			attr(div8, "class", "white-key svelte-1y50mx7");
+    			attr_dev(div8, "id", "K");
+    			attr_dev(div8, "class", "white-key svelte-1y50mx7");
     			add_location(div8, file$5, 99, 4, 2147);
-    			attr(div9, "id", "L");
-    			attr(div9, "class", "white-key svelte-1y50mx7");
+    			attr_dev(div9, "id", "L");
+    			attr_dev(div9, "class", "white-key svelte-1y50mx7");
     			add_location(div9, file$5, 100, 4, 2190);
-    			attr(div10, "id", "Č");
-    			attr(div10, "class", "white-key svelte-1y50mx7");
+    			attr_dev(div10, "id", "Č");
+    			attr_dev(div10, "class", "white-key svelte-1y50mx7");
     			add_location(div10, file$5, 101, 4, 2233);
-    			attr(div11, "id", "Ć");
-    			attr(div11, "class", "white-key svelte-1y50mx7");
+    			attr_dev(div11, "id", "Ć");
+    			attr_dev(div11, "class", "white-key svelte-1y50mx7");
     			add_location(div11, file$5, 102, 4, 2276);
-    			attr(div12, "id", "Ž");
-    			attr(div12, "class", "white-key svelte-1y50mx7");
+    			attr_dev(div12, "id", "Ž");
+    			attr_dev(div12, "class", "white-key svelte-1y50mx7");
     			add_location(div12, file$5, 103, 4, 2319);
-    			attr(div13, "id", "↵");
-    			attr(div13, "class", "white-key svelte-1y50mx7");
+    			attr_dev(div13, "id", "↵");
+    			attr_dev(div13, "class", "white-key svelte-1y50mx7");
     			add_location(div13, file$5, 104, 4, 2362);
-    			attr(div14, "class", "piano-grid svelte-1y50mx7");
+    			attr_dev(div14, "class", "piano-grid svelte-1y50mx7");
     			add_location(div14, file$5, 90, 2, 1773);
-    			attr(div15, "id", "Q");
-    			attr(div15, "class", "black-key svelte-1y50mx7");
+    			attr_dev(div15, "id", "Q");
+    			attr_dev(div15, "class", "black-key svelte-1y50mx7");
     			add_location(div15, file$5, 108, 4, 2445);
-    			attr(div16, "id", "W");
-    			attr(div16, "class", "black-key svelte-1y50mx7");
+    			attr_dev(div16, "id", "W");
+    			attr_dev(div16, "class", "black-key svelte-1y50mx7");
     			add_location(div16, file$5, 109, 4, 2488);
-    			attr(div17, "id", "E");
-    			attr(div17, "class", "black-key svelte-1y50mx7");
+    			attr_dev(div17, "id", "E");
+    			attr_dev(div17, "class", "black-key svelte-1y50mx7");
     			add_location(div17, file$5, 110, 4, 2531);
-    			attr(div18, "class", "blank-black-key svelte-1y50mx7");
+    			attr_dev(div18, "class", "blank-black-key svelte-1y50mx7");
     			add_location(div18, file$5, 111, 4, 2574);
-    			attr(div19, "id", "T");
-    			attr(div19, "class", "black-key svelte-1y50mx7");
+    			attr_dev(div19, "id", "T");
+    			attr_dev(div19, "class", "black-key svelte-1y50mx7");
     			add_location(div19, file$5, 112, 4, 2611);
-    			attr(div20, "id", "Z");
-    			attr(div20, "class", "black-key svelte-1y50mx7");
+    			attr_dev(div20, "id", "Z");
+    			attr_dev(div20, "class", "black-key svelte-1y50mx7");
     			add_location(div20, file$5, 113, 4, 2654);
-    			attr(div21, "class", "blank-black-key svelte-1y50mx7");
+    			attr_dev(div21, "class", "blank-black-key svelte-1y50mx7");
     			add_location(div21, file$5, 114, 4, 2697);
-    			attr(div22, "id", "I");
-    			attr(div22, "class", "black-key svelte-1y50mx7");
+    			attr_dev(div22, "id", "I");
+    			attr_dev(div22, "class", "black-key svelte-1y50mx7");
     			add_location(div22, file$5, 115, 4, 2734);
-    			attr(div23, "id", "O");
-    			attr(div23, "class", "black-key svelte-1y50mx7");
+    			attr_dev(div23, "id", "O");
+    			attr_dev(div23, "class", "black-key svelte-1y50mx7");
     			add_location(div23, file$5, 116, 4, 2777);
-    			attr(div24, "id", "P");
-    			attr(div24, "class", "black-key svelte-1y50mx7");
+    			attr_dev(div24, "id", "P");
+    			attr_dev(div24, "class", "black-key svelte-1y50mx7");
     			add_location(div24, file$5, 117, 4, 2820);
-    			attr(div25, "class", "blank-black-key svelte-1y50mx7");
+    			attr_dev(div25, "class", "blank-black-key svelte-1y50mx7");
     			add_location(div25, file$5, 118, 4, 2863);
-    			attr(div26, "id", "Đ");
-    			attr(div26, "class", "black-key svelte-1y50mx7");
+    			attr_dev(div26, "id", "Đ");
+    			attr_dev(div26, "class", "black-key svelte-1y50mx7");
     			add_location(div26, file$5, 119, 4, 2900);
-    			attr(div27, "id", "⌫");
-    			attr(div27, "class", "black-key svelte-1y50mx7");
+    			attr_dev(div27, "id", "⌫");
+    			attr_dev(div27, "class", "black-key svelte-1y50mx7");
     			add_location(div27, file$5, 120, 4, 2943);
-    			attr(div28, "class", "piano-grid svelte-1y50mx7");
+    			attr_dev(div28, "class", "piano-grid svelte-1y50mx7");
     			add_location(div28, file$5, 107, 2, 2415);
-    			attr(div29, "class", div29_class_value = "piano-grid-container " + (ctx.$isFocused || ctx.$editMode ? 'transparent' : '') + " svelte-1y50mx7");
+
+    			attr_dev(div29, "class", div29_class_value = "piano-grid-container " + (/*$isFocused*/ ctx[0] || /*$editMode*/ ctx[1]
+    			? "transparent"
+    			: "") + " svelte-1y50mx7");
+
     			add_location(div29, file$5, 88, 0, 1685);
     		},
-
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, div29, anchor);
-    			append(div29, div14);
-    			append(div14, div0);
-    			append(div14, t1);
-    			append(div14, div1);
-    			append(div14, t3);
-    			append(div14, div2);
-    			append(div14, t5);
-    			append(div14, div3);
-    			append(div14, t7);
-    			append(div14, div4);
-    			append(div14, t9);
-    			append(div14, div5);
-    			append(div14, t11);
-    			append(div14, div6);
-    			append(div14, t13);
-    			append(div14, div7);
-    			append(div14, t15);
-    			append(div14, div8);
-    			append(div14, t17);
-    			append(div14, div9);
-    			append(div14, t19);
-    			append(div14, div10);
-    			append(div14, t21);
-    			append(div14, div11);
-    			append(div14, t23);
-    			append(div14, div12);
-    			append(div14, t25);
-    			append(div14, div13);
-    			append(div29, t27);
-    			append(div29, div28);
-    			append(div28, div15);
-    			append(div28, t29);
-    			append(div28, div16);
-    			append(div28, t31);
-    			append(div28, div17);
-    			append(div28, t33);
-    			append(div28, div18);
-    			append(div28, t34);
-    			append(div28, div19);
-    			append(div28, t36);
-    			append(div28, div20);
-    			append(div28, t38);
-    			append(div28, div21);
-    			append(div28, t39);
-    			append(div28, div22);
-    			append(div28, t41);
-    			append(div28, div23);
-    			append(div28, t43);
-    			append(div28, div24);
-    			append(div28, t45);
-    			append(div28, div25);
-    			append(div28, t46);
-    			append(div28, div26);
-    			append(div28, t48);
-    			append(div28, div27);
-    			append(div29, t50);
+    			insert_dev(target, div29, anchor);
+    			append_dev(div29, div14);
+    			append_dev(div14, div0);
+    			append_dev(div14, t1);
+    			append_dev(div14, div1);
+    			append_dev(div14, t3);
+    			append_dev(div14, div2);
+    			append_dev(div14, t5);
+    			append_dev(div14, div3);
+    			append_dev(div14, t7);
+    			append_dev(div14, div4);
+    			append_dev(div14, t9);
+    			append_dev(div14, div5);
+    			append_dev(div14, t11);
+    			append_dev(div14, div6);
+    			append_dev(div14, t13);
+    			append_dev(div14, div7);
+    			append_dev(div14, t15);
+    			append_dev(div14, div8);
+    			append_dev(div14, t17);
+    			append_dev(div14, div9);
+    			append_dev(div14, t19);
+    			append_dev(div14, div10);
+    			append_dev(div14, t21);
+    			append_dev(div14, div11);
+    			append_dev(div14, t23);
+    			append_dev(div14, div12);
+    			append_dev(div14, t25);
+    			append_dev(div14, div13);
+    			append_dev(div29, t27);
+    			append_dev(div29, div28);
+    			append_dev(div28, div15);
+    			append_dev(div28, t29);
+    			append_dev(div28, div16);
+    			append_dev(div28, t31);
+    			append_dev(div28, div17);
+    			append_dev(div28, t33);
+    			append_dev(div28, div18);
+    			append_dev(div28, t34);
+    			append_dev(div28, div19);
+    			append_dev(div28, t36);
+    			append_dev(div28, div20);
+    			append_dev(div28, t38);
+    			append_dev(div28, div21);
+    			append_dev(div28, t39);
+    			append_dev(div28, div22);
+    			append_dev(div28, t41);
+    			append_dev(div28, div23);
+    			append_dev(div28, t43);
+    			append_dev(div28, div24);
+    			append_dev(div28, t45);
+    			append_dev(div28, div25);
+    			append_dev(div28, t46);
+    			append_dev(div28, div26);
+    			append_dev(div28, t48);
+    			append_dev(div28, div27);
+    			append_dev(div29, t50);
     			if (if_block) if_block.m(div29, null);
     			current = true;
     		},
-
-    		p: function update(changed, ctx) {
-    			if (ctx.$editMode) {
+    		p: function update(ctx, [dirty]) {
+    			if (/*$editMode*/ ctx[1]) {
     				if (!if_block) {
-    					if_block = create_if_block$2();
+    					if_block = create_if_block$2(ctx);
     					if_block.c();
     					transition_in(if_block, 1);
     					if_block.m(div29, null);
     				} else {
-    									transition_in(if_block, 1);
+    					transition_in(if_block, 1);
     				}
     			} else if (if_block) {
     				group_outros();
-    				transition_out(if_block, 1, () => {
+
+    				transition_out(if_block, 1, 1, () => {
     					if_block = null;
     				});
+
     				check_outros();
     			}
 
-    			if ((!current || changed.$isFocused || changed.$editMode) && div29_class_value !== (div29_class_value = "piano-grid-container " + (ctx.$isFocused || ctx.$editMode ? 'transparent' : '') + " svelte-1y50mx7")) {
-    				attr(div29, "class", div29_class_value);
+    			if (!current || dirty & /*$isFocused, $editMode*/ 3 && div29_class_value !== (div29_class_value = "piano-grid-container " + (/*$isFocused*/ ctx[0] || /*$editMode*/ ctx[1]
+    			? "transparent"
+    			: "") + " svelte-1y50mx7")) {
+    				attr_dev(div29, "class", div29_class_value);
     			}
     		},
-
     		i: function intro(local) {
     			if (current) return;
     			transition_in(if_block);
     			current = true;
     		},
-
     		o: function outro(local) {
     			transition_out(if_block);
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div29);
-    			}
-
+    			if (detaching) detach_dev(div29);
     			if (if_block) if_block.d();
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$5.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
     }
 
     function instance$5($$self, $$props, $$invalidate) {
-    	let $isFocused, $editMode;
+    	let $isFocused;
+    	let $editMode;
+    	validate_store(isFocused, "isFocused");
+    	component_subscribe($$self, isFocused, $$value => $$invalidate(0, $isFocused = $$value));
+    	validate_store(editMode, "editMode");
+    	component_subscribe($$self, editMode, $$value => $$invalidate(1, $editMode = $$value));
+    	const writable_props = [];
 
-    	validate_store(isFocused, 'isFocused');
-    	subscribe($$self, isFocused, $$value => { $isFocused = $$value; $$invalidate('$isFocused', $isFocused); });
-    	validate_store(editMode, 'editMode');
-    	subscribe($$self, editMode, $$value => { $editMode = $$value; $$invalidate('$editMode', $editMode); });
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<PianoGrid> was created with unknown prop '${key}'`);
+    	});
 
-    	return { $isFocused, $editMode };
+    	let { $$slots = {}, $$scope } = $$props;
+    	validate_slots("PianoGrid", $$slots, []);
+
+    	$$self.$capture_state = () => ({
+    		isFocused,
+    		editMode,
+    		fade,
+    		$isFocused,
+    		$editMode
+    	});
+
+    	return [$isFocused, $editMode];
     }
 
     class PianoGrid extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$5, create_fragment$5, safe_not_equal, []);
+    		init(this, options, instance$5, create_fragment$5, safe_not_equal, {});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "PianoGrid",
+    			options,
+    			id: create_fragment$5.name
+    		});
     	}
     }
 
     function flip(node, animation, params) {
         const style = getComputedStyle(node);
         const transform = style.transform === 'none' ? '' : style.transform;
-        const dx = animation.from.left - animation.to.left;
-        const dy = animation.from.top - animation.to.top;
+        const scaleX = animation.from.width / node.clientWidth;
+        const scaleY = animation.from.height / node.clientHeight;
+        const dx = (animation.from.left - animation.to.left) / scaleX;
+        const dy = (animation.from.top - animation.to.top) / scaleY;
         const d = Math.sqrt(dx * dx + dy * dy);
-        const { delay = 0, duration = d => Math.sqrt(d) * 120, easing = cubicOut } = params;
+        const { delay = 0, duration = (d) => Math.sqrt(d) * 120, easing = cubicOut } = params;
         return {
             delay,
             duration: is_function(duration) ? duration(d) : duration,
@@ -5468,73 +6188,70 @@ var app = (function () {
         };
     }
 
-    /* src\components\Card.svelte generated by Svelte v3.6.4 */
-
+    /* src\components\Card.svelte generated by Svelte v3.20.1 */
     const file$6 = "src\\components\\Card.svelte";
 
     // (58:0) {:else}
     function create_else_block(ctx) {
-    	var div, div_class_value, div_transition, current, dispose;
+    	let div;
+    	let div_animation_flip_value;
+    	let div_class_value;
+    	let div_transition;
+    	let current;
+    	let dispose;
+    	const default_slot_template = /*$$slots*/ ctx[6].default;
+    	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[5], null);
 
-    	const default_slot_1 = ctx.$$slots.default;
-    	const default_slot = create_slot(default_slot_1, ctx, null);
-
-    	return {
+    	const block = {
     		c: function create() {
     			div = element("div");
-
     			if (default_slot) default_slot.c();
-
-    			attr(div, "animation:flip", { duration: 300 });
-    			attr(div, "class", div_class_value = "card " + ctx.addClass + " svelte-1tei9xx");
-    			toggle_class(div, "active", ctx.active);
-    			toggle_class(div, "disabled", ctx.disabled && !ctx.active);
-    			toggle_class(div, "selectable", ctx.selectable);
+    			attr_dev(div, "animation:flip", div_animation_flip_value = { duration: 300 });
+    			attr_dev(div, "class", div_class_value = "card " + /*addClass*/ ctx[4] + " svelte-1tei9xx");
+    			toggle_class(div, "active", /*active*/ ctx[1]);
+    			toggle_class(div, "disabled", /*disabled*/ ctx[0] && !/*active*/ ctx[1]);
+    			toggle_class(div, "selectable", /*selectable*/ ctx[2]);
     			add_location(div, file$6, 58, 2, 1199);
-
-    			dispose = [
-    				listen(div, "click", ctx.click_handler),
-    				listen(div, "mouseover", ctx.mouseover_handler_1),
-    				listen(div, "mouseleave", ctx.mouseleave_handler_1)
-    			];
     		},
-
-    		l: function claim(nodes) {
-    			if (default_slot) default_slot.l(div_nodes);
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, div, anchor);
 
     			if (default_slot) {
     				default_slot.m(div, null);
     			}
 
     			current = true;
+    			if (remount) run_all(dispose);
+
+    			dispose = [
+    				listen_dev(div, "click", /*click_handler*/ ctx[9], false, false, false),
+    				listen_dev(div, "mouseover", /*mouseover_handler_1*/ ctx[10], false, false, false),
+    				listen_dev(div, "mouseleave", /*mouseleave_handler_1*/ ctx[11], false, false, false)
+    			];
     		},
-
-    		p: function update(changed, ctx) {
-    			if (default_slot && default_slot.p && changed.$$scope) {
-    				default_slot.p(get_slot_changes(default_slot_1, ctx, changed, null), get_slot_context(default_slot_1, ctx, null));
+    		p: function update(ctx, dirty) {
+    			if (default_slot) {
+    				if (default_slot.p && dirty & /*$$scope*/ 32) {
+    					default_slot.p(get_slot_context(default_slot_template, ctx, /*$$scope*/ ctx[5], null), get_slot_changes(default_slot_template, /*$$scope*/ ctx[5], dirty, null));
+    				}
     			}
 
-    			if ((!current || changed.addClass) && div_class_value !== (div_class_value = "card " + ctx.addClass + " svelte-1tei9xx")) {
-    				attr(div, "class", div_class_value);
+    			if (!current || dirty & /*addClass*/ 16 && div_class_value !== (div_class_value = "card " + /*addClass*/ ctx[4] + " svelte-1tei9xx")) {
+    				attr_dev(div, "class", div_class_value);
     			}
 
-    			if ((changed.addClass || changed.active)) {
-    				toggle_class(div, "active", ctx.active);
+    			if (dirty & /*addClass, active*/ 18) {
+    				toggle_class(div, "active", /*active*/ ctx[1]);
     			}
 
-    			if ((changed.addClass || changed.disabled || changed.active)) {
-    				toggle_class(div, "disabled", ctx.disabled && !ctx.active);
+    			if (dirty & /*addClass, disabled, active*/ 19) {
+    				toggle_class(div, "disabled", /*disabled*/ ctx[0] && !/*active*/ ctx[1]);
     			}
 
-    			if ((changed.addClass || changed.selectable)) {
-    				toggle_class(div, "selectable", ctx.selectable);
+    			if (dirty & /*addClass, selectable*/ 20) {
+    				toggle_class(div, "selectable", /*selectable*/ ctx[2]);
     			}
     		},
-
     		i: function intro(local) {
     			if (current) return;
     			transition_in(default_slot, local);
@@ -5546,94 +6263,91 @@ var app = (function () {
 
     			current = true;
     		},
-
     		o: function outro(local) {
     			transition_out(default_slot, local);
-
     			if (!div_transition) div_transition = create_bidirectional_transition(div, slide, {}, false);
     			div_transition.run(0);
-
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div);
-    			}
-
+    			if (detaching) detach_dev(div);
     			if (default_slot) default_slot.d(detaching);
-
-    			if (detaching) {
-    				if (div_transition) div_transition.end();
-    			}
-
+    			if (detaching && div_transition) div_transition.end();
     			run_all(dispose);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_else_block.name,
+    		type: "else",
+    		source: "(58:0) {:else}",
+    		ctx
+    	});
+
+    	return block;
     }
 
     // (46:0) {#if passive}
     function create_if_block$3(ctx) {
-    	var div, div_class_value, div_transition, current, dispose;
+    	let div;
+    	let div_animation_flip_value;
+    	let div_class_value;
+    	let div_transition;
+    	let current;
+    	let dispose;
+    	const default_slot_template = /*$$slots*/ ctx[6].default;
+    	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[5], null);
 
-    	const default_slot_1 = ctx.$$slots.default;
-    	const default_slot = create_slot(default_slot_1, ctx, null);
-
-    	return {
+    	const block = {
     		c: function create() {
     			div = element("div");
-
     			if (default_slot) default_slot.c();
-
-    			attr(div, "animation:flip", { duration: 300 });
-    			attr(div, "class", div_class_value = "card passive " + ctx.addClass + " svelte-1tei9xx");
-    			toggle_class(div, "active", ctx.active);
-    			toggle_class(div, "disabled", ctx.disabled);
-    			toggle_class(div, "selectable", ctx.selectable);
+    			attr_dev(div, "animation:flip", div_animation_flip_value = { duration: 300 });
+    			attr_dev(div, "class", div_class_value = "card passive " + /*addClass*/ ctx[4] + " svelte-1tei9xx");
+    			toggle_class(div, "active", /*active*/ ctx[1]);
+    			toggle_class(div, "disabled", /*disabled*/ ctx[0]);
+    			toggle_class(div, "selectable", /*selectable*/ ctx[2]);
     			add_location(div, file$6, 46, 2, 961);
-
-    			dispose = [
-    				listen(div, "mouseover", ctx.mouseover_handler),
-    				listen(div, "mouseleave", ctx.mouseleave_handler)
-    			];
     		},
-
-    		l: function claim(nodes) {
-    			if (default_slot) default_slot.l(div_nodes);
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, div, anchor);
 
     			if (default_slot) {
     				default_slot.m(div, null);
     			}
 
     			current = true;
+    			if (remount) run_all(dispose);
+
+    			dispose = [
+    				listen_dev(div, "mouseover", /*mouseover_handler*/ ctx[7], false, false, false),
+    				listen_dev(div, "mouseleave", /*mouseleave_handler*/ ctx[8], false, false, false)
+    			];
     		},
-
-    		p: function update(changed, ctx) {
-    			if (default_slot && default_slot.p && changed.$$scope) {
-    				default_slot.p(get_slot_changes(default_slot_1, ctx, changed, null), get_slot_context(default_slot_1, ctx, null));
+    		p: function update(ctx, dirty) {
+    			if (default_slot) {
+    				if (default_slot.p && dirty & /*$$scope*/ 32) {
+    					default_slot.p(get_slot_context(default_slot_template, ctx, /*$$scope*/ ctx[5], null), get_slot_changes(default_slot_template, /*$$scope*/ ctx[5], dirty, null));
+    				}
     			}
 
-    			if ((!current || changed.addClass) && div_class_value !== (div_class_value = "card passive " + ctx.addClass + " svelte-1tei9xx")) {
-    				attr(div, "class", div_class_value);
+    			if (!current || dirty & /*addClass*/ 16 && div_class_value !== (div_class_value = "card passive " + /*addClass*/ ctx[4] + " svelte-1tei9xx")) {
+    				attr_dev(div, "class", div_class_value);
     			}
 
-    			if ((changed.addClass || changed.active)) {
-    				toggle_class(div, "active", ctx.active);
+    			if (dirty & /*addClass, active*/ 18) {
+    				toggle_class(div, "active", /*active*/ ctx[1]);
     			}
 
-    			if ((changed.addClass || changed.disabled)) {
-    				toggle_class(div, "disabled", ctx.disabled);
+    			if (dirty & /*addClass, disabled*/ 17) {
+    				toggle_class(div, "disabled", /*disabled*/ ctx[0]);
     			}
 
-    			if ((changed.addClass || changed.selectable)) {
-    				toggle_class(div, "selectable", ctx.selectable);
+    			if (dirty & /*addClass, selectable*/ 20) {
+    				toggle_class(div, "selectable", /*selectable*/ ctx[2]);
     			}
     		},
-
     		i: function intro(local) {
     			if (current) return;
     			transition_in(default_slot, local);
@@ -5645,120 +6359,125 @@ var app = (function () {
 
     			current = true;
     		},
-
     		o: function outro(local) {
     			transition_out(default_slot, local);
-
     			if (!div_transition) div_transition = create_bidirectional_transition(div, slide, {}, false);
     			div_transition.run(0);
-
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div);
-    			}
-
+    			if (detaching) detach_dev(div);
     			if (default_slot) default_slot.d(detaching);
-
-    			if (detaching) {
-    				if (div_transition) div_transition.end();
-    			}
-
+    			if (detaching && div_transition) div_transition.end();
     			run_all(dispose);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block$3.name,
+    		type: "if",
+    		source: "(46:0) {#if passive}",
+    		ctx
+    	});
+
+    	return block;
     }
 
     function create_fragment$6(ctx) {
-    	var current_block_type_index, if_block, if_block_anchor, current;
+    	let current_block_type_index;
+    	let if_block;
+    	let if_block_anchor;
+    	let current;
+    	const if_block_creators = [create_if_block$3, create_else_block];
+    	const if_blocks = [];
 
-    	var if_block_creators = [
-    		create_if_block$3,
-    		create_else_block
-    	];
-
-    	var if_blocks = [];
-
-    	function select_block_type(ctx) {
-    		if (ctx.passive) return 0;
+    	function select_block_type(ctx, dirty) {
+    		if (/*passive*/ ctx[3]) return 0;
     		return 1;
     	}
 
     	current_block_type_index = select_block_type(ctx);
     	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
 
-    	return {
+    	const block = {
     		c: function create() {
     			if_block.c();
     			if_block_anchor = empty();
     		},
-
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
-
     		m: function mount(target, anchor) {
     			if_blocks[current_block_type_index].m(target, anchor);
-    			insert(target, if_block_anchor, anchor);
+    			insert_dev(target, if_block_anchor, anchor);
     			current = true;
     		},
-
-    		p: function update(changed, ctx) {
-    			var previous_block_index = current_block_type_index;
+    		p: function update(ctx, [dirty]) {
+    			let previous_block_index = current_block_type_index;
     			current_block_type_index = select_block_type(ctx);
+
     			if (current_block_type_index === previous_block_index) {
-    				if_blocks[current_block_type_index].p(changed, ctx);
+    				if_blocks[current_block_type_index].p(ctx, dirty);
     			} else {
     				group_outros();
-    				transition_out(if_blocks[previous_block_index], 1, () => {
+
+    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
     					if_blocks[previous_block_index] = null;
     				});
-    				check_outros();
 
+    				check_outros();
     				if_block = if_blocks[current_block_type_index];
+
     				if (!if_block) {
     					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
     					if_block.c();
     				}
+
     				transition_in(if_block, 1);
     				if_block.m(if_block_anchor.parentNode, if_block_anchor);
     			}
     		},
-
     		i: function intro(local) {
     			if (current) return;
     			transition_in(if_block);
     			current = true;
     		},
-
     		o: function outro(local) {
     			transition_out(if_block);
     			current = false;
     		},
-
     		d: function destroy(detaching) {
     			if_blocks[current_block_type_index].d(detaching);
-
-    			if (detaching) {
-    				detach(if_block_anchor);
-    			}
+    			if (detaching) detach_dev(if_block_anchor);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$6.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
     }
 
     function instance$6($$self, $$props, $$invalidate) {
-    	
+    	let { disabled = false } = $$props;
+    	let { active = false } = $$props;
+    	let { selectable = false } = $$props;
+    	let { passive = true } = $$props;
+    	let { addClass = "" } = $$props;
+    	const writable_props = ["disabled", "active", "selectable", "passive", "addClass"];
 
-      let { disabled = false, active = false, selectable = false, passive = true, addClass = "" } = $$props;
-
-    	const writable_props = ['disabled', 'active', 'selectable', 'passive', 'addClass'];
     	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Card> was created with unknown prop '${key}'`);
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Card> was created with unknown prop '${key}'`);
     	});
 
     	let { $$slots = {}, $$scope } = $$props;
+    	validate_slots("Card", $$slots, ['default']);
 
     	function mouseover_handler(event) {
     		bubble($$self, event);
@@ -5781,34 +6500,70 @@ var app = (function () {
     	}
 
     	$$self.$set = $$props => {
-    		if ('disabled' in $$props) $$invalidate('disabled', disabled = $$props.disabled);
-    		if ('active' in $$props) $$invalidate('active', active = $$props.active);
-    		if ('selectable' in $$props) $$invalidate('selectable', selectable = $$props.selectable);
-    		if ('passive' in $$props) $$invalidate('passive', passive = $$props.passive);
-    		if ('addClass' in $$props) $$invalidate('addClass', addClass = $$props.addClass);
-    		if ('$$scope' in $$props) $$invalidate('$$scope', $$scope = $$props.$$scope);
+    		if ("disabled" in $$props) $$invalidate(0, disabled = $$props.disabled);
+    		if ("active" in $$props) $$invalidate(1, active = $$props.active);
+    		if ("selectable" in $$props) $$invalidate(2, selectable = $$props.selectable);
+    		if ("passive" in $$props) $$invalidate(3, passive = $$props.passive);
+    		if ("addClass" in $$props) $$invalidate(4, addClass = $$props.addClass);
+    		if ("$$scope" in $$props) $$invalidate(5, $$scope = $$props.$$scope);
     	};
 
-    	return {
+    	$$self.$capture_state = () => ({
+    		slide,
+    		flip,
+    		disabled,
+    		active,
+    		selectable,
+    		passive,
+    		addClass
+    	});
+
+    	$$self.$inject_state = $$props => {
+    		if ("disabled" in $$props) $$invalidate(0, disabled = $$props.disabled);
+    		if ("active" in $$props) $$invalidate(1, active = $$props.active);
+    		if ("selectable" in $$props) $$invalidate(2, selectable = $$props.selectable);
+    		if ("passive" in $$props) $$invalidate(3, passive = $$props.passive);
+    		if ("addClass" in $$props) $$invalidate(4, addClass = $$props.addClass);
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	return [
     		disabled,
     		active,
     		selectable,
     		passive,
     		addClass,
+    		$$scope,
+    		$$slots,
     		mouseover_handler,
     		mouseleave_handler,
     		click_handler,
     		mouseover_handler_1,
-    		mouseleave_handler_1,
-    		$$slots,
-    		$$scope
-    	};
+    		mouseleave_handler_1
+    	];
     }
 
     class Card extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$6, create_fragment$6, safe_not_equal, ["disabled", "active", "selectable", "passive", "addClass"]);
+
+    		init(this, options, instance$6, create_fragment$6, safe_not_equal, {
+    			disabled: 0,
+    			active: 1,
+    			selectable: 2,
+    			passive: 3,
+    			addClass: 4
+    		});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "Card",
+    			options,
+    			id: create_fragment$6.name
+    		});
     	}
 
     	get disabled() {
@@ -5852,36 +6607,35 @@ var app = (function () {
     	}
     }
 
-    /* src\components\InstrumentCard.svelte generated by Svelte v3.6.4 */
+    /* src\components\InstrumentCard.svelte generated by Svelte v3.20.1 */
 
     const file$7 = "src\\components\\InstrumentCard.svelte";
 
     // (177:6) {#if volume > -1}
     function create_if_block_3(ctx) {
-    	var span, t, span_transition, current;
+    	let span;
+    	let t;
+    	let span_transition;
+    	let current;
 
-    	return {
+    	const block = {
     		c: function create() {
     			span = element("span");
-    			t = text(ctx.volTxt);
-    			attr(span, "class", "info-txt svelte-1regomg");
-    			add_location(span, file$7, 177, 8, 4021);
+    			t = text(/*volTxt*/ ctx[8]);
+    			attr_dev(span, "class", "info-txt svelte-1regomg");
+    			add_location(span, file$7, 177, 8, 4068);
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, span, anchor);
-    			append(span, t);
+    			insert_dev(target, span, anchor);
+    			append_dev(span, t);
     			current = true;
     		},
-
-    		p: function update(changed, ctx) {
-    			if (!current || changed.volTxt) {
-    				set_data(t, ctx.volTxt);
-    			}
+    		p: function update(ctx, dirty) {
+    			if (!current || dirty & /*volTxt*/ 256) set_data_dev(t, /*volTxt*/ ctx[8]);
     		},
-
     		i: function intro(local) {
     			if (current) return;
+
     			add_render_callback(() => {
     				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, {}, true);
     				span_transition.run(1);
@@ -5889,51 +6643,66 @@ var app = (function () {
 
     			current = true;
     		},
-
     		o: function outro(local) {
     			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, {}, false);
     			span_transition.run(0);
-
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(span);
-    				if (span_transition) span_transition.end();
-    			}
+    			if (detaching) detach_dev(span);
+    			if (detaching && span_transition) span_transition.end();
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_3.name,
+    		type: "if",
+    		source: "(177:6) {#if volume > -1}",
+    		ctx
+    	});
+
+    	return block;
     }
 
     // (182:4) {#if $editMode}
     function create_if_block_2(ctx) {
-    	var div, div_transition, current;
+    	let div;
+    	let div_transition;
+    	let current;
 
-    	var button = new Button({
-    		props: {
-    		style: "height: 1.6rem; width: 1.6rem; padding: 0; margin: 0.2rem;\r\n          transform: translateY(0.15rem)",
-    		outline: true,
-    		$$slots: { default: [create_default_slot_4] },
-    		$$scope: { ctx }
-    	},
-    		$$inline: true
-    	});
-    	button.$on("click", ctx.removeInstrument);
+    	const button = new Button({
+    			props: {
+    				style: "height: 1.6rem; width: 1.6rem; padding: 0; margin: 0.2rem;\r\n          transform: translateY(0.15rem)",
+    				outline: true,
+    				$$slots: { default: [create_default_slot_4] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
 
-    	return {
+    	button.$on("click", /*removeInstrument*/ ctx[13]);
+
+    	const block = {
     		c: function create() {
     			div = element("div");
-    			button.$$.fragment.c();
-    			add_location(div, file$7, 182, 6, 4132);
+    			create_component(button.$$.fragment);
+    			add_location(div, file$7, 182, 6, 4179);
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
+    			insert_dev(target, div, anchor);
     			mount_component(button, div, null);
     			current = true;
     		},
+    		p: function update(ctx, dirty) {
+    			const button_changes = {};
 
+    			if (dirty & /*$$scope*/ 536870912) {
+    				button_changes.$$scope = { dirty, ctx };
+    			}
+
+    			button.$set(button_changes);
+    		},
     		i: function intro(local) {
     			if (current) return;
     			transition_in(button.$$.fragment, local);
@@ -5945,119 +6714,145 @@ var app = (function () {
 
     			current = true;
     		},
-
     		o: function outro(local) {
     			transition_out(button.$$.fragment, local);
-
     			if (!div_transition) div_transition = create_bidirectional_transition(div, fade, {}, false);
     			div_transition.run(0);
-
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div);
-    			}
-
-    			destroy_component(button, );
-
-    			if (detaching) {
-    				if (div_transition) div_transition.end();
-    			}
+    			if (detaching) detach_dev(div);
+    			destroy_component(button);
+    			if (detaching && div_transition) div_transition.end();
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_2.name,
+    		type: "if",
+    		source: "(182:4) {#if $editMode}",
+    		ctx
+    	});
+
+    	return block;
     }
 
     // (184:8) <Button            style="height: 1.6rem; width: 1.6rem; padding: 0; margin: 0.2rem;            transform: translateY(0.15rem)"            outline            on:click={removeInstrument}>
     function create_default_slot_4(ctx) {
-    	var span;
+    	let span;
 
-    	return {
+    	const block = {
     		c: function create() {
     			span = element("span");
     			span.textContent = "✗";
     			set_style(span, "font-family", "'Inter', sans-serif");
     			set_style(span, "font-size", "1.2rem");
-    			add_location(span, file$7, 188, 10, 4361);
+    			add_location(span, file$7, 188, 10, 4408);
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, span, anchor);
+    			insert_dev(target, span, anchor);
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(span);
-    			}
+    			if (detaching) detach_dev(span);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot_4.name,
+    		type: "slot",
+    		source: "(184:8) <Button            style=\\\"height: 1.6rem; width: 1.6rem; padding: 0; margin: 0.2rem;            transform: translateY(0.15rem)\\\"            outline            on:click={removeInstrument}>",
+    		ctx
+    	});
+
+    	return block;
     }
 
     // (197:2) {#if optionsVisible && $editMode}
     function create_if_block$4(ctx) {
-    	var div3, p, t0, t1_value = normalizedName(ctx.soundfont), t1, t2, div0, t3, t4, div2, div1, updating_value, t5, t6, div3_transition, current;
+    	let div3;
+    	let p;
+    	let t0;
+    	let t1_value = normalizedName(/*soundfont*/ ctx[3]) + "";
+    	let t1;
+    	let t2;
+    	let div0;
+    	let t3;
+    	let t4;
+    	let div2;
+    	let div1;
+    	let updating_value;
+    	let t5;
+    	let t6;
+    	let div3_transition;
+    	let current;
 
-    	var button0 = new Button({
-    		props: {
-    		outline: true,
-    		$$slots: { default: [create_default_slot_3] },
-    		$$scope: { ctx }
-    	},
-    		$$inline: true
-    	});
-    	button0.$on("click", ctx.octavePlus);
+    	const button0 = new Button({
+    			props: {
+    				outline: true,
+    				$$slots: { default: [create_default_slot_3] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
 
-    	var button1 = new Button({
-    		props: {
-    		outline: true,
-    		spaced: true,
-    		$$slots: { default: [create_default_slot_2] },
-    		$$scope: { ctx }
-    	},
-    		$$inline: true
-    	});
-    	button1.$on("click", ctx.octaveMinus);
+    	button0.$on("click", /*octavePlus*/ ctx[11]);
+
+    	const button1 = new Button({
+    			props: {
+    				outline: true,
+    				spaced: true,
+    				$$slots: { default: [create_default_slot_2] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
+
+    	button1.$on("click", /*octaveMinus*/ ctx[12]);
 
     	function slidecontrol_value_binding(value) {
-    		ctx.slidecontrol_value_binding.call(null, value);
-    		updating_value = true;
-    		add_flush_callback(() => updating_value = false);
+    		/*slidecontrol_value_binding*/ ctx[22].call(null, value);
     	}
 
     	let slidecontrol_props = {
     		min: -1,
     		max: 100,
     		step: 1,
-    		title: 'Volume',
-    		customValueDisplay: { '-1': ctx.absoluteVolume ? 'Current' : 'Default', '0': 'Muted' }
+    		title: "Volume",
+    		customValueDisplay: {
+    			"-1": /*absoluteVolume*/ ctx[4] ? "Current" : "Default",
+    			"0": "Muted"
+    		}
     	};
-    	if (ctx.volume !== void 0) {
-    		slidecontrol_props.value = ctx.volume;
+
+    	if (/*volume*/ ctx[0] !== void 0) {
+    		slidecontrol_props.value = /*volume*/ ctx[0];
     	}
-    	var slidecontrol = new SlideControl({
-    		props: slidecontrol_props,
-    		$$inline: true
-    	});
 
-    	binding_callbacks.push(() => bind(slidecontrol, 'value', slidecontrol_value_binding));
-    	slidecontrol.$on("change", ctx.setVolume);
+    	const slidecontrol = new SlideControl({
+    			props: slidecontrol_props,
+    			$$inline: true
+    		});
 
-    	var button2 = new Button({
-    		props: {
-    		style: "transform: translateY(0.8rem)",
-    		outline: true,
-    		spaced: true,
-    		$$slots: { default: [create_default_slot_1] },
-    		$$scope: { ctx }
-    	},
-    		$$inline: true
-    	});
-    	button2.$on("click", ctx.toggleAbsoluteVolume);
+    	binding_callbacks.push(() => bind(slidecontrol, "value", slidecontrol_value_binding));
+    	slidecontrol.$on("change", /*setVolume*/ ctx[14]);
 
-    	var if_block = (ctx.$showAdsr && ctx.$editMode) && create_if_block_1(ctx);
+    	const button2 = new Button({
+    			props: {
+    				style: "transform: translateY(0.8rem)",
+    				outline: true,
+    				spaced: true,
+    				$$slots: { default: [create_default_slot_1] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
 
-    	return {
+    	button2.$on("click", /*toggleAbsoluteVolume*/ ctx[15]);
+    	let if_block = /*$showAdsr*/ ctx[10] && /*$editMode*/ ctx[9] && create_if_block_1(ctx);
+
+    	const block = {
     		c: function create() {
     			div3 = element("div");
     			p = element("p");
@@ -6065,78 +6860,90 @@ var app = (function () {
     			t1 = text(t1_value);
     			t2 = space();
     			div0 = element("div");
-    			button0.$$.fragment.c();
+    			create_component(button0.$$.fragment);
     			t3 = space();
-    			button1.$$.fragment.c();
+    			create_component(button1.$$.fragment);
     			t4 = space();
     			div2 = element("div");
     			div1 = element("div");
-    			slidecontrol.$$.fragment.c();
+    			create_component(slidecontrol.$$.fragment);
     			t5 = space();
-    			button2.$$.fragment.c();
+    			create_component(button2.$$.fragment);
     			t6 = space();
     			if (if_block) if_block.c();
-    			attr(p, "class", "info-txt svelte-1regomg");
-    			add_location(p, file$7, 199, 6, 4609);
+    			attr_dev(p, "class", "info-txt svelte-1regomg");
+    			add_location(p, file$7, 199, 6, 4656);
     			set_style(div0, "margin", "0.6rem 0");
-    			attr(div0, "class", "row svelte-1regomg");
-    			add_location(div0, file$7, 200, 6, 4680);
+    			attr_dev(div0, "class", "row svelte-1regomg");
+    			add_location(div0, file$7, 200, 6, 4727);
     			set_style(div1, "flex-grow", "1");
-    			add_location(div1, file$7, 206, 8, 4911);
-    			attr(div2, "class", "row svelte-1regomg");
-    			add_location(div2, file$7, 205, 6, 4884);
-    			attr(div3, "class", "toolbar svelte-1regomg");
-    			add_location(div3, file$7, 197, 4, 4561);
+    			add_location(div1, file$7, 206, 8, 4958);
+    			attr_dev(div2, "class", "row svelte-1regomg");
+    			add_location(div2, file$7, 205, 6, 4931);
+    			attr_dev(div3, "class", "toolbar svelte-1regomg");
+    			add_location(div3, file$7, 197, 4, 4608);
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, div3, anchor);
-    			append(div3, p);
-    			append(p, t0);
-    			append(p, t1);
-    			append(div3, t2);
-    			append(div3, div0);
+    			insert_dev(target, div3, anchor);
+    			append_dev(div3, p);
+    			append_dev(p, t0);
+    			append_dev(p, t1);
+    			append_dev(div3, t2);
+    			append_dev(div3, div0);
     			mount_component(button0, div0, null);
-    			append(div0, t3);
+    			append_dev(div0, t3);
     			mount_component(button1, div0, null);
-    			append(div3, t4);
-    			append(div3, div2);
-    			append(div2, div1);
+    			append_dev(div3, t4);
+    			append_dev(div3, div2);
+    			append_dev(div2, div1);
     			mount_component(slidecontrol, div1, null);
-    			append(div2, t5);
+    			append_dev(div2, t5);
     			mount_component(button2, div2, null);
-    			append(div3, t6);
+    			append_dev(div3, t6);
     			if (if_block) if_block.m(div3, null);
     			current = true;
     		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty & /*soundfont*/ 8) && t1_value !== (t1_value = normalizedName(/*soundfont*/ ctx[3]) + "")) set_data_dev(t1, t1_value);
+    			const button0_changes = {};
 
-    		p: function update(changed, ctx) {
-    			if ((!current || changed.soundfont) && t1_value !== (t1_value = normalizedName(ctx.soundfont))) {
-    				set_data(t1, t1_value);
+    			if (dirty & /*$$scope*/ 536870912) {
+    				button0_changes.$$scope = { dirty, ctx };
     			}
 
-    			var button0_changes = {};
-    			if (changed.$$scope) button0_changes.$$scope = { changed, ctx };
     			button0.$set(button0_changes);
+    			const button1_changes = {};
 
-    			var button1_changes = {};
-    			if (changed.$$scope) button1_changes.$$scope = { changed, ctx };
-    			button1.$set(button1_changes);
-
-    			var slidecontrol_changes = {};
-    			if (changed.absoluteVolume) slidecontrol_changes.customValueDisplay = { '-1': ctx.absoluteVolume ? 'Current' : 'Default', '0': 'Muted' };
-    			if (!updating_value && changed.volume) {
-    				slidecontrol_changes.value = ctx.volume;
+    			if (dirty & /*$$scope*/ 536870912) {
+    				button1_changes.$$scope = { dirty, ctx };
     			}
-    			slidecontrol.$set(slidecontrol_changes);
 
-    			var button2_changes = {};
-    			if (changed.$$scope || changed.absoluteVolume) button2_changes.$$scope = { changed, ctx };
+    			button1.$set(button1_changes);
+    			const slidecontrol_changes = {};
+
+    			if (dirty & /*absoluteVolume*/ 16) slidecontrol_changes.customValueDisplay = {
+    				"-1": /*absoluteVolume*/ ctx[4] ? "Current" : "Default",
+    				"0": "Muted"
+    			};
+
+    			if (!updating_value && dirty & /*volume*/ 1) {
+    				updating_value = true;
+    				slidecontrol_changes.value = /*volume*/ ctx[0];
+    				add_flush_callback(() => updating_value = false);
+    			}
+
+    			slidecontrol.$set(slidecontrol_changes);
+    			const button2_changes = {};
+
+    			if (dirty & /*$$scope, absoluteVolume*/ 536870928) {
+    				button2_changes.$$scope = { dirty, ctx };
+    			}
+
     			button2.$set(button2_changes);
 
-    			if (ctx.$showAdsr && ctx.$editMode) {
+    			if (/*$showAdsr*/ ctx[10] && /*$editMode*/ ctx[9]) {
     				if (if_block) {
-    					if_block.p(changed, ctx);
+    					if_block.p(ctx, dirty);
     					transition_in(if_block, 1);
     				} else {
     					if_block = create_if_block_1(ctx);
@@ -6146,23 +6953,20 @@ var app = (function () {
     				}
     			} else if (if_block) {
     				group_outros();
-    				transition_out(if_block, 1, () => {
+
+    				transition_out(if_block, 1, 1, () => {
     					if_block = null;
     				});
+
     				check_outros();
     			}
     		},
-
     		i: function intro(local) {
     			if (current) return;
     			transition_in(button0.$$.fragment, local);
-
     			transition_in(button1.$$.fragment, local);
-
     			transition_in(slidecontrol.$$.fragment, local);
-
     			transition_in(button2.$$.fragment, local);
-
     			transition_in(if_block);
 
     			add_render_callback(() => {
@@ -6172,272 +6976,296 @@ var app = (function () {
 
     			current = true;
     		},
-
     		o: function outro(local) {
     			transition_out(button0.$$.fragment, local);
     			transition_out(button1.$$.fragment, local);
     			transition_out(slidecontrol.$$.fragment, local);
     			transition_out(button2.$$.fragment, local);
     			transition_out(if_block);
-
     			if (!div3_transition) div3_transition = create_bidirectional_transition(div3, slide, {}, false);
     			div3_transition.run(0);
-
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div3);
-    			}
-
-    			destroy_component(button0, );
-
-    			destroy_component(button1, );
-
-    			destroy_component(slidecontrol, );
-
-    			destroy_component(button2, );
-
+    			if (detaching) detach_dev(div3);
+    			destroy_component(button0);
+    			destroy_component(button1);
+    			destroy_component(slidecontrol);
+    			destroy_component(button2);
     			if (if_block) if_block.d();
-
-    			if (detaching) {
-    				if (div3_transition) div3_transition.end();
-    			}
+    			if (detaching && div3_transition) div3_transition.end();
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block$4.name,
+    		type: "if",
+    		source: "(197:2) {#if optionsVisible && $editMode}",
+    		ctx
+    	});
+
+    	return block;
     }
 
     // (202:8) <Button outline on:click={octavePlus}>
     function create_default_slot_3(ctx) {
-    	var t;
+    	let t;
 
-    	return {
+    	const block = {
     		c: function create() {
     			t = text("Octave +");
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, t, anchor);
+    			insert_dev(target, t, anchor);
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(t);
-    			}
+    			if (detaching) detach_dev(t);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot_3.name,
+    		type: "slot",
+    		source: "(202:8) <Button outline on:click={octavePlus}>",
+    		ctx
+    	});
+
+    	return block;
     }
 
     // (203:8) <Button outline on:click={octaveMinus} spaced>
     function create_default_slot_2(ctx) {
-    	var t;
+    	let t;
 
-    	return {
+    	const block = {
     		c: function create() {
     			t = text("Octave -");
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, t, anchor);
+    			insert_dev(target, t, anchor);
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(t);
-    			}
+    			if (detaching) detach_dev(t);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot_2.name,
+    		type: "slot",
+    		source: "(203:8) <Button outline on:click={octaveMinus} spaced>",
+    		ctx
+    	});
+
+    	return block;
     }
 
     // (217:8) <Button            style="transform: translateY(0.8rem)"            outline            on:click={toggleAbsoluteVolume}            spaced>
     function create_default_slot_1(ctx) {
-    	var t_value = ctx.absoluteVolume ? '% of current' : 'Absolute', t;
+    	let t_value = (/*absoluteVolume*/ ctx[4] ? "% of current" : "Absolute") + "";
+    	let t;
 
-    	return {
+    	const block = {
     		c: function create() {
     			t = text(t_value);
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, t, anchor);
+    			insert_dev(target, t, anchor);
     		},
-
-    		p: function update(changed, ctx) {
-    			if ((changed.absoluteVolume) && t_value !== (t_value = ctx.absoluteVolume ? '% of current' : 'Absolute')) {
-    				set_data(t, t_value);
-    			}
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*absoluteVolume*/ 16 && t_value !== (t_value = (/*absoluteVolume*/ ctx[4] ? "% of current" : "Absolute") + "")) set_data_dev(t, t_value);
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(t);
-    			}
+    			if (detaching) detach_dev(t);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot_1.name,
+    		type: "slot",
+    		source: "(217:8) <Button            style=\\\"transform: translateY(0.8rem)\\\"            outline            on:click={toggleAbsoluteVolume}            spaced>",
+    		ctx
+    	});
+
+    	return block;
     }
 
     // (227:6) {#if $showAdsr && $editMode}
     function create_if_block_1(ctx) {
-    	var updating_value, t0, updating_value_1, t1, updating_value_2, t2, updating_value_3, current;
+    	let updating_value;
+    	let t0;
+    	let updating_value_1;
+    	let t1;
+    	let updating_value_2;
+    	let t2;
+    	let updating_value_3;
+    	let current;
 
     	function slidecontrol0_value_binding(value) {
-    		ctx.slidecontrol0_value_binding.call(null, value);
-    		updating_value = true;
-    		add_flush_callback(() => updating_value = false);
+    		/*slidecontrol0_value_binding*/ ctx[23].call(null, value);
     	}
 
     	let slidecontrol0_props = {
     		min: -0.01,
     		max: 1,
     		step: 0.01,
-    		title: 'Attack',
-    		customValueDisplay: { '-0.01': 'Default', '0.005': 'Default' }
+    		title: "Attack",
+    		customValueDisplay: { "-0.01": "Default", "0.005": "Default" }
     	};
-    	if (ctx.adsr[0] !== void 0) {
-    		slidecontrol0_props.value = ctx.adsr[0];
+
+    	if (/*adsr*/ ctx[1][0] !== void 0) {
+    		slidecontrol0_props.value = /*adsr*/ ctx[1][0];
     	}
-    	var slidecontrol0 = new SlideControl({
-    		props: slidecontrol0_props,
-    		$$inline: true
-    	});
 
-    	binding_callbacks.push(() => bind(slidecontrol0, 'value', slidecontrol0_value_binding));
-    	slidecontrol0.$on("change", ctx.setAdsr);
+    	const slidecontrol0 = new SlideControl({
+    			props: slidecontrol0_props,
+    			$$inline: true
+    		});
 
-    	function slidecontrol1_value_binding(value_1) {
-    		ctx.slidecontrol1_value_binding.call(null, value_1);
-    		updating_value_1 = true;
-    		add_flush_callback(() => updating_value_1 = false);
+    	binding_callbacks.push(() => bind(slidecontrol0, "value", slidecontrol0_value_binding));
+    	slidecontrol0.$on("change", /*setAdsr*/ ctx[16]);
+
+    	function slidecontrol1_value_binding(value) {
+    		/*slidecontrol1_value_binding*/ ctx[24].call(null, value);
     	}
 
     	let slidecontrol1_props = {
     		min: -0.01,
     		max: 1,
     		step: 0.01,
-    		title: 'Delay',
-    		customValueDisplay: { '-0.01': 'Default', '0.395': 'Default' }
+    		title: "Delay",
+    		customValueDisplay: { "-0.01": "Default", "0.395": "Default" }
     	};
-    	if (ctx.adsr[1] !== void 0) {
-    		slidecontrol1_props.value = ctx.adsr[1];
+
+    	if (/*adsr*/ ctx[1][1] !== void 0) {
+    		slidecontrol1_props.value = /*adsr*/ ctx[1][1];
     	}
-    	var slidecontrol1 = new SlideControl({
-    		props: slidecontrol1_props,
-    		$$inline: true
-    	});
 
-    	binding_callbacks.push(() => bind(slidecontrol1, 'value', slidecontrol1_value_binding));
-    	slidecontrol1.$on("change", ctx.setAdsr);
+    	const slidecontrol1 = new SlideControl({
+    			props: slidecontrol1_props,
+    			$$inline: true
+    		});
 
-    	function slidecontrol2_value_binding(value_2) {
-    		ctx.slidecontrol2_value_binding.call(null, value_2);
-    		updating_value_2 = true;
-    		add_flush_callback(() => updating_value_2 = false);
+    	binding_callbacks.push(() => bind(slidecontrol1, "value", slidecontrol1_value_binding));
+    	slidecontrol1.$on("change", /*setAdsr*/ ctx[16]);
+
+    	function slidecontrol2_value_binding(value) {
+    		/*slidecontrol2_value_binding*/ ctx[25].call(null, value);
     	}
 
     	let slidecontrol2_props = {
     		min: -0.01,
     		max: 1,
     		step: 0.01,
-    		title: 'Sustain',
-    		customValueDisplay: { '-0.01': 'Default', '0.8': 'Default' }
+    		title: "Sustain",
+    		customValueDisplay: { "-0.01": "Default", "0.8": "Default" }
     	};
-    	if (ctx.adsr[2] !== void 0) {
-    		slidecontrol2_props.value = ctx.adsr[2];
+
+    	if (/*adsr*/ ctx[1][2] !== void 0) {
+    		slidecontrol2_props.value = /*adsr*/ ctx[1][2];
     	}
-    	var slidecontrol2 = new SlideControl({
-    		props: slidecontrol2_props,
-    		$$inline: true
-    	});
 
-    	binding_callbacks.push(() => bind(slidecontrol2, 'value', slidecontrol2_value_binding));
-    	slidecontrol2.$on("change", ctx.setAdsr);
+    	const slidecontrol2 = new SlideControl({
+    			props: slidecontrol2_props,
+    			$$inline: true
+    		});
 
-    	function slidecontrol3_value_binding(value_3) {
-    		ctx.slidecontrol3_value_binding.call(null, value_3);
-    		updating_value_3 = true;
-    		add_flush_callback(() => updating_value_3 = false);
+    	binding_callbacks.push(() => bind(slidecontrol2, "value", slidecontrol2_value_binding));
+    	slidecontrol2.$on("change", /*setAdsr*/ ctx[16]);
+
+    	function slidecontrol3_value_binding(value) {
+    		/*slidecontrol3_value_binding*/ ctx[26].call(null, value);
     	}
 
     	let slidecontrol3_props = {
     		min: -0.01,
     		max: 1,
     		step: 0.01,
-    		title: 'Release',
-    		customValueDisplay: { '-0.01': 'Default', '1.2': 'Default' }
+    		title: "Release",
+    		customValueDisplay: { "-0.01": "Default", "1.2": "Default" }
     	};
-    	if (ctx.adsr[3] !== void 0) {
-    		slidecontrol3_props.value = ctx.adsr[3];
+
+    	if (/*adsr*/ ctx[1][3] !== void 0) {
+    		slidecontrol3_props.value = /*adsr*/ ctx[1][3];
     	}
-    	var slidecontrol3 = new SlideControl({
-    		props: slidecontrol3_props,
-    		$$inline: true
-    	});
 
-    	binding_callbacks.push(() => bind(slidecontrol3, 'value', slidecontrol3_value_binding));
-    	slidecontrol3.$on("change", ctx.setAdsr);
+    	const slidecontrol3 = new SlideControl({
+    			props: slidecontrol3_props,
+    			$$inline: true
+    		});
 
-    	return {
+    	binding_callbacks.push(() => bind(slidecontrol3, "value", slidecontrol3_value_binding));
+    	slidecontrol3.$on("change", /*setAdsr*/ ctx[16]);
+
+    	const block = {
     		c: function create() {
-    			slidecontrol0.$$.fragment.c();
+    			create_component(slidecontrol0.$$.fragment);
     			t0 = space();
-    			slidecontrol1.$$.fragment.c();
+    			create_component(slidecontrol1.$$.fragment);
     			t1 = space();
-    			slidecontrol2.$$.fragment.c();
+    			create_component(slidecontrol2.$$.fragment);
     			t2 = space();
-    			slidecontrol3.$$.fragment.c();
+    			create_component(slidecontrol3.$$.fragment);
     		},
-
     		m: function mount(target, anchor) {
     			mount_component(slidecontrol0, target, anchor);
-    			insert(target, t0, anchor);
+    			insert_dev(target, t0, anchor);
     			mount_component(slidecontrol1, target, anchor);
-    			insert(target, t1, anchor);
+    			insert_dev(target, t1, anchor);
     			mount_component(slidecontrol2, target, anchor);
-    			insert(target, t2, anchor);
+    			insert_dev(target, t2, anchor);
     			mount_component(slidecontrol3, target, anchor);
     			current = true;
     		},
+    		p: function update(ctx, dirty) {
+    			const slidecontrol0_changes = {};
 
-    		p: function update(changed, ctx) {
-    			var slidecontrol0_changes = {};
-    			if (!updating_value && changed.adsr) {
-    				slidecontrol0_changes.value = ctx.adsr[0];
+    			if (!updating_value && dirty & /*adsr*/ 2) {
+    				updating_value = true;
+    				slidecontrol0_changes.value = /*adsr*/ ctx[1][0];
+    				add_flush_callback(() => updating_value = false);
     			}
+
     			slidecontrol0.$set(slidecontrol0_changes);
+    			const slidecontrol1_changes = {};
 
-    			var slidecontrol1_changes = {};
-    			if (!updating_value_1 && changed.adsr) {
-    				slidecontrol1_changes.value = ctx.adsr[1];
+    			if (!updating_value_1 && dirty & /*adsr*/ 2) {
+    				updating_value_1 = true;
+    				slidecontrol1_changes.value = /*adsr*/ ctx[1][1];
+    				add_flush_callback(() => updating_value_1 = false);
     			}
+
     			slidecontrol1.$set(slidecontrol1_changes);
+    			const slidecontrol2_changes = {};
 
-    			var slidecontrol2_changes = {};
-    			if (!updating_value_2 && changed.adsr) {
-    				slidecontrol2_changes.value = ctx.adsr[2];
+    			if (!updating_value_2 && dirty & /*adsr*/ 2) {
+    				updating_value_2 = true;
+    				slidecontrol2_changes.value = /*adsr*/ ctx[1][2];
+    				add_flush_callback(() => updating_value_2 = false);
     			}
+
     			slidecontrol2.$set(slidecontrol2_changes);
+    			const slidecontrol3_changes = {};
 
-    			var slidecontrol3_changes = {};
-    			if (!updating_value_3 && changed.adsr) {
-    				slidecontrol3_changes.value = ctx.adsr[3];
+    			if (!updating_value_3 && dirty & /*adsr*/ 2) {
+    				updating_value_3 = true;
+    				slidecontrol3_changes.value = /*adsr*/ ctx[1][3];
+    				add_flush_callback(() => updating_value_3 = false);
     			}
+
     			slidecontrol3.$set(slidecontrol3_changes);
     		},
-
     		i: function intro(local) {
     			if (current) return;
     			transition_in(slidecontrol0.$$.fragment, local);
-
     			transition_in(slidecontrol1.$$.fragment, local);
-
     			transition_in(slidecontrol2.$$.fragment, local);
-
     			transition_in(slidecontrol3.$$.fragment, local);
-
     			current = true;
     		},
-
     		o: function outro(local) {
     			transition_out(slidecontrol0.$$.fragment, local);
     			transition_out(slidecontrol1.$$.fragment, local);
@@ -6445,42 +7273,48 @@ var app = (function () {
     			transition_out(slidecontrol3.$$.fragment, local);
     			current = false;
     		},
-
     		d: function destroy(detaching) {
     			destroy_component(slidecontrol0, detaching);
-
-    			if (detaching) {
-    				detach(t0);
-    			}
-
+    			if (detaching) detach_dev(t0);
     			destroy_component(slidecontrol1, detaching);
-
-    			if (detaching) {
-    				detach(t1);
-    			}
-
+    			if (detaching) detach_dev(t1);
     			destroy_component(slidecontrol2, detaching);
-
-    			if (detaching) {
-    				detach(t2);
-    			}
-
+    			if (detaching) detach_dev(t2);
     			destroy_component(slidecontrol3, detaching);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_1.name,
+    		type: "if",
+    		source: "(227:6) {#if $showAdsr && $editMode}",
+    		ctx
+    	});
+
+    	return block;
     }
 
-    // (169:0) <Card    on:mouseover={() => (optionsVisible = true)}    on:mouseleave={() => (optionsVisible = false)}>
+    // (170:0) <Card    on:mouseover={() => (optionsVisible = nohover ? false : true)}    on:mouseleave={() => (optionsVisible = false)}>
     function create_default_slot(ctx) {
-    	var div1, div0, h4, t0_value = normalizedName(ctx.name), t0, t1, span, t2, t3, t4, t5, if_block2_anchor, current;
+    	let div1;
+    	let div0;
+    	let h4;
+    	let t0_value = normalizedName(/*name*/ ctx[2]) + "";
+    	let t0;
+    	let t1;
+    	let span;
+    	let t2;
+    	let t3;
+    	let t4;
+    	let t5;
+    	let if_block2_anchor;
+    	let current;
+    	let if_block0 = /*volume*/ ctx[0] > -1 && create_if_block_3(ctx);
+    	let if_block1 = /*$editMode*/ ctx[9] && create_if_block_2(ctx);
+    	let if_block2 = /*optionsVisible*/ ctx[6] && /*$editMode*/ ctx[9] && create_if_block$4(ctx);
 
-    	var if_block0 = (ctx.volume > -1) && create_if_block_3(ctx);
-
-    	var if_block1 = (ctx.$editMode) && create_if_block_2(ctx);
-
-    	var if_block2 = (ctx.optionsVisible && ctx.$editMode) && create_if_block$4(ctx);
-
-    	return {
+    	const block = {
     		c: function create() {
     			div1 = element("div");
     			div0 = element("div");
@@ -6488,7 +7322,7 @@ var app = (function () {
     			t0 = text(t0_value);
     			t1 = space();
     			span = element("span");
-    			t2 = text(ctx.octShift);
+    			t2 = text(/*octShift*/ ctx[7]);
     			t3 = space();
     			if (if_block0) if_block0.c();
     			t4 = space();
@@ -6496,46 +7330,39 @@ var app = (function () {
     			t5 = space();
     			if (if_block2) if_block2.c();
     			if_block2_anchor = empty();
-    			attr(h4, "class", "uppercase svelte-1regomg");
-    			add_location(h4, file$7, 174, 6, 3889);
-    			attr(span, "class", "info-txt svelte-1regomg");
-    			add_location(span, file$7, 175, 6, 3946);
-    			attr(div0, "class", "status svelte-1regomg");
-    			add_location(div0, file$7, 173, 4, 3861);
-    			attr(div1, "class", "row svelte-1regomg");
-    			add_location(div1, file$7, 172, 2, 3838);
+    			attr_dev(h4, "class", "uppercase svelte-1regomg");
+    			add_location(h4, file$7, 174, 6, 3936);
+    			attr_dev(span, "class", "info-txt svelte-1regomg");
+    			add_location(span, file$7, 175, 6, 3993);
+    			attr_dev(div0, "class", "status svelte-1regomg");
+    			add_location(div0, file$7, 173, 4, 3908);
+    			attr_dev(div1, "class", "row svelte-1regomg");
+    			add_location(div1, file$7, 172, 2, 3885);
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, div1, anchor);
-    			append(div1, div0);
-    			append(div0, h4);
-    			append(h4, t0);
-    			append(div0, t1);
-    			append(div0, span);
-    			append(span, t2);
-    			append(div0, t3);
+    			insert_dev(target, div1, anchor);
+    			append_dev(div1, div0);
+    			append_dev(div0, h4);
+    			append_dev(h4, t0);
+    			append_dev(div0, t1);
+    			append_dev(div0, span);
+    			append_dev(span, t2);
+    			append_dev(div0, t3);
     			if (if_block0) if_block0.m(div0, null);
-    			append(div1, t4);
+    			append_dev(div1, t4);
     			if (if_block1) if_block1.m(div1, null);
-    			insert(target, t5, anchor);
+    			insert_dev(target, t5, anchor);
     			if (if_block2) if_block2.m(target, anchor);
-    			insert(target, if_block2_anchor, anchor);
+    			insert_dev(target, if_block2_anchor, anchor);
     			current = true;
     		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty & /*name*/ 4) && t0_value !== (t0_value = normalizedName(/*name*/ ctx[2]) + "")) set_data_dev(t0, t0_value);
+    			if (!current || dirty & /*octShift*/ 128) set_data_dev(t2, /*octShift*/ ctx[7]);
 
-    		p: function update(changed, ctx) {
-    			if ((!current || changed.name) && t0_value !== (t0_value = normalizedName(ctx.name))) {
-    				set_data(t0, t0_value);
-    			}
-
-    			if (!current || changed.octShift) {
-    				set_data(t2, ctx.octShift);
-    			}
-
-    			if (ctx.volume > -1) {
+    			if (/*volume*/ ctx[0] > -1) {
     				if (if_block0) {
-    					if_block0.p(changed, ctx);
+    					if_block0.p(ctx, dirty);
     					transition_in(if_block0, 1);
     				} else {
     					if_block0 = create_if_block_3(ctx);
@@ -6545,32 +7372,37 @@ var app = (function () {
     				}
     			} else if (if_block0) {
     				group_outros();
-    				transition_out(if_block0, 1, () => {
+
+    				transition_out(if_block0, 1, 1, () => {
     					if_block0 = null;
     				});
+
     				check_outros();
     			}
 
-    			if (ctx.$editMode) {
-    				if (!if_block1) {
+    			if (/*$editMode*/ ctx[9]) {
+    				if (if_block1) {
+    					if_block1.p(ctx, dirty);
+    					transition_in(if_block1, 1);
+    				} else {
     					if_block1 = create_if_block_2(ctx);
     					if_block1.c();
     					transition_in(if_block1, 1);
     					if_block1.m(div1, null);
-    				} else {
-    									transition_in(if_block1, 1);
     				}
     			} else if (if_block1) {
     				group_outros();
-    				transition_out(if_block1, 1, () => {
+
+    				transition_out(if_block1, 1, 1, () => {
     					if_block1 = null;
     				});
+
     				check_outros();
     			}
 
-    			if (ctx.optionsVisible && ctx.$editMode) {
+    			if (/*optionsVisible*/ ctx[6] && /*$editMode*/ ctx[9]) {
     				if (if_block2) {
-    					if_block2.p(changed, ctx);
+    					if_block2.p(ctx, dirty);
     					transition_in(if_block2, 1);
     				} else {
     					if_block2 = create_if_block$4(ctx);
@@ -6580,13 +7412,14 @@ var app = (function () {
     				}
     			} else if (if_block2) {
     				group_outros();
-    				transition_out(if_block2, 1, () => {
+
+    				transition_out(if_block2, 1, 1, () => {
     					if_block2 = null;
     				});
+
     				check_outros();
     			}
     		},
-
     		i: function intro(local) {
     			if (current) return;
     			transition_in(if_block0);
@@ -6594,259 +7427,242 @@ var app = (function () {
     			transition_in(if_block2);
     			current = true;
     		},
-
     		o: function outro(local) {
     			transition_out(if_block0);
     			transition_out(if_block1);
     			transition_out(if_block2);
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div1);
-    			}
-
+    			if (detaching) detach_dev(div1);
     			if (if_block0) if_block0.d();
     			if (if_block1) if_block1.d();
-
-    			if (detaching) {
-    				detach(t5);
-    			}
-
+    			if (detaching) detach_dev(t5);
     			if (if_block2) if_block2.d(detaching);
-
-    			if (detaching) {
-    				detach(if_block2_anchor);
-    			}
+    			if (detaching) detach_dev(if_block2_anchor);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot.name,
+    		type: "slot",
+    		source: "(170:0) <Card    on:mouseover={() => (optionsVisible = nohover ? false : true)}    on:mouseleave={() => (optionsVisible = false)}>",
+    		ctx
+    	});
+
+    	return block;
     }
 
     function create_fragment$7(ctx) {
-    	var current;
+    	let current;
 
-    	var card = new Card({
-    		props: {
-    		$$slots: { default: [create_default_slot] },
-    		$$scope: { ctx }
-    	},
-    		$$inline: true
-    	});
-    	card.$on("mouseover", ctx.mouseover_handler);
-    	card.$on("mouseleave", ctx.mouseleave_handler);
+    	const card = new Card({
+    			props: {
+    				$$slots: { default: [create_default_slot] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
 
-    	return {
+    	card.$on("mouseover", /*mouseover_handler*/ ctx[27]);
+    	card.$on("mouseleave", /*mouseleave_handler*/ ctx[28]);
+
+    	const block = {
     		c: function create() {
-    			card.$$.fragment.c();
+    			create_component(card.$$.fragment);
     		},
-
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
-
     		m: function mount(target, anchor) {
     			mount_component(card, target, anchor);
     			current = true;
     		},
+    		p: function update(ctx, [dirty]) {
+    			const card_changes = {};
 
-    		p: function update(changed, ctx) {
-    			var card_changes = {};
-    			if (changed.$$scope || changed.optionsVisible || changed.$editMode || changed.$showAdsr || changed.adsr || changed.absoluteVolume || changed.volume || changed.soundfont || changed.volTxt || changed.octShift || changed.name) card_changes.$$scope = { changed, ctx };
+    			if (dirty & /*$$scope, adsr, $showAdsr, $editMode, absoluteVolume, volume, soundfont, optionsVisible, volTxt, octShift, name*/ 536872927) {
+    				card_changes.$$scope = { dirty, ctx };
+    			}
+
     			card.$set(card_changes);
     		},
-
     		i: function intro(local) {
     			if (current) return;
     			transition_in(card.$$.fragment, local);
-
     			current = true;
     		},
-
     		o: function outro(local) {
     			transition_out(card.$$.fragment, local);
     			current = false;
     		},
-
     		d: function destroy(detaching) {
     			destroy_component(card, detaching);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$7.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
     }
 
     function normalizedName(name) {
-      name = name.replace(/_/g, " ");
-
-      return name.charAt(0).toUpperCase() + name.slice(1);
+    	name = name.replace(/_/g, " ");
+    	return name.charAt(0).toUpperCase() + name.slice(1);
     }
 
     function clamp(value, min, max) {
-      if (value <= min) return min;
-      if (value >= max) return max;
-      return value;
+    	if (value <= min) return min;
+    	if (value >= max) return max;
+    	return value;
     }
 
     function instance$7($$self, $$props, $$invalidate) {
-    	let $instrumentSets, $activeSet, $editMode, $showAdsr;
+    	let $instrumentSets;
+    	let $activeSet;
+    	let $editMode;
+    	let $showAdsr;
+    	validate_store(instrumentSets, "instrumentSets");
+    	component_subscribe($$self, instrumentSets, $$value => $$invalidate(20, $instrumentSets = $$value));
+    	validate_store(activeSet, "activeSet");
+    	component_subscribe($$self, activeSet, $$value => $$invalidate(21, $activeSet = $$value));
+    	validate_store(editMode, "editMode");
+    	component_subscribe($$self, editMode, $$value => $$invalidate(9, $editMode = $$value));
+    	validate_store(showAdsr, "showAdsr");
+    	component_subscribe($$self, showAdsr, $$value => $$invalidate(10, $showAdsr = $$value));
+    	let { id } = $$props;
+    	let { name } = $$props;
+    	let { volume } = $$props;
+    	let { octave } = $$props;
+    	let { data } = $$props;
+    	let { soundfont } = $$props;
+    	let { adsr } = $$props;
+    	let { absoluteVolume } = $$props;
+    	let { nohover = false } = $$props;
+    	let optionsVisible = false;
 
-    	validate_store(instrumentSets, 'instrumentSets');
-    	subscribe($$self, instrumentSets, $$value => { $instrumentSets = $$value; $$invalidate('$instrumentSets', $instrumentSets); });
-    	validate_store(activeSet, 'activeSet');
-    	subscribe($$self, activeSet, $$value => { $activeSet = $$value; $$invalidate('$activeSet', $activeSet); });
-    	validate_store(editMode, 'editMode');
-    	subscribe($$self, editMode, $$value => { $editMode = $$value; $$invalidate('$editMode', $editMode); });
-    	validate_store(showAdsr, 'showAdsr');
-    	subscribe($$self, showAdsr, $$value => { $showAdsr = $$value; $$invalidate('$showAdsr', $showAdsr); });
+    	function octavePlus() {
+    		let currentSets = $instrumentSets;
+    		let index = currentSets[$activeSet].instruments.findIndex(i => i.id === id);
+    		let currentShift = currentSets[$activeSet].instruments[index].octave;
+    		currentSets[$activeSet].instruments[index].octave = clamp(currentShift + 1, -3, 3);
+    		instrumentSets.set(currentSets);
+    	}
 
-    	
+    	function octaveMinus() {
+    		let currentSets = $instrumentSets;
+    		let index = currentSets[$activeSet].instruments.findIndex(i => i.id === id);
+    		let currentShift = currentSets[$activeSet].instruments[index].octave;
+    		currentSets[$activeSet].instruments[index].octave = clamp(currentShift - 1, -3, 3);
+    		instrumentSets.set(currentSets);
+    	}
 
-      let { id, name, volume, octave, data, soundfont, adsr, absoluteVolume } = $$props;
+    	function removeInstrument() {
+    		let currentSets = $instrumentSets;
+    		currentSets[$activeSet].instruments = currentSets[$activeSet].instruments.filter(i => i.id !== id);
+    		instrumentSets.set(currentSets);
+    	}
 
-      let optionsVisible = false;
+    	function setVolume() {
+    		let currentSets = $instrumentSets;
+    		let index = currentSets[$activeSet].instruments.findIndex(i => i.id === id);
+    		currentSets[$activeSet].instruments[index].volume = volume;
+    		instrumentSets.set(currentSets);
+    	}
 
-      function octavePlus() {
-        let currentSets = $instrumentSets;
+    	function toggleAbsoluteVolume() {
+    		let currentSets = $instrumentSets;
+    		let index = currentSets[$activeSet].instruments.findIndex(i => i.id === id);
+    		currentSets[$activeSet].instruments[index].absoluteVolume = !currentSets[$activeSet].instruments[index].absoluteVolume;
+    		instrumentSets.set(currentSets);
+    	}
 
-        let index = currentSets[$activeSet].instruments.findIndex(i => i.id === id);
+    	function setAdsr() {
+    		let currentSets = $instrumentSets;
+    		let index = currentSets[$activeSet].instruments.findIndex(i => i.id === id);
+    		currentSets[$activeSet].instruments[index].adsr = adsr;
+    		instrumentSets.set(currentSets);
+    	}
 
-        let currentShift = currentSets[$activeSet].instruments[index].octave;
-        currentSets[$activeSet].instruments[index].octave = clamp(
-          currentShift + 1,
-          -3,
-          3
-        );
+    	const writable_props = [
+    		"id",
+    		"name",
+    		"volume",
+    		"octave",
+    		"data",
+    		"soundfont",
+    		"adsr",
+    		"absoluteVolume",
+    		"nohover"
+    	];
 
-        instrumentSets.set(currentSets);
-      }
-
-      function octaveMinus() {
-        let currentSets = $instrumentSets;
-
-        let index = currentSets[$activeSet].instruments.findIndex(i => i.id === id);
-
-        let currentShift = currentSets[$activeSet].instruments[index].octave;
-        currentSets[$activeSet].instruments[index].octave = clamp(
-          currentShift - 1,
-          -3,
-          3
-        );
-
-        instrumentSets.set(currentSets);
-      }
-
-      function removeInstrument() {
-        let currentSets = $instrumentSets;
-
-        currentSets[$activeSet].instruments = currentSets[
-          $activeSet
-        ].instruments.filter(i => i.id !== id);
-
-        instrumentSets.set(currentSets);
-      }
-
-      function setVolume() {
-        let currentSets = $instrumentSets;
-
-        let index = currentSets[$activeSet].instruments.findIndex(i => i.id === id);
-
-        currentSets[$activeSet].instruments[index].volume = volume;
-
-        instrumentSets.set(currentSets);
-      }
-
-      function toggleAbsoluteVolume() {
-        let currentSets = $instrumentSets;
-
-        let index = currentSets[$activeSet].instruments.findIndex(i => i.id === id);
-
-        currentSets[$activeSet].instruments[index].absoluteVolume = !currentSets[
-          $activeSet
-        ].instruments[index].absoluteVolume;
-
-        instrumentSets.set(currentSets);
-      }
-
-      function setAdsr() {
-        let currentSets = $instrumentSets;
-
-        let index = currentSets[$activeSet].instruments.findIndex(i => i.id === id);
-
-        currentSets[$activeSet].instruments[index].adsr = adsr;
-
-        instrumentSets.set(currentSets);
-      }
-
-    	const writable_props = ['id', 'name', 'volume', 'octave', 'data', 'soundfont', 'adsr', 'absoluteVolume'];
     	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<InstrumentCard> was created with unknown prop '${key}'`);
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<InstrumentCard> was created with unknown prop '${key}'`);
     	});
+
+    	let { $$slots = {}, $$scope } = $$props;
+    	validate_slots("InstrumentCard", $$slots, []);
 
     	function slidecontrol_value_binding(value) {
     		volume = value;
-    		$$invalidate('volume', volume);
+    		$$invalidate(0, volume);
     	}
 
     	function slidecontrol0_value_binding(value) {
     		adsr[0] = value;
-    		$$invalidate('adsr', adsr);
+    		$$invalidate(1, adsr);
     	}
 
-    	function slidecontrol1_value_binding(value_1) {
-    		adsr[1] = value_1;
-    		$$invalidate('adsr', adsr);
+    	function slidecontrol1_value_binding(value) {
+    		adsr[1] = value;
+    		$$invalidate(1, adsr);
     	}
 
-    	function slidecontrol2_value_binding(value_2) {
-    		adsr[2] = value_2;
-    		$$invalidate('adsr', adsr);
+    	function slidecontrol2_value_binding(value) {
+    		adsr[2] = value;
+    		$$invalidate(1, adsr);
     	}
 
-    	function slidecontrol3_value_binding(value_3) {
-    		adsr[3] = value_3;
-    		$$invalidate('adsr', adsr);
+    	function slidecontrol3_value_binding(value) {
+    		adsr[3] = value;
+    		$$invalidate(1, adsr);
     	}
 
-    	function mouseover_handler() {
-    		const $$result = (optionsVisible = true);
-    		$$invalidate('optionsVisible', optionsVisible);
-    		return $$result;
-    	}
-
-    	function mouseleave_handler() {
-    		const $$result = (optionsVisible = false);
-    		$$invalidate('optionsVisible', optionsVisible);
-    		return $$result;
-    	}
+    	const mouseover_handler = () => $$invalidate(6, optionsVisible = nohover ? false : true);
+    	const mouseleave_handler = () => $$invalidate(6, optionsVisible = false);
 
     	$$self.$set = $$props => {
-    		if ('id' in $$props) $$invalidate('id', id = $$props.id);
-    		if ('name' in $$props) $$invalidate('name', name = $$props.name);
-    		if ('volume' in $$props) $$invalidate('volume', volume = $$props.volume);
-    		if ('octave' in $$props) $$invalidate('octave', octave = $$props.octave);
-    		if ('data' in $$props) $$invalidate('data', data = $$props.data);
-    		if ('soundfont' in $$props) $$invalidate('soundfont', soundfont = $$props.soundfont);
-    		if ('adsr' in $$props) $$invalidate('adsr', adsr = $$props.adsr);
-    		if ('absoluteVolume' in $$props) $$invalidate('absoluteVolume', absoluteVolume = $$props.absoluteVolume);
+    		if ("id" in $$props) $$invalidate(17, id = $$props.id);
+    		if ("name" in $$props) $$invalidate(2, name = $$props.name);
+    		if ("volume" in $$props) $$invalidate(0, volume = $$props.volume);
+    		if ("octave" in $$props) $$invalidate(18, octave = $$props.octave);
+    		if ("data" in $$props) $$invalidate(19, data = $$props.data);
+    		if ("soundfont" in $$props) $$invalidate(3, soundfont = $$props.soundfont);
+    		if ("adsr" in $$props) $$invalidate(1, adsr = $$props.adsr);
+    		if ("absoluteVolume" in $$props) $$invalidate(4, absoluteVolume = $$props.absoluteVolume);
+    		if ("nohover" in $$props) $$invalidate(5, nohover = $$props.nohover);
     	};
 
-    	let octShift, volTxt;
-
-    	$$self.$$.update = ($$dirty = { octave: 1, volume: 1, absoluteVolume: 1 }) => {
-    		if ($$dirty.octave) { $$invalidate('octShift', octShift =
-            octave == 0
-              ? "No octave shift"
-              : octave < 0
-              ? `Octave ${octave}`
-              : `Octave +${octave}`); }
-    		if ($$dirty.volume || $$dirty.absoluteVolume) { $$invalidate('volTxt', volTxt =
-            volume > -1
-              ? volume < 1
-                ? "Muted"
-                : `Volume ${volume}${absoluteVolume ? "%" : ""}`
-              : "Custom volume not set"); }
-    	};
-
-    	return {
+    	$$self.$capture_state = () => ({
+    		slide,
+    		fade,
+    		Card,
+    		Button,
+    		SlideControl,
+    		instrumentSets,
+    		activeSet,
+    		octaveShift,
+    		currentSoundFont,
+    		defaultAdsr,
+    		showAdsr,
+    		editMode,
     		id,
     		name,
     		volume,
@@ -6855,7 +7671,10 @@ var app = (function () {
     		soundfont,
     		adsr,
     		absoluteVolume,
+    		nohover,
     		optionsVisible,
+    		normalizedName,
+    		clamp,
     		octavePlus,
     		octaveMinus,
     		removeInstrument,
@@ -6864,8 +7683,73 @@ var app = (function () {
     		setAdsr,
     		octShift,
     		volTxt,
+    		$instrumentSets,
+    		$activeSet,
+    		$editMode,
+    		$showAdsr
+    	});
+
+    	$$self.$inject_state = $$props => {
+    		if ("id" in $$props) $$invalidate(17, id = $$props.id);
+    		if ("name" in $$props) $$invalidate(2, name = $$props.name);
+    		if ("volume" in $$props) $$invalidate(0, volume = $$props.volume);
+    		if ("octave" in $$props) $$invalidate(18, octave = $$props.octave);
+    		if ("data" in $$props) $$invalidate(19, data = $$props.data);
+    		if ("soundfont" in $$props) $$invalidate(3, soundfont = $$props.soundfont);
+    		if ("adsr" in $$props) $$invalidate(1, adsr = $$props.adsr);
+    		if ("absoluteVolume" in $$props) $$invalidate(4, absoluteVolume = $$props.absoluteVolume);
+    		if ("nohover" in $$props) $$invalidate(5, nohover = $$props.nohover);
+    		if ("optionsVisible" in $$props) $$invalidate(6, optionsVisible = $$props.optionsVisible);
+    		if ("octShift" in $$props) $$invalidate(7, octShift = $$props.octShift);
+    		if ("volTxt" in $$props) $$invalidate(8, volTxt = $$props.volTxt);
+    	};
+
+    	let octShift;
+    	let volTxt;
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	$$self.$$.update = () => {
+    		if ($$self.$$.dirty & /*octave*/ 262144) {
+    			 $$invalidate(7, octShift = octave == 0
+    			? "No octave shift"
+    			: octave < 0 ? `Octave ${octave}` : `Octave +${octave}`);
+    		}
+
+    		if ($$self.$$.dirty & /*volume, absoluteVolume*/ 17) {
+    			 $$invalidate(8, volTxt = volume > -1
+    			? volume < 1
+    				? "Muted"
+    				: `Volume ${volume}${absoluteVolume ? "%" : ""}`
+    			: "Custom volume not set");
+    		}
+    	};
+
+    	return [
+    		volume,
+    		adsr,
+    		name,
+    		soundfont,
+    		absoluteVolume,
+    		nohover,
+    		optionsVisible,
+    		octShift,
+    		volTxt,
     		$editMode,
     		$showAdsr,
+    		octavePlus,
+    		octaveMinus,
+    		removeInstrument,
+    		setVolume,
+    		toggleAbsoluteVolume,
+    		setAdsr,
+    		id,
+    		octave,
+    		data,
+    		$instrumentSets,
+    		$activeSet,
     		slidecontrol_value_binding,
     		slidecontrol0_value_binding,
     		slidecontrol1_value_binding,
@@ -6873,38 +7757,64 @@ var app = (function () {
     		slidecontrol3_value_binding,
     		mouseover_handler,
     		mouseleave_handler
-    	};
+    	];
     }
 
     class InstrumentCard extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$7, create_fragment$7, safe_not_equal, ["id", "name", "volume", "octave", "data", "soundfont", "adsr", "absoluteVolume"]);
+
+    		init(this, options, instance$7, create_fragment$7, safe_not_equal, {
+    			id: 17,
+    			name: 2,
+    			volume: 0,
+    			octave: 18,
+    			data: 19,
+    			soundfont: 3,
+    			adsr: 1,
+    			absoluteVolume: 4,
+    			nohover: 5
+    		});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "InstrumentCard",
+    			options,
+    			id: create_fragment$7.name
+    		});
 
     		const { ctx } = this.$$;
     		const props = options.props || {};
-    		if (ctx.id === undefined && !('id' in props)) {
+
+    		if (/*id*/ ctx[17] === undefined && !("id" in props)) {
     			console.warn("<InstrumentCard> was created without expected prop 'id'");
     		}
-    		if (ctx.name === undefined && !('name' in props)) {
+
+    		if (/*name*/ ctx[2] === undefined && !("name" in props)) {
     			console.warn("<InstrumentCard> was created without expected prop 'name'");
     		}
-    		if (ctx.volume === undefined && !('volume' in props)) {
+
+    		if (/*volume*/ ctx[0] === undefined && !("volume" in props)) {
     			console.warn("<InstrumentCard> was created without expected prop 'volume'");
     		}
-    		if (ctx.octave === undefined && !('octave' in props)) {
+
+    		if (/*octave*/ ctx[18] === undefined && !("octave" in props)) {
     			console.warn("<InstrumentCard> was created without expected prop 'octave'");
     		}
-    		if (ctx.data === undefined && !('data' in props)) {
+
+    		if (/*data*/ ctx[19] === undefined && !("data" in props)) {
     			console.warn("<InstrumentCard> was created without expected prop 'data'");
     		}
-    		if (ctx.soundfont === undefined && !('soundfont' in props)) {
+
+    		if (/*soundfont*/ ctx[3] === undefined && !("soundfont" in props)) {
     			console.warn("<InstrumentCard> was created without expected prop 'soundfont'");
     		}
-    		if (ctx.adsr === undefined && !('adsr' in props)) {
+
+    		if (/*adsr*/ ctx[1] === undefined && !("adsr" in props)) {
     			console.warn("<InstrumentCard> was created without expected prop 'adsr'");
     		}
-    		if (ctx.absoluteVolume === undefined && !('absoluteVolume' in props)) {
+
+    		if (/*absoluteVolume*/ ctx[4] === undefined && !("absoluteVolume" in props)) {
     			console.warn("<InstrumentCard> was created without expected prop 'absoluteVolume'");
     		}
     	}
@@ -6972,324 +7882,1320 @@ var app = (function () {
     	set absoluteVolume(value) {
     		throw new Error("<InstrumentCard>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
+
+    	get nohover() {
+    		throw new Error("<InstrumentCard>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set nohover(value) {
+    		throw new Error("<InstrumentCard>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
     }
 
-    /* src\components\SetEditor.svelte generated by Svelte v3.6.4 */
+    /* src\components\DragAndDropList.svelte generated by Svelte v3.20.1 */
 
-    const file$8 = "src\\components\\SetEditor.svelte";
+    const file$8 = "src\\components\\DragAndDropList.svelte";
+
+    const get_error_slot_changes = dirty => ({
+    	item: dirty & /*list*/ 1,
+    	index: dirty & /*list*/ 1
+    });
+
+    const get_error_slot_context = ctx => ({
+    	item: /*item*/ ctx[15],
+    	index: /*index*/ ctx[17]
+    });
+
+    const get_default_slot_changes = dirty => ({
+    	item: dirty & /*list*/ 1,
+    	index: dirty & /*list*/ 1
+    });
+
+    const get_default_slot_context = ctx => ({
+    	item: /*item*/ ctx[15],
+    	index: /*index*/ ctx[17]
+    });
 
     function get_each_context$1(ctx, list, i) {
-    	const child_ctx = Object.create(ctx);
-    	child_ctx.instrument = list[i];
-    	child_ctx.i = i;
+    	const child_ctx = ctx.slice();
+    	child_ctx[15] = list[i];
+    	child_ctx[17] = i;
     	return child_ctx;
     }
 
-    // (37:4) {:else}
+    // (77:2) {:else}
     function create_else_block$1(ctx) {
-    	var p;
+    	let current;
+    	const error_slot_template = /*$$slots*/ ctx[14].error;
+    	const error_slot = create_slot(error_slot_template, ctx, /*$$scope*/ ctx[13], get_error_slot_context);
 
-    	return {
+    	const block = {
     		c: function create() {
-    			p = element("p");
-    			p.textContent = "No instruments";
-    			attr(p, "class", "error svelte-1yw2g1e");
-    			add_location(p, file$8, 37, 6, 636);
+    			if (error_slot) error_slot.c();
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, p, anchor);
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(p);
+    			if (error_slot) {
+    				error_slot.m(target, anchor);
     			}
-    		}
-    	};
-    }
 
-    // (35:4) {#each $instrumentSets[$activeSet].instruments as instrument, i (instrument.id)}
-    function create_each_block$1(key_1, ctx) {
-    	var first, current;
-
-    	var instrumentcard_spread_levels = [
-    		ctx.instrument
-    	];
-
-    	let instrumentcard_props = {};
-    	for (var i_1 = 0; i_1 < instrumentcard_spread_levels.length; i_1 += 1) {
-    		instrumentcard_props = assign(instrumentcard_props, instrumentcard_spread_levels[i_1]);
-    	}
-    	var instrumentcard = new InstrumentCard({
-    		props: instrumentcard_props,
-    		$$inline: true
-    	});
-
-    	return {
-    		key: key_1,
-
-    		first: null,
-
-    		c: function create() {
-    			first = empty();
-    			instrumentcard.$$.fragment.c();
-    			this.first = first;
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, first, anchor);
-    			mount_component(instrumentcard, target, anchor);
     			current = true;
     		},
-
-    		p: function update(changed, ctx) {
-    			var instrumentcard_changes = (changed.$instrumentSets || changed.$activeSet) ? get_spread_update(instrumentcard_spread_levels, [
-    				ctx.instrument
-    			]) : {};
-    			instrumentcard.$set(instrumentcard_changes);
+    		p: function update(ctx, dirty) {
+    			if (error_slot) {
+    				if (error_slot.p && dirty & /*$$scope, list*/ 8193) {
+    					error_slot.p(get_slot_context(error_slot_template, ctx, /*$$scope*/ ctx[13], get_error_slot_context), get_slot_changes(error_slot_template, /*$$scope*/ ctx[13], dirty, get_error_slot_changes));
+    				}
+    			}
     		},
-
     		i: function intro(local) {
     			if (current) return;
-    			transition_in(instrumentcard.$$.fragment, local);
-
+    			transition_in(error_slot, local);
     			current = true;
     		},
-
     		o: function outro(local) {
-    			transition_out(instrumentcard.$$.fragment, local);
+    			transition_out(error_slot, local);
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(first);
-    			}
-
-    			destroy_component(instrumentcard, detaching);
+    			if (error_slot) error_slot.d(detaching);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_else_block$1.name,
+    		type: "else",
+    		source: "(77:2) {:else}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (64:2) {#each list as item, index (item.id)}
+    function create_each_block$1(key_2, ctx) {
+    	let li;
+    	let t;
+    	let li_data_index_value;
+    	let li_data_id_value;
+    	let rect;
+    	let stop_animation = noop;
+    	let current;
+    	let dispose;
+    	const default_slot_template = /*$$slots*/ ctx[14].default;
+    	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[13], get_default_slot_context);
+
+    	const block = {
+    		key: key_2,
+    		first: null,
+    		c: function create() {
+    			li = element("li");
+    			if (default_slot) default_slot.c();
+    			t = space();
+    			attr_dev(li, "data-index", li_data_index_value = /*index*/ ctx[17]);
+    			attr_dev(li, "data-id", li_data_id_value = JSON.stringify(/*getKey*/ ctx[6](/*item*/ ctx[15])));
+    			attr_dev(li, "draggable", /*canReroder*/ ctx[1]);
+    			attr_dev(li, "class", "svelte-8mke7y");
+    			toggle_class(li, "reordering", /*canReroder*/ ctx[1]);
+    			add_location(li, file$8, 64, 4, 1590);
+    			this.first = li;
+    		},
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, li, anchor);
+
+    			if (default_slot) {
+    				default_slot.m(li, null);
+    			}
+
+    			append_dev(li, t);
+    			current = true;
+    			if (remount) run_all(dispose);
+
+    			dispose = [
+    				listen_dev(li, "dragstart", /*start*/ ctx[2], false, false, false),
+    				listen_dev(li, "dragover", /*over*/ ctx[3], false, false, false),
+    				listen_dev(li, "dragleave", /*leave*/ ctx[4], false, false, false),
+    				listen_dev(li, "drop", /*drop*/ ctx[5], false, false, false)
+    			];
+    		},
+    		p: function update(ctx, dirty) {
+    			if (default_slot) {
+    				if (default_slot.p && dirty & /*$$scope, list*/ 8193) {
+    					default_slot.p(get_slot_context(default_slot_template, ctx, /*$$scope*/ ctx[13], get_default_slot_context), get_slot_changes(default_slot_template, /*$$scope*/ ctx[13], dirty, get_default_slot_changes));
+    				}
+    			}
+
+    			if (!current || dirty & /*list*/ 1 && li_data_index_value !== (li_data_index_value = /*index*/ ctx[17])) {
+    				attr_dev(li, "data-index", li_data_index_value);
+    			}
+
+    			if (!current || dirty & /*list*/ 1 && li_data_id_value !== (li_data_id_value = JSON.stringify(/*getKey*/ ctx[6](/*item*/ ctx[15])))) {
+    				attr_dev(li, "data-id", li_data_id_value);
+    			}
+
+    			if (!current || dirty & /*canReroder*/ 2) {
+    				attr_dev(li, "draggable", /*canReroder*/ ctx[1]);
+    			}
+
+    			if (dirty & /*canReroder*/ 2) {
+    				toggle_class(li, "reordering", /*canReroder*/ ctx[1]);
+    			}
+    		},
+    		r: function measure() {
+    			rect = li.getBoundingClientRect();
+    		},
+    		f: function fix() {
+    			fix_position(li);
+    			stop_animation();
+    		},
+    		a: function animate() {
+    			stop_animation();
+    			stop_animation = create_animation(li, rect, flip, { duration: 300 });
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(default_slot, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(default_slot, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(li);
+    			if (default_slot) default_slot.d(detaching);
+    			run_all(dispose);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block$1.name,
+    		type: "each",
+    		source: "(64:2) {#each list as item, index (item.id)}",
+    		ctx
+    	});
+
+    	return block;
     }
 
     function create_fragment$8(ctx) {
-    	var div1, h4, t0_value = ctx.$instrumentSets[ctx.$activeSet].name, t0, t1, div0, each_blocks = [], each_1_lookup = new Map(), current;
+    	let ul;
+    	let each_blocks = [];
+    	let each_1_lookup = new Map();
+    	let current;
+    	let each_value = /*list*/ ctx[0];
+    	validate_each_argument(each_value);
+    	const get_key = ctx => /*item*/ ctx[15].id;
+    	validate_each_keys(ctx, each_value, get_each_context$1, get_key);
 
-    	var each_value = ctx.$instrumentSets[ctx.$activeSet].instruments;
-
-    	const get_key = ctx => ctx.instrument.id;
-
-    	for (var i = 0; i < each_value.length; i += 1) {
+    	for (let i = 0; i < each_value.length; i += 1) {
     		let child_ctx = get_each_context$1(ctx, each_value, i);
     		let key = get_key(child_ctx);
     		each_1_lookup.set(key, each_blocks[i] = create_each_block$1(key, child_ctx));
     	}
 
-    	var each_1_else = null;
+    	let each_1_else = null;
 
     	if (!each_value.length) {
-    		each_1_else = create_else_block$1();
-    		each_1_else.c();
+    		each_1_else = create_else_block$1(ctx);
     	}
 
-    	return {
+    	const block = {
     		c: function create() {
-    			div1 = element("div");
-    			h4 = element("h4");
-    			t0 = text(t0_value);
-    			t1 = space();
-    			div0 = element("div");
+    			ul = element("ul");
 
-    			for (i = 0; i < each_blocks.length; i += 1) each_blocks[i].c();
-    			attr(h4, "class", "svelte-1yw2g1e");
-    			add_location(h4, file$8, 29, 2, 414);
-    			attr(div0, "class", "list svelte-1yw2g1e");
-    			add_location(div0, file$8, 33, 2, 469);
-    			set_style(div1, "width", "22rem");
-    			add_location(div1, file$8, 27, 0, 381);
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			if (each_1_else) {
+    				each_1_else.c();
+    			}
+
+    			attr_dev(ul, "class", "list svelte-8mke7y");
+    			add_location(ul, file$8, 62, 0, 1526);
     		},
-
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, div1, anchor);
-    			append(div1, h4);
-    			append(h4, t0);
-    			append(div1, t1);
-    			append(div1, div0);
+    			insert_dev(target, ul, anchor);
 
-    			for (i = 0; i < each_blocks.length; i += 1) each_blocks[i].m(div0, null);
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(ul, null);
+    			}
 
     			if (each_1_else) {
-    				each_1_else.m(div0, null);
+    				each_1_else.m(ul, null);
     			}
 
     			current = true;
     		},
+    		p: function update(ctx, [dirty]) {
+    			if (dirty & /*list, JSON, getKey, canReroder, start, over, leave, drop, $$scope*/ 8319) {
+    				const each_value = /*list*/ ctx[0];
+    				validate_each_argument(each_value);
+    				group_outros();
+    				for (let i = 0; i < each_blocks.length; i += 1) each_blocks[i].r();
+    				validate_each_keys(ctx, each_value, get_each_context$1, get_key);
+    				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, ul, fix_and_outro_and_destroy_block, create_each_block$1, null, get_each_context$1);
+    				for (let i = 0; i < each_blocks.length; i += 1) each_blocks[i].a();
+    				check_outros();
 
-    		p: function update(changed, ctx) {
-    			if ((!current || changed.$instrumentSets || changed.$activeSet) && t0_value !== (t0_value = ctx.$instrumentSets[ctx.$activeSet].name)) {
-    				set_data(t0, t0_value);
-    			}
-
-    			const each_value = ctx.$instrumentSets[ctx.$activeSet].instruments;
-
-    			group_outros();
-    			each_blocks = update_keyed_each(each_blocks, changed, get_key, 1, ctx, each_value, each_1_lookup, div0, outro_and_destroy_block, create_each_block$1, null, get_each_context$1);
-    			check_outros();
-
-    			if (each_value.length) {
-    				if (each_1_else) {
+    				if (!each_value.length && each_1_else) {
+    					each_1_else.p(ctx, dirty);
+    				} else if (!each_value.length) {
+    					each_1_else = create_else_block$1(ctx);
+    					each_1_else.c();
+    					each_1_else.m(ul, null);
+    				} else if (each_1_else) {
     					each_1_else.d(1);
     					each_1_else = null;
     				}
-    			} else if (!each_1_else) {
-    				each_1_else = create_else_block$1();
-    				each_1_else.c();
-    				each_1_else.m(div0, null);
     			}
     		},
-
     		i: function intro(local) {
     			if (current) return;
-    			for (var i = 0; i < each_value.length; i += 1) transition_in(each_blocks[i]);
+
+    			for (let i = 0; i < each_value.length; i += 1) {
+    				transition_in(each_blocks[i]);
+    			}
 
     			current = true;
     		},
-
     		o: function outro(local) {
-    			for (i = 0; i < each_blocks.length; i += 1) transition_out(each_blocks[i]);
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				transition_out(each_blocks[i]);
+    			}
 
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div1);
-    			}
+    			if (detaching) detach_dev(ul);
 
-    			for (i = 0; i < each_blocks.length; i += 1) each_blocks[i].d();
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].d();
+    			}
 
     			if (each_1_else) each_1_else.d();
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$8.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
     }
 
     function instance$8($$self, $$props, $$invalidate) {
-    	let $instrumentSets, $activeSet;
+    	let { list } = $$props;
+    	let { update } = $$props;
+    	let { canReroder = false } = $$props;
 
-    	validate_store(instrumentSets, 'instrumentSets');
-    	subscribe($$self, instrumentSets, $$value => { $instrumentSets = $$value; $$invalidate('$instrumentSets', $instrumentSets); });
-    	validate_store(activeSet, 'activeSet');
-    	subscribe($$self, activeSet, $$value => { $activeSet = $$value; $$invalidate('$activeSet', $activeSet); });
+    	// DRAG AND DROP
+    	let isOver = false;
 
-    	return { $instrumentSets, $activeSet };
+    	const getDraggedParent = node => node.dataset.index && node.dataset || getDraggedParent(node.parentNode);
+
+    	const start = ev => {
+    		ev.dataTransfer.setData("source", ev.target.dataset.index);
+    	};
+
+    	const over = ev => {
+    		ev.preventDefault();
+    		let dragged = getDraggedParent(ev.target);
+    		if (isOver !== dragged.id) isOver = JSON.parse(dragged.id);
+    	};
+
+    	const leave = ev => {
+    		let dragged = getDraggedParent(ev.target);
+    		if (isOver === dragged.id) isOver = false;
+    	};
+
+    	const drop = ev => {
+    		isOver = false;
+    		ev.preventDefault();
+    		let dragged = getDraggedParent(ev.target);
+    		let from = ev.dataTransfer.getData("source");
+    		let to = dragged.index;
+    		reorder({ from, to });
+    	};
+
+    	const dispatch = createEventDispatcher();
+
+    	const reorder = ({ from, to }) => {
+    		update(from, to);
+    	};
+
+    	// UTILS
+    	let key = "id";
+
+    	const getKey = item => key ? item[key] : item;
+    	const writable_props = ["list", "update", "canReroder"];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<DragAndDropList> was created with unknown prop '${key}'`);
+    	});
+
+    	let { $$slots = {}, $$scope } = $$props;
+    	validate_slots("DragAndDropList", $$slots, ['default','error']);
+
+    	$$self.$set = $$props => {
+    		if ("list" in $$props) $$invalidate(0, list = $$props.list);
+    		if ("update" in $$props) $$invalidate(7, update = $$props.update);
+    		if ("canReroder" in $$props) $$invalidate(1, canReroder = $$props.canReroder);
+    		if ("$$scope" in $$props) $$invalidate(13, $$scope = $$props.$$scope);
+    	};
+
+    	$$self.$capture_state = () => ({
+    		slide,
+    		crossfade,
+    		quintOut,
+    		flip,
+    		list,
+    		update,
+    		canReroder,
+    		isOver,
+    		getDraggedParent,
+    		start,
+    		over,
+    		leave,
+    		drop,
+    		createEventDispatcher,
+    		dispatch,
+    		reorder,
+    		key,
+    		getKey
+    	});
+
+    	$$self.$inject_state = $$props => {
+    		if ("list" in $$props) $$invalidate(0, list = $$props.list);
+    		if ("update" in $$props) $$invalidate(7, update = $$props.update);
+    		if ("canReroder" in $$props) $$invalidate(1, canReroder = $$props.canReroder);
+    		if ("isOver" in $$props) isOver = $$props.isOver;
+    		if ("key" in $$props) key = $$props.key;
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	return [
+    		list,
+    		canReroder,
+    		start,
+    		over,
+    		leave,
+    		drop,
+    		getKey,
+    		update,
+    		isOver,
+    		getDraggedParent,
+    		dispatch,
+    		reorder,
+    		key,
+    		$$scope,
+    		$$slots
+    	];
+    }
+
+    class DragAndDropList extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$8, create_fragment$8, safe_not_equal, { list: 0, update: 7, canReroder: 1 });
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "DragAndDropList",
+    			options,
+    			id: create_fragment$8.name
+    		});
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+
+    		if (/*list*/ ctx[0] === undefined && !("list" in props)) {
+    			console.warn("<DragAndDropList> was created without expected prop 'list'");
+    		}
+
+    		if (/*update*/ ctx[7] === undefined && !("update" in props)) {
+    			console.warn("<DragAndDropList> was created without expected prop 'update'");
+    		}
+    	}
+
+    	get list() {
+    		throw new Error("<DragAndDropList>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set list(value) {
+    		throw new Error("<DragAndDropList>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get update() {
+    		throw new Error("<DragAndDropList>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set update(value) {
+    		throw new Error("<DragAndDropList>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get canReroder() {
+    		throw new Error("<DragAndDropList>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set canReroder(value) {
+    		throw new Error("<DragAndDropList>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* src\components\Toast.svelte generated by Svelte v3.20.1 */
+    const file$9 = "src\\components\\Toast.svelte";
+
+    function get_each_context$2(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[6] = list[i];
+    	return child_ctx;
+    }
+
+    // (85:2) {#each toasts as toast (toast._id)}
+    function create_each_block$2(key_1, ctx) {
+    	let div;
+    	let html_tag;
+    	let raw_value = /*toast*/ ctx[6].msg + "";
+    	let t0;
+    	let br;
+    	let t1;
+    	let span;
+    	let t3;
+    	let div_intro;
+    	let div_outro;
+    	let current;
+    	let dispose;
+
+    	function click_handler(...args) {
+    		return /*click_handler*/ ctx[5](/*toast*/ ctx[6], ...args);
+    	}
+
+    	const block = {
+    		key: key_1,
+    		first: null,
+    		c: function create() {
+    			div = element("div");
+    			t0 = space();
+    			br = element("br");
+    			t1 = space();
+    			span = element("span");
+    			span.textContent = `${getCurrentTime()}`;
+    			t3 = space();
+    			html_tag = new HtmlTag(raw_value, t0);
+    			add_location(br, file$9, 92, 6, 2099);
+    			attr_dev(span, "class", "svelte-1h4pa5e");
+    			add_location(span, file$9, 93, 6, 2113);
+    			attr_dev(div, "class", "toast-item svelte-1h4pa5e");
+    			toggle_class(div, "error", /*toast*/ ctx[6].type == "error");
+    			add_location(div, file$9, 85, 4, 1819);
+    			this.first = div;
+    		},
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, div, anchor);
+    			html_tag.m(div);
+    			append_dev(div, t0);
+    			append_dev(div, br);
+    			append_dev(div, t1);
+    			append_dev(div, span);
+    			append_dev(div, t3);
+    			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(div, "click", click_handler, false, false, false);
+    		},
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
+    			if ((!current || dirty & /*toasts*/ 1) && raw_value !== (raw_value = /*toast*/ ctx[6].msg + "")) html_tag.p(raw_value);
+
+    			if (dirty & /*toasts*/ 1) {
+    				toggle_class(div, "error", /*toast*/ ctx[6].type == "error");
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (div_outro) div_outro.end(1);
+
+    				if (!div_intro) div_intro = create_in_transition(div, fly, {
+    					delay: 0,
+    					duration: 300,
+    					x: 50,
+    					y: 0,
+    					opacity: 0.1,
+    					easing: backOut
+    				});
+
+    				div_intro.start();
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (div_intro) div_intro.invalidate();
+    			div_outro = create_out_transition(div, slide, { duration: 300 });
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    			if (detaching && div_outro) div_outro.end();
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block$2.name,
+    		type: "each",
+    		source: "(85:2) {#each toasts as toast (toast._id)}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function create_fragment$9(ctx) {
+    	let div;
+    	let each_blocks = [];
+    	let each_1_lookup = new Map();
+    	let current;
+    	let each_value = /*toasts*/ ctx[0];
+    	validate_each_argument(each_value);
+    	const get_key = ctx => /*toast*/ ctx[6]._id;
+    	validate_each_keys(ctx, each_value, get_each_context$2, get_key);
+
+    	for (let i = 0; i < each_value.length; i += 1) {
+    		let child_ctx = get_each_context$2(ctx, each_value, i);
+    		let key = get_key(child_ctx);
+    		each_1_lookup.set(key, each_blocks[i] = create_each_block$2(key, child_ctx));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			attr_dev(div, "class", "toast-wrapper svelte-1h4pa5e");
+    			add_location(div, file$9, 83, 0, 1747);
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(div, null);
+    			}
+
+    			current = true;
+    		},
+    		p: function update(ctx, [dirty]) {
+    			if (dirty & /*toasts, unshiftToast, getCurrentTime*/ 3) {
+    				const each_value = /*toasts*/ ctx[0];
+    				validate_each_argument(each_value);
+    				group_outros();
+    				validate_each_keys(ctx, each_value, get_each_context$2, get_key);
+    				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, div, outro_and_destroy_block, create_each_block$2, null, get_each_context$2);
+    				check_outros();
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			for (let i = 0; i < each_value.length; i += 1) {
+    				transition_in(each_blocks[i]);
+    			}
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				transition_out(each_blocks[i]);
+    			}
+
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].d();
+    			}
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$9.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function getCurrentTime() {
+    	let today = new Date();
+    	let time = today.getHours() + ":" + today.getMinutes();
+    	return time;
+    }
+
+    function instance$9($$self, $$props, $$invalidate) {
+    	let toasts = [];
+    	let retainMs = 2000;
+    	let toastId = 0;
+
+    	const pushToast = (msg = "", type) => {
+    		let id = ++toastId;
+    		$$invalidate(0, toasts = [...toasts, { _id: id, type, msg }]);
+
+    		setTimeout(
+    			() => {
+    				unshiftToast();
+    			},
+    			retainMs
+    		);
+    	};
+
+    	const unshiftToast = () => {
+    		$$invalidate(0, toasts = toasts.filter((a, i) => i > 0));
+    	};
+
+    	// const unshiftToast = id => {
+    	//   toasts.splice(id - 1, 1);
+    	//   toasts = [...toasts];
+    	// };
+    	onMount(() => {
+    		window.pushToast = pushToast;
+    	});
+
+    	const writable_props = [];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Toast> was created with unknown prop '${key}'`);
+    	});
+
+    	let { $$slots = {}, $$scope } = $$props;
+    	validate_slots("Toast", $$slots, []);
+    	const click_handler = toast => unshiftToast(toast._id);
+
+    	$$self.$capture_state = () => ({
+    		onMount,
+    		fly,
+    		slide,
+    		backOut,
+    		flip,
+    		toasts,
+    		retainMs,
+    		toastId,
+    		pushToast,
+    		unshiftToast,
+    		getCurrentTime
+    	});
+
+    	$$self.$inject_state = $$props => {
+    		if ("toasts" in $$props) $$invalidate(0, toasts = $$props.toasts);
+    		if ("retainMs" in $$props) retainMs = $$props.retainMs;
+    		if ("toastId" in $$props) toastId = $$props.toastId;
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	return [toasts, unshiftToast, toastId, retainMs, pushToast, click_handler];
+    }
+
+    class Toast extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$9, create_fragment$9, safe_not_equal, {});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "Toast",
+    			options,
+    			id: create_fragment$9.name
+    		});
+    	}
+    }
+
+    /* src\components\SetEditor.svelte generated by Svelte v3.20.1 */
+    const file$a = "src\\components\\SetEditor.svelte";
+
+    // (52:4) {#if $editMode}
+    function create_if_block$5(ctx) {
+    	let div;
+    	let div_transition;
+    	let current;
+
+    	const button = new Button({
+    			props: {
+    				toggled: /*$isReordering*/ ctx[2],
+    				$$slots: { default: [create_default_slot_1$1] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
+
+    	button.$on("click", /*toggleReorder*/ ctx[5]);
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			create_component(button.$$.fragment);
+    			add_location(div, file$a, 52, 6, 1341);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    			mount_component(button, div, null);
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			const button_changes = {};
+    			if (dirty & /*$isReordering*/ 4) button_changes.toggled = /*$isReordering*/ ctx[2];
+
+    			if (dirty & /*$$scope*/ 128) {
+    				button_changes.$$scope = { dirty, ctx };
+    			}
+
+    			button.$set(button_changes);
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(button.$$.fragment, local);
+
+    			add_render_callback(() => {
+    				if (!div_transition) div_transition = create_bidirectional_transition(div, slide, {}, true);
+    				div_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(button.$$.fragment, local);
+    			if (!div_transition) div_transition = create_bidirectional_transition(div, slide, {}, false);
+    			div_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    			destroy_component(button);
+    			if (detaching && div_transition) div_transition.end();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block$5.name,
+    		type: "if",
+    		source: "(52:4) {#if $editMode}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (54:8) <Button on:click={toggleReorder} toggled={$isReordering}>
+    function create_default_slot_1$1(ctx) {
+    	let t;
+
+    	const block = {
+    		c: function create() {
+    			t = text("Reroder");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, t, anchor);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(t);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot_1$1.name,
+    		type: "slot",
+    		source: "(54:8) <Button on:click={toggleReorder} toggled={$isReordering}>",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (67:4) <p class="error" slot="error">
+    function create_error_slot(ctx) {
+    	let p;
+
+    	const block = {
+    		c: function create() {
+    			p = element("p");
+    			p.textContent = "No instruments";
+    			attr_dev(p, "class", "error svelte-f033fq");
+    			attr_dev(p, "slot", "error");
+    			add_location(p, file$a, 66, 4, 1702);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, p, anchor);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(p);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_error_slot.name,
+    		type: "slot",
+    		source: "(67:4) <p class=\\\"error\\\" slot=\\\"error\\\">",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (61:2) <DragAndDropList      list={$instrumentSets[$activeSet].instruments}      canReroder={$isReordering}      let:item      {update}>
+    function create_default_slot$1(ctx) {
+    	let t;
+    	let current;
+    	const instrumentcard_spread_levels = [/*item*/ ctx[6], { nohover: /*$isReordering*/ ctx[2] }];
+    	let instrumentcard_props = {};
+
+    	for (let i = 0; i < instrumentcard_spread_levels.length; i += 1) {
+    		instrumentcard_props = assign(instrumentcard_props, instrumentcard_spread_levels[i]);
+    	}
+
+    	const instrumentcard = new InstrumentCard({
+    			props: instrumentcard_props,
+    			$$inline: true
+    		});
+
+    	const block = {
+    		c: function create() {
+    			create_component(instrumentcard.$$.fragment);
+    			t = space();
+    		},
+    		m: function mount(target, anchor) {
+    			mount_component(instrumentcard, target, anchor);
+    			insert_dev(target, t, anchor);
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			const instrumentcard_changes = (dirty & /*item, $isReordering*/ 68)
+    			? get_spread_update(instrumentcard_spread_levels, [
+    					dirty & /*item*/ 64 && get_spread_object(/*item*/ ctx[6]),
+    					dirty & /*$isReordering*/ 4 && { nohover: /*$isReordering*/ ctx[2] }
+    				])
+    			: {};
+
+    			instrumentcard.$set(instrumentcard_changes);
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(instrumentcard.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(instrumentcard.$$.fragment, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			destroy_component(instrumentcard, detaching);
+    			if (detaching) detach_dev(t);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot$1.name,
+    		type: "slot",
+    		source: "(61:2) <DragAndDropList      list={$instrumentSets[$activeSet].instruments}      canReroder={$isReordering}      let:item      {update}>",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function create_fragment$a(ctx) {
+    	let div1;
+    	let div0;
+    	let h4;
+    	let t0_value = /*$instrumentSets*/ ctx[0][/*$activeSet*/ ctx[1]].name + "";
+    	let t0;
+    	let t1;
+    	let t2;
+    	let t3;
+    	let current;
+    	let if_block = /*$editMode*/ ctx[3] && create_if_block$5(ctx);
+
+    	const draganddroplist = new DragAndDropList({
+    			props: {
+    				list: /*$instrumentSets*/ ctx[0][/*$activeSet*/ ctx[1]].instruments,
+    				canReroder: /*$isReordering*/ ctx[2],
+    				update: /*update*/ ctx[4],
+    				$$slots: {
+    					default: [
+    						create_default_slot$1,
+    						({ item }) => ({ 6: item }),
+    						({ item }) => item ? 64 : 0
+    					],
+    					error: [
+    						create_error_slot,
+    						({ item }) => ({ 6: item }),
+    						({ item }) => item ? 64 : 0
+    					]
+    				},
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
+
+    	const toast = new Toast({ $$inline: true });
+
+    	const block = {
+    		c: function create() {
+    			div1 = element("div");
+    			div0 = element("div");
+    			h4 = element("h4");
+    			t0 = text(t0_value);
+    			t1 = space();
+    			if (if_block) if_block.c();
+    			t2 = space();
+    			create_component(draganddroplist.$$.fragment);
+    			t3 = space();
+    			create_component(toast.$$.fragment);
+    			attr_dev(h4, "class", "svelte-f033fq");
+    			add_location(h4, file$a, 50, 4, 1269);
+    			attr_dev(div0, "class", "title-flex svelte-f033fq");
+    			add_location(div0, file$a, 49, 2, 1239);
+    			set_style(div1, "width", "22rem");
+    			add_location(div1, file$a, 47, 0, 1206);
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div1, anchor);
+    			append_dev(div1, div0);
+    			append_dev(div0, h4);
+    			append_dev(h4, t0);
+    			append_dev(div0, t1);
+    			if (if_block) if_block.m(div0, null);
+    			append_dev(div1, t2);
+    			mount_component(draganddroplist, div1, null);
+    			insert_dev(target, t3, anchor);
+    			mount_component(toast, target, anchor);
+    			current = true;
+    		},
+    		p: function update(ctx, [dirty]) {
+    			if ((!current || dirty & /*$instrumentSets, $activeSet*/ 3) && t0_value !== (t0_value = /*$instrumentSets*/ ctx[0][/*$activeSet*/ ctx[1]].name + "")) set_data_dev(t0, t0_value);
+
+    			if (/*$editMode*/ ctx[3]) {
+    				if (if_block) {
+    					if_block.p(ctx, dirty);
+    					transition_in(if_block, 1);
+    				} else {
+    					if_block = create_if_block$5(ctx);
+    					if_block.c();
+    					transition_in(if_block, 1);
+    					if_block.m(div0, null);
+    				}
+    			} else if (if_block) {
+    				group_outros();
+
+    				transition_out(if_block, 1, 1, () => {
+    					if_block = null;
+    				});
+
+    				check_outros();
+    			}
+
+    			const draganddroplist_changes = {};
+    			if (dirty & /*$instrumentSets, $activeSet*/ 3) draganddroplist_changes.list = /*$instrumentSets*/ ctx[0][/*$activeSet*/ ctx[1]].instruments;
+    			if (dirty & /*$isReordering*/ 4) draganddroplist_changes.canReroder = /*$isReordering*/ ctx[2];
+
+    			if (dirty & /*$$scope, item, $isReordering*/ 196) {
+    				draganddroplist_changes.$$scope = { dirty, ctx };
+    			}
+
+    			draganddroplist.$set(draganddroplist_changes);
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(if_block);
+    			transition_in(draganddroplist.$$.fragment, local);
+    			transition_in(toast.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(if_block);
+    			transition_out(draganddroplist.$$.fragment, local);
+    			transition_out(toast.$$.fragment, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div1);
+    			if (if_block) if_block.d();
+    			destroy_component(draganddroplist);
+    			if (detaching) detach_dev(t3);
+    			destroy_component(toast, detaching);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$a.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function instance$a($$self, $$props, $$invalidate) {
+    	let $instrumentSets;
+    	let $activeSet;
+    	let $isReordering;
+    	let $editMode;
+    	validate_store(instrumentSets, "instrumentSets");
+    	component_subscribe($$self, instrumentSets, $$value => $$invalidate(0, $instrumentSets = $$value));
+    	validate_store(activeSet, "activeSet");
+    	component_subscribe($$self, activeSet, $$value => $$invalidate(1, $activeSet = $$value));
+    	validate_store(isReordering, "isReordering");
+    	component_subscribe($$self, isReordering, $$value => $$invalidate(2, $isReordering = $$value));
+    	validate_store(editMode, "editMode");
+    	component_subscribe($$self, editMode, $$value => $$invalidate(3, $editMode = $$value));
+
+    	function update(from, to) {
+    		let newList = [...$instrumentSets[$activeSet].instruments];
+    		newList[from] = [newList[to], newList[to] = newList[from]][0];
+    		set_store_value(instrumentSets, $instrumentSets[$activeSet].instruments = [...newList], $instrumentSets);
+    		instrumentSets.set($instrumentSets);
+    	}
+
+    	function toggleReorder() {
+    		isReordering.set(!$isReordering);
+    		window.pushToast("Reordering " + ($isReordering ? "on" : "off"));
+    	}
+
+    	const writable_props = [];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<SetEditor> was created with unknown prop '${key}'`);
+    	});
+
+    	let { $$slots = {}, $$scope } = $$props;
+    	validate_slots("SetEditor", $$slots, []);
+
+    	$$self.$capture_state = () => ({
+    		activeSet,
+    		instrumentSets,
+    		editMode,
+    		isReordering,
+    		InstrumentCard,
+    		DragAndDropList,
+    		Button,
+    		Toast,
+    		slide,
+    		quintOut,
+    		flip,
+    		update,
+    		toggleReorder,
+    		$instrumentSets,
+    		$activeSet,
+    		$isReordering,
+    		$editMode
+    	});
+
+    	return [$instrumentSets, $activeSet, $isReordering, $editMode, update, toggleReorder];
     }
 
     class SetEditor extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$8, create_fragment$8, safe_not_equal, []);
+    		init(this, options, instance$a, create_fragment$a, safe_not_equal, {});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "SetEditor",
+    			options,
+    			id: create_fragment$a.name
+    		});
     	}
     }
 
-    /* src\components\SetList.svelte generated by Svelte v3.6.4 */
+    /* src\components\SetList.svelte generated by Svelte v3.20.1 */
 
-    const file$9 = "src\\components\\SetList.svelte";
+    const { console: console_1 } = globals;
+    const file$b = "src\\components\\SetList.svelte";
 
-    function get_each_context_1(ctx, list, i) {
-    	const child_ctx = Object.create(ctx);
-    	child_ctx.i = list[i];
+    function get_each_context$3(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[14] = list[i];
     	return child_ctx;
     }
 
-    function get_each_context$2(ctx, list, i) {
-    	const child_ctx = Object.create(ctx);
-    	child_ctx.set = list[i];
-    	child_ctx.each_value = list;
-    	child_ctx.i = i;
-    	return child_ctx;
-    }
+    // (245:4) {#if $editMode}
+    function create_if_block_3$1(ctx) {
+    	let div;
+    	let div_transition;
+    	let current;
 
-    // (179:4) {:else}
-    function create_else_block$2(ctx) {
-    	var p, t0, br, t1;
+    	const button = new Button({
+    			props: {
+    				$$slots: { default: [create_default_slot_5] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
 
-    	return {
+    	button.$on("click", /*addSet*/ ctx[4]);
+
+    	const block = {
     		c: function create() {
-    			p = element("p");
-    			t0 = text("🕳 No instrument sets.\r\n        ");
-    			br = element("br");
-    			t1 = text("\r\n        This is an error.\r\n      ");
-    			add_location(br, file$9, 181, 8, 4086);
-    			add_location(p, file$9, 179, 6, 4041);
+    			div = element("div");
+    			create_component(button.$$.fragment);
+    			add_location(div, file$b, 245, 6, 5562);
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, p, anchor);
-    			append(p, t0);
-    			append(p, br);
-    			append(p, t1);
+    			insert_dev(target, div, anchor);
+    			mount_component(button, div, null);
+    			current = true;
     		},
+    		p: function update(ctx, dirty) {
+    			const button_changes = {};
 
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(p);
+    			if (dirty & /*$$scope*/ 131072) {
+    				button_changes.$$scope = { dirty, ctx };
     			}
+
+    			button.$set(button_changes);
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(button.$$.fragment, local);
+
+    			add_render_callback(() => {
+    				if (!div_transition) div_transition = create_bidirectional_transition(div, slide, {}, true);
+    				div_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(button.$$.fragment, local);
+    			if (!div_transition) div_transition = create_bidirectional_transition(div, slide, {}, false);
+    			div_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    			destroy_component(button);
+    			if (detaching && div_transition) div_transition.end();
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_3$1.name,
+    		type: "if",
+    		source: "(245:4) {#if $editMode}",
+    		ctx
+    	});
+
+    	return block;
     }
 
-    // (163:12) {#each set.instruments as i (i.id)}
-    function create_each_block_1(key_1, ctx) {
-    	var span, t0_value = normalizedName$1(ctx.i.name), t0, t1, span_transition, rect, stop_animation = noop, current;
+    // (247:8) <Button on:click={addSet}>
+    function create_default_slot_5(ctx) {
+    	let t;
 
-    	return {
+    	const block = {
+    		c: function create() {
+    			t = text("Add");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, t, anchor);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(t);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot_5.name,
+    		type: "slot",
+    		source: "(247:8) <Button on:click={addSet}>",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (284:10) {#each set.instruments as i (i.id)}
+    function create_each_block$3(key_1, ctx) {
+    	let span;
+    	let t0_value = normalizedName$1(/*i*/ ctx[14].name) + "";
+    	let t0;
+    	let t1;
+    	let span_transition;
+    	let rect;
+    	let stop_animation = noop;
+    	let current;
+
+    	const block = {
     		key: key_1,
-
     		first: null,
-
     		c: function create() {
     			span = element("span");
     			t0 = text(t0_value);
     			t1 = space();
-    			attr(span, "class", "info-txt svelte-1aiggbp");
-    			add_location(span, file$9, 163, 14, 3567);
+    			attr_dev(span, "class", "info-txt svelte-n72dv4");
+    			add_location(span, file$b, 284, 12, 6723);
     			this.first = span;
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, span, anchor);
-    			append(span, t0);
-    			append(span, t1);
+    			insert_dev(target, span, anchor);
+    			append_dev(span, t0);
+    			append_dev(span, t1);
     			current = true;
     		},
-
-    		p: function update(changed, ctx) {
-    			if ((!current || changed.$instrumentSets) && t0_value !== (t0_value = normalizedName$1(ctx.i.name))) {
-    				set_data(t0, t0_value);
-    			}
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty & /*set*/ 8192) && t0_value !== (t0_value = normalizedName$1(/*i*/ ctx[14].name) + "")) set_data_dev(t0, t0_value);
     		},
-
-    		r: function measure_1() {
+    		r: function measure() {
     			rect = span.getBoundingClientRect();
     		},
-
     		f: function fix() {
     			fix_position(span);
     			stop_animation();
     			add_transform(span, rect);
     		},
-
     		a: function animate() {
     			stop_animation();
     			stop_animation = create_animation(span, rect, flip, {});
     		},
-
     		i: function intro(local) {
     			if (current) return;
+
     			add_render_callback(() => {
     				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, {}, true);
     				span_transition.run(1);
@@ -7297,629 +9203,1355 @@ var app = (function () {
 
     			current = true;
     		},
-
     		o: function outro(local) {
     			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, {}, false);
     			span_transition.run(0);
-
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(span);
-    				if (span_transition) span_transition.end();
-    			}
+    			if (detaching) detach_dev(span);
+    			if (detaching && span_transition) span_transition.end();
     		}
     	};
-    }
 
-    // (169:10) {#if !$editMode}
-    function create_if_block$5(ctx) {
-    	var div, div_transition, current;
-
-    	var keyboardkey = new KeyboardKey({
-    		props: { square: true, key: ctx.i + 1 < 10 ? ctx.i + 1 : 0 },
-    		$$inline: true
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block$3.name,
+    		type: "each",
+    		source: "(284:10) {#each set.instruments as i (i.id)}",
+    		ctx
     	});
 
-    	return {
+    	return block;
+    }
+
+    // (296:58) 
+    function create_if_block_2$1(ctx) {
+    	let div;
+    	let div_transition;
+    	let current;
+
+    	function click_handler(...args) {
+    		return /*click_handler*/ ctx[10](/*i*/ ctx[14], ...args);
+    	}
+
+    	const button = new Button({
+    			props: {
+    				outline: true,
+    				style: "font-family: 'Inter', sans-serif; transform:\r\n              translateX(-8px) translateY(1px); padding: 0.3rem; font-size:\r\n              1rem;",
+    				$$slots: { default: [create_default_slot_4$1] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
+
+    	button.$on("click", click_handler);
+
+    	const block = {
     		c: function create() {
     			div = element("div");
-    			keyboardkey.$$.fragment.c();
-    			attr(div, "class", "f-shrink transform-key svelte-1aiggbp");
-    			add_location(div, file$9, 169, 12, 3766);
+    			create_component(button.$$.fragment);
+    			attr_dev(div, "class", "f-shrink transform-key svelte-n72dv4");
+    			add_location(div, file$b, 296, 10, 7191);
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
-    			mount_component(keyboardkey, div, null);
+    			insert_dev(target, div, anchor);
+    			mount_component(button, div, null);
     			current = true;
     		},
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
+    			const button_changes = {};
 
+    			if (dirty & /*$$scope*/ 131072) {
+    				button_changes.$$scope = { dirty, ctx };
+    			}
+
+    			button.$set(button_changes);
+    		},
     		i: function intro(local) {
     			if (current) return;
-    			transition_in(keyboardkey.$$.fragment, local);
+    			transition_in(button.$$.fragment, local);
 
     			add_render_callback(() => {
-    				if (!div_transition) div_transition = create_bidirectional_transition(div, fade, { duration: 150, delay: 50 * ctx.i }, true);
+    				if (!div_transition) div_transition = create_bidirectional_transition(div, fade, { duration: 150 }, true);
     				div_transition.run(1);
     			});
 
     			current = true;
     		},
-
     		o: function outro(local) {
-    			transition_out(keyboardkey.$$.fragment, local);
-
-    			if (!div_transition) div_transition = create_bidirectional_transition(div, fade, { duration: 150, delay: 50 * ctx.i }, false);
+    			transition_out(button.$$.fragment, local);
+    			if (!div_transition) div_transition = create_bidirectional_transition(div, fade, { duration: 150 }, false);
     			div_transition.run(0);
-
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div);
-    			}
-
-    			destroy_component(keyboardkey, );
-
-    			if (detaching) {
-    				if (div_transition) div_transition.end();
-    			}
+    			if (detaching) detach_dev(div);
+    			destroy_component(button);
+    			if (detaching && div_transition) div_transition.end();
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_2$1.name,
+    		type: "if",
+    		source: "(296:58) ",
+    		ctx
+    	});
+
+    	return block;
     }
 
-    // (138:6) <Card          disabled={set.instruments.length < 1 && !$editMode}          passive={false}          active={$activeSet === i}          on:click={() => {            activeSet.set(i);          }}>
-    function create_default_slot$1(ctx) {
-    	var div1, div0, input, input_class_value, input_disabled_value, t0, each_blocks = [], each_1_lookup = new Map(), t1, div1_class_value, t2, current, dispose;
+    // (290:8) {#if !$editMode}
+    function create_if_block_1$1(ctx) {
+    	let div;
+    	let div_transition;
+    	let current;
 
-    	function input_input_handler() {
-    		ctx.input_input_handler.call(input, ctx);
+    	const keyboardkey = new KeyboardKey({
+    			props: {
+    				square: true,
+    				key: /*i*/ ctx[14] + 1 < 1
+    				? /*i*/ ctx[14] + 1
+    				: /*i*/ ctx[14] >= 1 ? "" : 0
+    			},
+    			$$inline: true
+    		});
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			create_component(keyboardkey.$$.fragment);
+    			attr_dev(div, "class", "f-shrink transform-key svelte-n72dv4");
+    			add_location(div, file$b, 290, 10, 6910);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    			mount_component(keyboardkey, div, null);
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			const keyboardkey_changes = {};
+
+    			if (dirty & /*i*/ 16384) keyboardkey_changes.key = /*i*/ ctx[14] + 1 < 1
+    			? /*i*/ ctx[14] + 1
+    			: /*i*/ ctx[14] >= 1 ? "" : 0;
+
+    			keyboardkey.$set(keyboardkey_changes);
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(keyboardkey.$$.fragment, local);
+
+    			add_render_callback(() => {
+    				if (!div_transition) div_transition = create_bidirectional_transition(div, fade, { duration: 150, delay: 50 * /*i*/ ctx[14] }, true);
+    				div_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(keyboardkey.$$.fragment, local);
+    			if (!div_transition) div_transition = create_bidirectional_transition(div, fade, { duration: 150, delay: 50 * /*i*/ ctx[14] }, false);
+    			div_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    			destroy_component(keyboardkey);
+    			if (detaching && div_transition) div_transition.end();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_1$1.name,
+    		type: "if",
+    		source: "(290:8) {#if !$editMode}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (300:12) <Button                on:click={e => deleteSet(i, e)}                outline                style="font-family: 'Inter', sans-serif; transform:                translateX(-8px) translateY(1px); padding: 0.3rem; font-size:                1rem;">
+    function create_default_slot_4$1(ctx) {
+    	let t;
+
+    	const block = {
+    		c: function create() {
+    			t = text("⌫");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, t, anchor);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(t);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot_4$1.name,
+    		type: "slot",
+    		source: "(300:12) <Button                on:click={e => deleteSet(i, e)}                outline                style=\\\"font-family: 'Inter', sans-serif; transform:                translateX(-8px) translateY(1px); padding: 0.3rem; font-size:                1rem;\\\">",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (258:4) <Card        disabled={set.instruments.length < 1 && !$editMode}        passive={false}        active={$activeSet === i}        on:click={() => {          activeSet.set(i);        }}>
+    function create_default_slot_3$1(ctx) {
+    	let div1;
+    	let div0;
+    	let input;
+    	let input_value_value;
+    	let input_class_value;
+    	let input_disabled_value;
+    	let t0;
+    	let each_blocks = [];
+    	let each_1_lookup = new Map();
+    	let t1;
+    	let current_block_type_index;
+    	let if_block;
+    	let div1_class_value;
+    	let current;
+    	let dispose;
+
+    	function input_handler(...args) {
+    		return /*input_handler*/ ctx[9](/*set*/ ctx[13], ...args);
     	}
 
-    	var each_value_1 = ctx.set.instruments;
+    	let each_value = /*set*/ ctx[13].instruments;
+    	validate_each_argument(each_value);
+    	const get_key = ctx => /*i*/ ctx[14].id;
+    	validate_each_keys(ctx, each_value, get_each_context$3, get_key);
 
-    	const get_key = ctx => ctx.i.id;
-
-    	for (var i = 0; i < each_value_1.length; i += 1) {
-    		let child_ctx = get_each_context_1(ctx, each_value_1, i);
+    	for (let i = 0; i < each_value.length; i += 1) {
+    		let child_ctx = get_each_context$3(ctx, each_value, i);
     		let key = get_key(child_ctx);
-    		each_1_lookup.set(key, each_blocks[i] = create_each_block_1(key, child_ctx));
+    		each_1_lookup.set(key, each_blocks[i] = create_each_block$3(key, child_ctx));
     	}
 
-    	var if_block = (!ctx.$editMode) && create_if_block$5(ctx);
+    	const if_block_creators = [create_if_block_1$1, create_if_block_2$1];
+    	const if_blocks = [];
 
-    	return {
+    	function select_block_type(ctx, dirty) {
+    		if (!/*$editMode*/ ctx[1]) return 0;
+    		if (/*$editMode*/ ctx[1] && /*i*/ ctx[14] >= 1 && /*i*/ ctx[14] !== /*$activeSet*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index = select_block_type(ctx))) {
+    		if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+    	}
+
+    	const block = {
     		c: function create() {
     			div1 = element("div");
     			div0 = element("div");
     			input = element("input");
     			t0 = space();
 
-    			for (i = 0; i < each_blocks.length; i += 1) each_blocks[i].c();
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
 
     			t1 = space();
     			if (if_block) if_block.c();
-    			t2 = space();
-    			attr(input, "type", "text");
-    			attr(input, "class", input_class_value = "uppercase " + (ctx.$editMode ? 'edit-field' : 'label-field') + " svelte-1aiggbp");
-    			set_style(input, "transition-delay", "" + 50 * ctx.i + "ms");
-    			input.disabled = input_disabled_value = !ctx.$editMode;
-    			toggle_class(input, "act", ctx.$activeSet === ctx.i);
-    			add_location(input, file$9, 148, 12, 3043);
-    			attr(div0, "class", "f-grow svelte-1aiggbp");
-    			add_location(div0, file$9, 146, 10, 3007);
-    			attr(div1, "class", div1_class_value = "fixed-card " + (ctx.set.instruments.length > 0 ? '' : 'remove-btm-margin') + " svelte-1aiggbp");
-    			add_location(div1, file$9, 144, 8, 2904);
-    			dispose = listen(input, "input", input_input_handler);
+    			attr_dev(input, "type", "text");
+    			input.value = input_value_value = /*set*/ ctx[13].name;
+    			attr_dev(input, "class", input_class_value = "uppercase " + (/*$editMode*/ ctx[1] ? "edit-field" : "label-field") + " svelte-n72dv4");
+    			set_style(input, "transition-delay", 50 * /*i*/ ctx[14] + "ms");
+    			input.disabled = input_disabled_value = !/*$editMode*/ ctx[1];
+    			toggle_class(input, "act", /*$activeSet*/ ctx[3] === /*i*/ ctx[14] && !/*$editMode*/ ctx[1]);
+    			add_location(input, file$b, 268, 10, 6138);
+    			attr_dev(div0, "class", "f-grow svelte-n72dv4");
+    			add_location(div0, file$b, 266, 8, 6104);
+
+    			attr_dev(div1, "class", div1_class_value = "fixed-card " + (/*set*/ ctx[13].instruments.length > 0
+    			? ""
+    			: "remove-btm-margin") + " svelte-n72dv4");
+
+    			add_location(div1, file$b, 264, 6, 6005);
     		},
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, div1, anchor);
+    			append_dev(div1, div0);
+    			append_dev(div0, input);
+    			append_dev(div0, t0);
 
-    		m: function mount(target, anchor) {
-    			insert(target, div1, anchor);
-    			append(div1, div0);
-    			append(div0, input);
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(div0, null);
+    			}
 
-    			input.value = ctx.set.name;
+    			append_dev(div1, t1);
 
-    			append(div0, t0);
+    			if (~current_block_type_index) {
+    				if_blocks[current_block_type_index].m(div1, null);
+    			}
 
-    			for (i = 0; i < each_blocks.length; i += 1) each_blocks[i].m(div0, null);
-
-    			append(div1, t1);
-    			if (if_block) if_block.m(div1, null);
-    			insert(target, t2, anchor);
     			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(input, "input", input_handler, false, false, false);
     		},
-
-    		p: function update(changed, new_ctx) {
+    		p: function update(new_ctx, dirty) {
     			ctx = new_ctx;
-    			if (changed.$instrumentSets && (input.value !== ctx.set.name)) input.value = ctx.set.name;
 
-    			if ((!current || changed.$editMode) && input_class_value !== (input_class_value = "uppercase " + (ctx.$editMode ? 'edit-field' : 'label-field') + " svelte-1aiggbp")) {
-    				attr(input, "class", input_class_value);
+    			if (!current || dirty & /*set*/ 8192 && input_value_value !== (input_value_value = /*set*/ ctx[13].name) && input.value !== input_value_value) {
+    				prop_dev(input, "value", input_value_value);
     			}
 
-    			if ((!current || changed.$editMode) && input_disabled_value !== (input_disabled_value = !ctx.$editMode)) {
-    				input.disabled = input_disabled_value;
+    			if (!current || dirty & /*$editMode*/ 2 && input_class_value !== (input_class_value = "uppercase " + (/*$editMode*/ ctx[1] ? "edit-field" : "label-field") + " svelte-n72dv4")) {
+    				attr_dev(input, "class", input_class_value);
     			}
 
-    			if ((changed.$editMode || changed.$activeSet)) {
-    				toggle_class(input, "act", ctx.$activeSet === ctx.i);
+    			if (!current || dirty & /*i*/ 16384) {
+    				set_style(input, "transition-delay", 50 * /*i*/ ctx[14] + "ms");
     			}
 
-    			const each_value_1 = ctx.set.instruments;
+    			if (!current || dirty & /*$editMode*/ 2 && input_disabled_value !== (input_disabled_value = !/*$editMode*/ ctx[1])) {
+    				prop_dev(input, "disabled", input_disabled_value);
+    			}
 
-    			group_outros();
-    			for (let i = 0; i < each_blocks.length; i += 1) each_blocks[i].r();
-    			each_blocks = update_keyed_each(each_blocks, changed, get_key, 1, ctx, each_value_1, each_1_lookup, div0, fix_and_outro_and_destroy_block, create_each_block_1, null, get_each_context_1);
-    			for (let i = 0; i < each_blocks.length; i += 1) each_blocks[i].a();
-    			check_outros();
+    			if (dirty & /*$editMode, $activeSet, i, $editMode*/ 16394) {
+    				toggle_class(input, "act", /*$activeSet*/ ctx[3] === /*i*/ ctx[14] && !/*$editMode*/ ctx[1]);
+    			}
 
-    			if (!ctx.$editMode) {
-    				if (!if_block) {
-    					if_block = create_if_block$5(ctx);
-    					if_block.c();
-    					transition_in(if_block, 1);
-    					if_block.m(div1, null);
-    				} else {
-    									transition_in(if_block, 1);
-    				}
-    			} else if (if_block) {
+    			if (dirty & /*normalizedName, set*/ 8192) {
+    				const each_value = /*set*/ ctx[13].instruments;
+    				validate_each_argument(each_value);
     				group_outros();
-    				transition_out(if_block, 1, () => {
-    					if_block = null;
-    				});
+    				for (let i = 0; i < each_blocks.length; i += 1) each_blocks[i].r();
+    				validate_each_keys(ctx, each_value, get_each_context$3, get_key);
+    				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, div0, fix_and_outro_and_destroy_block, create_each_block$3, null, get_each_context$3);
+    				for (let i = 0; i < each_blocks.length; i += 1) each_blocks[i].a();
     				check_outros();
     			}
 
-    			if ((!current || changed.$instrumentSets) && div1_class_value !== (div1_class_value = "fixed-card " + (ctx.set.instruments.length > 0 ? '' : 'remove-btm-margin') + " svelte-1aiggbp")) {
-    				attr(div1, "class", div1_class_value);
+    			let previous_block_index = current_block_type_index;
+    			current_block_type_index = select_block_type(ctx);
+
+    			if (current_block_type_index === previous_block_index) {
+    				if (~current_block_type_index) {
+    					if_blocks[current_block_type_index].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block) {
+    					group_outros();
+
+    					transition_out(if_blocks[previous_block_index], 1, 1, () => {
+    						if_blocks[previous_block_index] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index) {
+    					if_block = if_blocks[current_block_type_index];
+
+    					if (!if_block) {
+    						if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+    						if_block.c();
+    					}
+
+    					transition_in(if_block, 1);
+    					if_block.m(div1, null);
+    				} else {
+    					if_block = null;
+    				}
+    			}
+
+    			if (!current || dirty & /*set*/ 8192 && div1_class_value !== (div1_class_value = "fixed-card " + (/*set*/ ctx[13].instruments.length > 0
+    			? ""
+    			: "remove-btm-margin") + " svelte-n72dv4")) {
+    				attr_dev(div1, "class", div1_class_value);
     			}
     		},
-
     		i: function intro(local) {
     			if (current) return;
-    			for (var i = 0; i < each_value_1.length; i += 1) transition_in(each_blocks[i]);
+
+    			for (let i = 0; i < each_value.length; i += 1) {
+    				transition_in(each_blocks[i]);
+    			}
 
     			transition_in(if_block);
     			current = true;
     		},
-
     		o: function outro(local) {
-    			for (i = 0; i < each_blocks.length; i += 1) transition_out(each_blocks[i]);
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				transition_out(each_blocks[i]);
+    			}
 
     			transition_out(if_block);
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div1);
+    			if (detaching) detach_dev(div1);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].d();
     			}
 
-    			for (i = 0; i < each_blocks.length; i += 1) each_blocks[i].d();
-
-    			if (if_block) if_block.d();
-
-    			if (detaching) {
-    				detach(t2);
+    			if (~current_block_type_index) {
+    				if_blocks[current_block_type_index].d();
     			}
 
     			dispose();
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot_3$1.name,
+    		type: "slot",
+    		source: "(258:4) <Card        disabled={set.instruments.length < 1 && !$editMode}        passive={false}        active={$activeSet === i}        on:click={() => {          activeSet.set(i);        }}>",
+    		ctx
+    	});
+
+    	return block;
     }
 
-    // (137:4) {#each $instrumentSets as set, i}
-    function create_each_block$2(ctx) {
-    	var current;
+    // (314:4) <p slot="error">
+    function create_error_slot$1(ctx) {
+    	let p;
+    	let t0;
+    	let br;
+    	let t1;
 
-    	function click_handler() {
-    		return ctx.click_handler(ctx);
+    	const block = {
+    		c: function create() {
+    			p = element("p");
+    			t0 = text("🕳 No instrument sets.\r\n      ");
+    			br = element("br");
+    			t1 = text("\r\n      This is an error.");
+    			add_location(br, file$b, 315, 6, 7711);
+    			attr_dev(p, "slot", "error");
+    			add_location(p, file$b, 313, 4, 7657);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, p, anchor);
+    			append_dev(p, t0);
+    			append_dev(p, br);
+    			append_dev(p, t1);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(p);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_error_slot$1.name,
+    		type: "slot",
+    		source: "(314:4) <p slot=\\\"error\\\">",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (252:2) <DragAndDropList      bind:list={$instrumentSets}      canReroder={$isReordering}      let:item={set}      let:index={i}      {update}>
+    function create_default_slot_2$1(ctx) {
+    	let t;
+    	let current;
+
+    	function click_handler_1(...args) {
+    		return /*click_handler_1*/ ctx[11](/*i*/ ctx[14], ...args);
     	}
 
-    	var card = new Card({
-    		props: {
-    		disabled: ctx.set.instruments.length < 1 && !ctx.$editMode,
-    		passive: false,
-    		active: ctx.$activeSet === ctx.i,
-    		$$slots: { default: [create_default_slot$1] },
-    		$$scope: { ctx }
-    	},
-    		$$inline: true
-    	});
-    	card.$on("click", click_handler);
+    	const card = new Card({
+    			props: {
+    				disabled: /*set*/ ctx[13].instruments.length < 1 && !/*$editMode*/ ctx[1],
+    				passive: false,
+    				active: /*$activeSet*/ ctx[3] === /*i*/ ctx[14],
+    				$$slots: { default: [create_default_slot_3$1] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
 
-    	return {
+    	card.$on("click", click_handler_1);
+
+    	const block = {
     		c: function create() {
-    			card.$$.fragment.c();
+    			create_component(card.$$.fragment);
+    			t = space();
     		},
-
     		m: function mount(target, anchor) {
     			mount_component(card, target, anchor);
+    			insert_dev(target, t, anchor);
     			current = true;
     		},
-
-    		p: function update(changed, new_ctx) {
+    		p: function update(new_ctx, dirty) {
     			ctx = new_ctx;
-    			var card_changes = {};
-    			if (changed.$instrumentSets || changed.$editMode) card_changes.disabled = ctx.set.instruments.length < 1 && !ctx.$editMode;
-    			if (changed.$activeSet) card_changes.active = ctx.$activeSet === ctx.i;
-    			if (changed.$$scope || changed.$instrumentSets || changed.$editMode || changed.$activeSet) card_changes.$$scope = { changed, ctx };
+    			const card_changes = {};
+    			if (dirty & /*set, $editMode*/ 8194) card_changes.disabled = /*set*/ ctx[13].instruments.length < 1 && !/*$editMode*/ ctx[1];
+    			if (dirty & /*$activeSet, i*/ 16392) card_changes.active = /*$activeSet*/ ctx[3] === /*i*/ ctx[14];
+
+    			if (dirty & /*$$scope, set, i, $editMode, $activeSet*/ 155658) {
+    				card_changes.$$scope = { dirty, ctx };
+    			}
+
     			card.$set(card_changes);
     		},
-
     		i: function intro(local) {
     			if (current) return;
     			transition_in(card.$$.fragment, local);
-
     			current = true;
     		},
-
     		o: function outro(local) {
     			transition_out(card.$$.fragment, local);
     			current = false;
     		},
-
     		d: function destroy(detaching) {
     			destroy_component(card, detaching);
+    			if (detaching) detach_dev(t);
     		}
     	};
-    }
 
-    function create_fragment$9(ctx) {
-    	var div1, h4, t_1, div0, current;
-
-    	var each_value = ctx.$instrumentSets;
-
-    	var each_blocks = [];
-
-    	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$2(get_each_context$2(ctx, each_value, i));
-    	}
-
-    	const out = i => transition_out(each_blocks[i], 1, () => {
-    		each_blocks[i] = null;
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot_2$1.name,
+    		type: "slot",
+    		source: "(252:2) <DragAndDropList      bind:list={$instrumentSets}      canReroder={$isReordering}      let:item={set}      let:index={i}      {update}>",
+    		ctx
     	});
 
-    	var each_1_else = null;
+    	return block;
+    }
 
-    	if (!each_value.length) {
-    		each_1_else = create_else_block$2();
-    		each_1_else.c();
+    // (321:2) {#if $editMode}
+    function create_if_block$6(ctx) {
+    	let div;
+    	let t;
+    	let div_transition;
+    	let current;
+
+    	const button0 = new Button({
+    			props: {
+    				$$slots: { default: [create_default_slot_1$2] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
+
+    	button0.$on("click", /*downloadObjectAsJson*/ ctx[6]);
+
+    	const button1 = new Button({
+    			props: {
+    				$$slots: { default: [create_default_slot$2] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
+
+    	button1.$on("click", restore);
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			create_component(button0.$$.fragment);
+    			t = space();
+    			create_component(button1.$$.fragment);
+    			attr_dev(div, "class", "title-flex svelte-n72dv4");
+    			add_location(div, file$b, 321, 4, 7801);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    			mount_component(button0, div, null);
+    			append_dev(div, t);
+    			mount_component(button1, div, null);
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			const button0_changes = {};
+
+    			if (dirty & /*$$scope*/ 131072) {
+    				button0_changes.$$scope = { dirty, ctx };
+    			}
+
+    			button0.$set(button0_changes);
+    			const button1_changes = {};
+
+    			if (dirty & /*$$scope*/ 131072) {
+    				button1_changes.$$scope = { dirty, ctx };
+    			}
+
+    			button1.$set(button1_changes);
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(button0.$$.fragment, local);
+    			transition_in(button1.$$.fragment, local);
+
+    			add_render_callback(() => {
+    				if (!div_transition) div_transition = create_bidirectional_transition(div, slide, {}, true);
+    				div_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(button0.$$.fragment, local);
+    			transition_out(button1.$$.fragment, local);
+    			if (!div_transition) div_transition = create_bidirectional_transition(div, slide, {}, false);
+    			div_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    			destroy_component(button0);
+    			destroy_component(button1);
+    			if (detaching && div_transition) div_transition.end();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block$6.name,
+    		type: "if",
+    		source: "(321:2) {#if $editMode}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (323:6) <Button on:click={downloadObjectAsJson}>
+    function create_default_slot_1$2(ctx) {
+    	let t;
+
+    	const block = {
+    		c: function create() {
+    			t = text("Backup");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, t, anchor);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(t);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot_1$2.name,
+    		type: "slot",
+    		source: "(323:6) <Button on:click={downloadObjectAsJson}>",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (324:6) <Button on:click={restore}>
+    function create_default_slot$2(ctx) {
+    	let t;
+
+    	const block = {
+    		c: function create() {
+    			t = text("Restore");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, t, anchor);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(t);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot$2.name,
+    		type: "slot",
+    		source: "(324:6) <Button on:click={restore}>",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function create_fragment$b(ctx) {
+    	let div1;
+    	let div0;
+    	let h4;
+    	let t1;
+    	let t2;
+    	let updating_list;
+    	let t3;
+    	let t4;
+    	let current;
+    	let if_block0 = /*$editMode*/ ctx[1] && create_if_block_3$1(ctx);
+
+    	function draganddroplist_list_binding(value) {
+    		/*draganddroplist_list_binding*/ ctx[12].call(null, value);
     	}
 
-    	return {
+    	let draganddroplist_props = {
+    		canReroder: /*$isReordering*/ ctx[2],
+    		update: /*update*/ ctx[7],
+    		$$slots: {
+    			default: [
+    				create_default_slot_2$1,
+    				({ item: set, index: i }) => ({ 13: set, 14: i }),
+    				({ item: set, index: i }) => (set ? 8192 : 0) | (i ? 16384 : 0)
+    			],
+    			error: [
+    				create_error_slot$1,
+    				({ item: set, index: i }) => ({ 13: set, 14: i }),
+    				({ item: set, index: i }) => (set ? 8192 : 0) | (i ? 16384 : 0)
+    			]
+    		},
+    		$$scope: { ctx }
+    	};
+
+    	if (/*$instrumentSets*/ ctx[0] !== void 0) {
+    		draganddroplist_props.list = /*$instrumentSets*/ ctx[0];
+    	}
+
+    	const draganddroplist = new DragAndDropList({
+    			props: draganddroplist_props,
+    			$$inline: true
+    		});
+
+    	binding_callbacks.push(() => bind(draganddroplist, "list", draganddroplist_list_binding));
+    	let if_block1 = /*$editMode*/ ctx[1] && create_if_block$6(ctx);
+    	const toast = new Toast({ $$inline: true });
+
+    	const block = {
     		c: function create() {
     			div1 = element("div");
+    			div0 = element("div");
     			h4 = element("h4");
     			h4.textContent = "Instrument sets";
-    			t_1 = space();
-    			div0 = element("div");
-
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
+    			t1 = space();
+    			if (if_block0) if_block0.c();
+    			t2 = space();
+    			create_component(draganddroplist.$$.fragment);
+    			t3 = space();
+    			if (if_block1) if_block1.c();
+    			t4 = space();
+    			create_component(toast.$$.fragment);
     			set_style(h4, "font-weight", "400");
-    			attr(h4, "class", "svelte-1aiggbp");
-    			add_location(h4, file$9, 134, 2, 2581);
-    			attr(div0, "class", "list svelte-1aiggbp");
-    			add_location(div0, file$9, 135, 2, 2634);
-    			attr(div1, "class", "container svelte-1aiggbp");
-    			add_location(div1, file$9, 132, 0, 2552);
+    			attr_dev(h4, "class", "svelte-n72dv4");
+    			add_location(h4, file$b, 243, 4, 5484);
+    			attr_dev(div0, "class", "title-flex svelte-n72dv4");
+    			add_location(div0, file$b, 242, 2, 5454);
+    			attr_dev(div1, "class", "container svelte-n72dv4");
+    			add_location(div1, file$b, 240, 0, 5425);
     		},
-
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, div1, anchor);
-    			append(div1, h4);
-    			append(div1, t_1);
-    			append(div1, div0);
-
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(div0, null);
-    			}
-
-    			if (each_1_else) {
-    				each_1_else.m(div0, null);
-    			}
-
+    			insert_dev(target, div1, anchor);
+    			append_dev(div1, div0);
+    			append_dev(div0, h4);
+    			append_dev(div0, t1);
+    			if (if_block0) if_block0.m(div0, null);
+    			append_dev(div1, t2);
+    			mount_component(draganddroplist, div1, null);
+    			append_dev(div1, t3);
+    			if (if_block1) if_block1.m(div1, null);
+    			insert_dev(target, t4, anchor);
+    			mount_component(toast, target, anchor);
     			current = true;
     		},
-
-    		p: function update(changed, ctx) {
-    			if (changed.$instrumentSets || changed.$editMode || changed.$activeSet || changed.normalizedName) {
-    				each_value = ctx.$instrumentSets;
-
-    				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$2(ctx, each_value, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(changed, child_ctx);
-    						transition_in(each_blocks[i], 1);
-    					} else {
-    						each_blocks[i] = create_each_block$2(child_ctx);
-    						each_blocks[i].c();
-    						transition_in(each_blocks[i], 1);
-    						each_blocks[i].m(div0, null);
-    					}
+    		p: function update(ctx, [dirty]) {
+    			if (/*$editMode*/ ctx[1]) {
+    				if (if_block0) {
+    					if_block0.p(ctx, dirty);
+    					transition_in(if_block0, 1);
+    				} else {
+    					if_block0 = create_if_block_3$1(ctx);
+    					if_block0.c();
+    					transition_in(if_block0, 1);
+    					if_block0.m(div0, null);
     				}
-
+    			} else if (if_block0) {
     				group_outros();
-    				for (i = each_value.length; i < each_blocks.length; i += 1) out(i);
+
+    				transition_out(if_block0, 1, 1, () => {
+    					if_block0 = null;
+    				});
+
     				check_outros();
     			}
 
-    			if (each_value.length) {
-    				if (each_1_else) {
-    					each_1_else.d(1);
-    					each_1_else = null;
+    			const draganddroplist_changes = {};
+    			if (dirty & /*$isReordering*/ 4) draganddroplist_changes.canReroder = /*$isReordering*/ ctx[2];
+
+    			if (dirty & /*$$scope, set, $editMode, $activeSet, i*/ 155658) {
+    				draganddroplist_changes.$$scope = { dirty, ctx };
+    			}
+
+    			if (!updating_list && dirty & /*$instrumentSets*/ 1) {
+    				updating_list = true;
+    				draganddroplist_changes.list = /*$instrumentSets*/ ctx[0];
+    				add_flush_callback(() => updating_list = false);
+    			}
+
+    			draganddroplist.$set(draganddroplist_changes);
+
+    			if (/*$editMode*/ ctx[1]) {
+    				if (if_block1) {
+    					if_block1.p(ctx, dirty);
+    					transition_in(if_block1, 1);
+    				} else {
+    					if_block1 = create_if_block$6(ctx);
+    					if_block1.c();
+    					transition_in(if_block1, 1);
+    					if_block1.m(div1, null);
     				}
-    			} else if (!each_1_else) {
-    				each_1_else = create_else_block$2();
-    				each_1_else.c();
-    				each_1_else.m(div0, null);
+    			} else if (if_block1) {
+    				group_outros();
+
+    				transition_out(if_block1, 1, 1, () => {
+    					if_block1 = null;
+    				});
+
+    				check_outros();
     			}
     		},
-
     		i: function intro(local) {
     			if (current) return;
-    			for (var i = 0; i < each_value.length; i += 1) transition_in(each_blocks[i]);
-
+    			transition_in(if_block0);
+    			transition_in(draganddroplist.$$.fragment, local);
+    			transition_in(if_block1);
+    			transition_in(toast.$$.fragment, local);
     			current = true;
     		},
-
     		o: function outro(local) {
-    			each_blocks = each_blocks.filter(Boolean);
-    			for (let i = 0; i < each_blocks.length; i += 1) transition_out(each_blocks[i]);
-
+    			transition_out(if_block0);
+    			transition_out(draganddroplist.$$.fragment, local);
+    			transition_out(if_block1);
+    			transition_out(toast.$$.fragment, local);
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div1);
-    			}
-
-    			destroy_each(each_blocks, detaching);
-
-    			if (each_1_else) each_1_else.d();
+    			if (detaching) detach_dev(div1);
+    			if (if_block0) if_block0.d();
+    			destroy_component(draganddroplist);
+    			if (if_block1) if_block1.d();
+    			if (detaching) detach_dev(t4);
+    			destroy_component(toast, detaching);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$b.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
     }
 
     function normalizedName$1(name) {
-      name = name.replace(/_/g, " ");
-
-      return name.charAt(0).toUpperCase() + name.slice(1);
+    	name = name.replace(/_/g, " ");
+    	return name.charAt(0).toUpperCase() + name.slice(1);
     }
 
-    function instance$9($$self, $$props, $$invalidate) {
-    	let $instrumentSets, $editMode, $activeSet;
+    function randId() {
+    	return Math.random().toString(36).replace(/[^a-z]+/g, "").substr(2, 10);
+    }
 
-    	validate_store(instrumentSets, 'instrumentSets');
-    	subscribe($$self, instrumentSets, $$value => { $instrumentSets = $$value; $$invalidate('$instrumentSets', $instrumentSets); });
-    	validate_store(editMode, 'editMode');
-    	subscribe($$self, editMode, $$value => { $editMode = $$value; $$invalidate('$editMode', $editMode); });
-    	validate_store(activeSet, 'activeSet');
-    	subscribe($$self, activeSet, $$value => { $activeSet = $$value; $$invalidate('$activeSet', $activeSet); });
+    function restore() {
+    	let input = prompt("Copy-paste the backup .json contents");
 
-    	function input_input_handler({ set, each_value, i }) {
-    		each_value[i].name = this.value;
+    	if (input != null) {
+    		try {
+    			let parsed = JSON.parse(input);
+    			console.log(parsed);
+    			instrumentSets.set([...parsed]);
+    		} catch(error) {
+    			window.pushToast("Restore not successful", "error");
+    		}
+
+    		window.pushToast("Restore successful");
+    	} else {
+    		window.pushToast("Invalid restore input", "error");
+    	}
+    }
+
+    function instance$b($$self, $$props, $$invalidate) {
+    	let $instrumentSets;
+    	let $editMode;
+    	let $isReordering;
+    	let $activeSet;
+    	validate_store(instrumentSets, "instrumentSets");
+    	component_subscribe($$self, instrumentSets, $$value => $$invalidate(0, $instrumentSets = $$value));
+    	validate_store(editMode, "editMode");
+    	component_subscribe($$self, editMode, $$value => $$invalidate(1, $editMode = $$value));
+    	validate_store(isReordering, "isReordering");
+    	component_subscribe($$self, isReordering, $$value => $$invalidate(2, $isReordering = $$value));
+    	validate_store(activeSet, "activeSet");
+    	component_subscribe($$self, activeSet, $$value => $$invalidate(3, $activeSet = $$value));
+
+    	function addSet() {
+    		instrumentSets.set([
+    			...$instrumentSets,
+    			{
+    				id: randId(),
+    				name: "New set",
+    				instruments: []
+    			}
+    		]);
+
+    		window.pushToast("Instrument set added");
     	}
 
-    	function click_handler({ i }) {
-    	          activeSet.set(i);
-    	        }
+    	function deleteSet(set, event) {
+    		event.preventDefault();
+    		event.stopPropagation();
+    		const name = $instrumentSets[set].name;
 
-    	return {
+    		if (confirm("Delete instrument set?")) {
+    			let newSets = [...$instrumentSets];
+    			newSets.splice(set, 1);
+    			instrumentSets.set([...newSets]);
+    		}
+
+    		window.pushToast("Removed <i>" + name + "</i>");
+    	}
+
+    	function downloadObjectAsJson() {
+    		var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify($instrumentSets));
+    		var downloadAnchorNode = document.createElement("a");
+    		downloadAnchorNode.setAttribute("href", dataStr);
+    		downloadAnchorNode.setAttribute("download", "backup.json");
+    		document.body.appendChild(downloadAnchorNode); // required for firefox
+    		downloadAnchorNode.click();
+    		downloadAnchorNode.remove();
+    		window.pushToast("Backup downloading");
+    	}
+
+    	function update(from, to) {
+    		let newList = [...$instrumentSets];
+    		newList[from] = [newList[to], newList[to] = newList[from]][0];
+    		set_store_value(instrumentSets, $instrumentSets = [...newList]);
+    		instrumentSets.set($instrumentSets);
+    	}
+
+    	const updateValue = (item, prop, value) => {
+    		// either this...
+    		item[prop] = value;
+
+    		instrumentSets.set($instrumentSets); // force an update
+    	}; // ...or this:
+    	// instrumentSets.set(
+    	//   $instrumentSets.map(i => (i === item ? { ...i, [prop]: value } : i))
+    	// );
+
+    	const writable_props = [];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1.warn(`<SetList> was created with unknown prop '${key}'`);
+    	});
+
+    	let { $$slots = {}, $$scope } = $$props;
+    	validate_slots("SetList", $$slots, []);
+    	const input_handler = (set, e) => updateValue(set, "name", e.target.value);
+    	const click_handler = (i, e) => deleteSet(i, e);
+
+    	const click_handler_1 = i => {
+    		activeSet.set(i);
+    	};
+
+    	function draganddroplist_list_binding(value) {
+    		$instrumentSets = value;
+    		instrumentSets.set($instrumentSets);
+    	}
+
+    	$$self.$capture_state = () => ({
+    		flip,
+    		slide,
+    		fade,
+    		scale,
+    		activeSet,
+    		instrumentSets,
+    		editMode,
+    		isReordering,
+    		Button,
+    		DragAndDropList,
+    		Toast,
+    		Card,
+    		KeyboardKey,
+    		normalizedName: normalizedName$1,
+    		randId,
+    		addSet,
+    		deleteSet,
+    		downloadObjectAsJson,
+    		restore,
+    		update,
+    		updateValue,
     		$instrumentSets,
     		$editMode,
+    		$isReordering,
+    		$activeSet
+    	});
+
+    	return [
+    		$instrumentSets,
+    		$editMode,
+    		$isReordering,
     		$activeSet,
-    		input_input_handler,
-    		click_handler
-    	};
+    		addSet,
+    		deleteSet,
+    		downloadObjectAsJson,
+    		update,
+    		updateValue,
+    		input_handler,
+    		click_handler,
+    		click_handler_1,
+    		draganddroplist_list_binding
+    	];
     }
 
     class SetList extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$9, create_fragment$9, safe_not_equal, []);
+    		init(this, options, instance$b, create_fragment$b, safe_not_equal, {});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "SetList",
+    			options,
+    			id: create_fragment$b.name
+    		});
     	}
     }
 
-    /* src\components\InstrumentList.svelte generated by Svelte v3.6.4 */
+    /* src\components\InstrumentList.svelte generated by Svelte v3.20.1 */
+    const file$c = "src\\components\\InstrumentList.svelte";
 
-    const file$a = "src\\components\\InstrumentList.svelte";
-
-    function get_each_context$3(ctx, list, i) {
-    	const child_ctx = Object.create(ctx);
-    	child_ctx.item = list[i];
+    function get_each_context$4(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[16] = list[i];
     	return child_ctx;
     }
 
-    // (207:8) <Button            style="width: 12rem; height: 2rem; margin-bottom: 0.4rem; text-align:            left;"            on:click={e => addPickedInstrument(item)}>
-    function create_default_slot_2$1(ctx) {
-    	var t0_value = normalizeInstrumentName(ctx.item), t0, t1;
+    // (254:6) {:else}
+    function create_else_block$2(ctx) {
+    	let p;
+    	let t0;
+    	let br;
+    	let t1;
+    	let span;
+    	let t2;
+    	let p_transition;
+    	let current;
 
-    	return {
+    	const block = {
     		c: function create() {
-    			t0 = text(t0_value);
+    			p = element("p");
+    			t0 = text("No instruments match\r\n          ");
+    			br = element("br");
     			t1 = space();
+    			span = element("span");
+    			t2 = text(/*filterString*/ ctx[0]);
+    			add_location(br, file$c, 256, 10, 5494);
+    			attr_dev(span, "class", "svelte-23g65n");
+    			add_location(span, file$c, 257, 10, 5512);
+    			attr_dev(p, "class", "info-msg svelte-23g65n");
+    			add_location(p, file$c, 254, 8, 5393);
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, t0, anchor);
-    			insert(target, t1, anchor);
-    		},
-
-    		p: function update(changed, ctx) {
-    			if ((changed.filteredList) && t0_value !== (t0_value = normalizeInstrumentName(ctx.item))) {
-    				set_data(t0, t0_value);
-    			}
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(t0);
-    				detach(t1);
-    			}
-    		}
-    	};
-    }
-
-    // (206:6) {#each filteredList as item (item)}
-    function create_each_block$3(key_1, ctx) {
-    	var first, current;
-
-    	function click_handler(...args) {
-    		return ctx.click_handler(ctx, ...args);
-    	}
-
-    	var button = new Button({
-    		props: {
-    		style: "width: 12rem; height: 2rem; margin-bottom: 0.4rem; text-align:\r\n          left;",
-    		$$slots: { default: [create_default_slot_2$1] },
-    		$$scope: { ctx }
-    	},
-    		$$inline: true
-    	});
-    	button.$on("click", click_handler);
-
-    	return {
-    		key: key_1,
-
-    		first: null,
-
-    		c: function create() {
-    			first = empty();
-    			button.$$.fragment.c();
-    			this.first = first;
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, first, anchor);
-    			mount_component(button, target, anchor);
+    			insert_dev(target, p, anchor);
+    			append_dev(p, t0);
+    			append_dev(p, br);
+    			append_dev(p, t1);
+    			append_dev(p, span);
+    			append_dev(span, t2);
     			current = true;
     		},
-
-    		p: function update(changed, new_ctx) {
-    			ctx = new_ctx;
-    			var button_changes = {};
-    			if (changed.$$scope || changed.filteredList) button_changes.$$scope = { changed, ctx };
-    			button.$set(button_changes);
+    		p: function update(ctx, dirty) {
+    			if (!current || dirty & /*filterString*/ 1) set_data_dev(t2, /*filterString*/ ctx[0]);
     		},
-
     		i: function intro(local) {
     			if (current) return;
-    			transition_in(button.$$.fragment, local);
+
+    			add_render_callback(() => {
+    				if (!p_transition) p_transition = create_bidirectional_transition(p, slide, { duration: 200 }, true);
+    				p_transition.run(1);
+    			});
 
     			current = true;
     		},
-
     		o: function outro(local) {
-    			transition_out(button.$$.fragment, local);
+    			if (!p_transition) p_transition = create_bidirectional_transition(p, slide, { duration: 200 }, false);
+    			p_transition.run(0);
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(first);
-    			}
-
-    			destroy_component(button, detaching);
+    			if (detaching) detach_dev(p);
+    			if (detaching && p_transition) p_transition.end();
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_else_block$2.name,
+    		type: "else",
+    		source: "(254:6) {:else}",
+    		ctx
+    	});
+
+    	return block;
     }
 
-    // (221:6) <Button on:click={switchSf}>
-    function create_default_slot_1$1(ctx) {
-    	var t;
+    // (246:6) {#if filteredList.length > 0}
+    function create_if_block$7(ctx) {
+    	let ul;
+    	let each_blocks = [];
+    	let each_1_lookup = new Map();
+    	let ul_transition;
+    	let current;
+    	let each_value = /*filteredList*/ ctx[1];
+    	validate_each_argument(each_value);
+    	const get_key = ctx => /*item*/ ctx[16];
+    	validate_each_keys(ctx, each_value, get_each_context$4, get_key);
 
-    	return {
+    	for (let i = 0; i < each_value.length; i += 1) {
+    		let child_ctx = get_each_context$4(ctx, each_value, i);
+    		let key = get_key(child_ctx);
+    		each_1_lookup.set(key, each_blocks[i] = create_each_block$4(key, child_ctx));
+    	}
+
+    	const block = {
     		c: function create() {
-    			t = text(ctx.$currentSoundFont);
-    		},
+    			ul = element("ul");
 
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			attr_dev(ul, "class", "svelte-23g65n");
+    			add_location(ul, file$c, 246, 8, 5120);
+    		},
     		m: function mount(target, anchor) {
-    			insert(target, t, anchor);
-    		},
+    			insert_dev(target, ul, anchor);
 
-    		p: function update(changed, ctx) {
-    			if (changed.$currentSoundFont) {
-    				set_data(t, ctx.$currentSoundFont);
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(ul, null);
+    			}
+
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*addPickedInstrument, filteredList, normalizeInstrumentName*/ 34) {
+    				const each_value = /*filteredList*/ ctx[1];
+    				validate_each_argument(each_value);
+    				validate_each_keys(ctx, each_value, get_each_context$4, get_key);
+    				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, ul, destroy_block, create_each_block$4, null, get_each_context$4);
     			}
     		},
+    		i: function intro(local) {
+    			if (current) return;
 
+    			add_render_callback(() => {
+    				if (!ul_transition) ul_transition = create_bidirectional_transition(ul, slide, { duration: 200 }, true);
+    				ul_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!ul_transition) ul_transition = create_bidirectional_transition(ul, slide, { duration: 200 }, false);
+    			ul_transition.run(0);
+    			current = false;
+    		},
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(t);
+    			if (detaching) detach_dev(ul);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].d();
     			}
+
+    			if (detaching && ul_transition) ul_transition.end();
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block$7.name,
+    		type: "if",
+    		source: "(246:6) {#if filteredList.length > 0}",
+    		ctx
+    	});
+
+    	return block;
     }
 
-    // (226:6) <Button on:click={switchAdsrOpt} toggled={$showAdsr} style="width: 100%">
-    function create_default_slot$2(ctx) {
-    	var t;
+    // (248:10) {#each filteredList as item (item)}
+    function create_each_block$4(key_1, ctx) {
+    	let li;
+    	let t0_value = normalizeInstrumentName(/*item*/ ctx[16]) + "";
+    	let t0;
+    	let t1;
+    	let dispose;
 
-    	return {
+    	function click_handler(...args) {
+    		return /*click_handler*/ ctx[15](/*item*/ ctx[16], ...args);
+    	}
+
+    	const block = {
+    		key: key_1,
+    		first: null,
+    		c: function create() {
+    			li = element("li");
+    			t0 = text(t0_value);
+    			t1 = space();
+    			attr_dev(li, "class", "svelte-23g65n");
+    			add_location(li, file$c, 248, 12, 5222);
+    			this.first = li;
+    		},
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, li, anchor);
+    			append_dev(li, t0);
+    			append_dev(li, t1);
+    			if (remount) dispose();
+    			dispose = listen_dev(li, "click", click_handler, false, false, false);
+    		},
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
+    			if (dirty & /*filteredList*/ 2 && t0_value !== (t0_value = normalizeInstrumentName(/*item*/ ctx[16]) + "")) set_data_dev(t0, t0_value);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(li);
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block$4.name,
+    		type: "each",
+    		source: "(248:10) {#each filteredList as item (item)}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (268:6) <Button on:click={switchSf}>
+    function create_default_slot_1$3(ctx) {
+    	let t;
+
+    	const block = {
+    		c: function create() {
+    			t = text(/*$currentSoundFont*/ ctx[2]);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, t, anchor);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*$currentSoundFont*/ 4) set_data_dev(t, /*$currentSoundFont*/ ctx[2]);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(t);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot_1$3.name,
+    		type: "slot",
+    		source: "(268:6) <Button on:click={switchSf}>",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (273:6) <Button on:click={switchAdsrOpt} toggled={$showAdsr} style="width: 100%">
+    function create_default_slot$3(ctx) {
+    	let t;
+
+    	const block = {
     		c: function create() {
     			t = text("Show ADSR controls");
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, t, anchor);
+    			insert_dev(target, t, anchor);
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(t);
-    			}
+    			if (detaching) detach_dev(t);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot$3.name,
+    		type: "slot",
+    		source: "(273:6) <Button on:click={switchAdsrOpt} toggled={$showAdsr} style=\\\"width: 100%\\\">",
+    		ctx
+    	});
+
+    	return block;
     }
 
-    function create_fragment$a(ctx) {
-    	var div5, h4, t1, div1, input, t2, div0, each_blocks = [], each_1_lookup = new Map(), t3, div4, div2, span, t5, t6, div3, current, dispose;
+    function create_fragment$c(ctx) {
+    	let div5;
+    	let h4;
+    	let t1;
+    	let div1;
+    	let input;
+    	let t2;
+    	let div0;
+    	let current_block_type_index;
+    	let if_block;
+    	let t3;
+    	let div4;
+    	let div2;
+    	let span;
+    	let t5;
+    	let t6;
+    	let div3;
+    	let t7;
+    	let current;
+    	let dispose;
+    	const if_block_creators = [create_if_block$7, create_else_block$2];
+    	const if_blocks = [];
 
-    	var each_value = ctx.filteredList;
-
-    	const get_key = ctx => ctx.item;
-
-    	for (var i = 0; i < each_value.length; i += 1) {
-    		let child_ctx = get_each_context$3(ctx, each_value, i);
-    		let key = get_key(child_ctx);
-    		each_1_lookup.set(key, each_blocks[i] = create_each_block$3(key, child_ctx));
+    	function select_block_type(ctx, dirty) {
+    		if (/*filteredList*/ ctx[1].length > 0) return 0;
+    		return 1;
     	}
 
-    	var button0 = new Button({
-    		props: {
-    		$$slots: { default: [create_default_slot_1$1] },
-    		$$scope: { ctx }
-    	},
-    		$$inline: true
-    	});
-    	button0.$on("click", ctx.switchSf);
+    	current_block_type_index = select_block_type(ctx);
+    	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
 
-    	var button1 = new Button({
-    		props: {
-    		toggled: ctx.$showAdsr,
-    		style: "width: 100%",
-    		$$slots: { default: [create_default_slot$2] },
-    		$$scope: { ctx }
-    	},
-    		$$inline: true
-    	});
-    	button1.$on("click", ctx.switchAdsrOpt);
+    	const button0 = new Button({
+    			props: {
+    				$$slots: { default: [create_default_slot_1$3] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
 
-    	return {
+    	button0.$on("click", /*switchSf*/ ctx[6]);
+
+    	const button1 = new Button({
+    			props: {
+    				toggled: /*$showAdsr*/ ctx[3],
+    				style: "width: 100%",
+    				$$slots: { default: [create_default_slot$3] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
+
+    	button1.$on("click", /*switchAdsrOpt*/ ctx[7]);
+    	const toast = new Toast({ $$inline: true });
+
+    	const block = {
     		c: function create() {
     			div5 = element("div");
     			h4 = element("h4");
@@ -7929,276 +10561,661 @@ var app = (function () {
     			input = element("input");
     			t2 = space();
     			div0 = element("div");
-
-    			for (i = 0; i < each_blocks.length; i += 1) each_blocks[i].c();
-
+    			if_block.c();
     			t3 = space();
     			div4 = element("div");
     			div2 = element("div");
     			span = element("span");
     			span.textContent = "Sound font";
     			t5 = space();
-    			button0.$$.fragment.c();
+    			create_component(button0.$$.fragment);
     			t6 = space();
     			div3 = element("div");
-    			button1.$$.fragment.c();
-    			attr(h4, "class", "svelte-17hg53e");
-    			add_location(h4, file$a, 192, 2, 3992);
-    			attr(input, "class", "search-box svelte-17hg53e");
-    			attr(input, "placeholder", "Search...");
-    			attr(input, "type", "search");
-    			add_location(input, file$a, 196, 4, 4048);
-    			attr(div0, "class", "scrollList svelte-17hg53e");
-    			add_location(div0, file$a, 204, 4, 4235);
-    			attr(div1, "class", "selector");
-    			add_location(div1, file$a, 194, 2, 4018);
-    			attr(span, "class", "svelte-17hg53e");
-    			add_location(span, file$a, 219, 6, 4635);
-    			attr(div2, "class", "row svelte-17hg53e");
-    			add_location(div2, file$a, 218, 4, 4610);
-    			attr(div3, "class", "row svelte-17hg53e");
+    			create_component(button1.$$.fragment);
+    			t7 = space();
+    			create_component(toast.$$.fragment);
+    			attr_dev(h4, "class", "svelte-23g65n");
+    			add_location(h4, file$c, 232, 2, 4806);
+    			attr_dev(input, "class", "search-box svelte-23g65n");
+    			attr_dev(input, "placeholder", "Search...");
+    			attr_dev(input, "type", "search");
+    			add_location(input, file$c, 236, 4, 4862);
+    			attr_dev(div0, "class", "scrollList svelte-23g65n");
+    			add_location(div0, file$c, 244, 4, 5049);
+    			attr_dev(div1, "class", "selector");
+    			add_location(div1, file$c, 234, 2, 4832);
+    			attr_dev(span, "class", "svelte-23g65n");
+    			add_location(span, file$c, 266, 6, 5652);
+    			attr_dev(div2, "class", "row svelte-23g65n");
+    			add_location(div2, file$c, 265, 4, 5627);
+    			attr_dev(div3, "class", "row svelte-23g65n");
     			set_style(div3, "align-items", "flex-end");
-    			add_location(div3, file$a, 223, 4, 4742);
-    			attr(div4, "class", "mini-column svelte-17hg53e");
-    			add_location(div4, file$a, 217, 2, 4579);
-    			attr(div5, "class", "column svelte-17hg53e");
-    			toggle_class(div5, "transparent", !ctx.$editMode);
-    			add_location(div5, file$a, 191, 0, 3937);
-
-    			dispose = [
-    				listen(input, "input", ctx.input_input_handler),
-    				listen(input, "focus", setFocused),
-    				listen(input, "blur", setUnfocused)
-    			];
+    			add_location(div3, file$c, 270, 4, 5759);
+    			attr_dev(div4, "class", "mini-column svelte-23g65n");
+    			add_location(div4, file$c, 264, 2, 5596);
+    			attr_dev(div5, "class", "column svelte-23g65n");
+    			toggle_class(div5, "transparent", !/*$editMode*/ ctx[4]);
+    			add_location(div5, file$c, 231, 0, 4751);
     		},
-
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div5, anchor);
-    			append(div5, h4);
-    			append(div5, t1);
-    			append(div5, div1);
-    			append(div1, input);
-
-    			input.value = ctx.filterString;
-
-    			append(div1, t2);
-    			append(div1, div0);
-
-    			for (i = 0; i < each_blocks.length; i += 1) each_blocks[i].m(div0, null);
-
-    			append(div5, t3);
-    			append(div5, div4);
-    			append(div4, div2);
-    			append(div2, span);
-    			append(div2, t5);
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, div5, anchor);
+    			append_dev(div5, h4);
+    			append_dev(div5, t1);
+    			append_dev(div5, div1);
+    			append_dev(div1, input);
+    			set_input_value(input, /*filterString*/ ctx[0]);
+    			append_dev(div1, t2);
+    			append_dev(div1, div0);
+    			if_blocks[current_block_type_index].m(div0, null);
+    			append_dev(div5, t3);
+    			append_dev(div5, div4);
+    			append_dev(div4, div2);
+    			append_dev(div2, span);
+    			append_dev(div2, t5);
     			mount_component(button0, div2, null);
-    			append(div4, t6);
-    			append(div4, div3);
+    			append_dev(div4, t6);
+    			append_dev(div4, div3);
     			mount_component(button1, div3, null);
+    			insert_dev(target, t7, anchor);
+    			mount_component(toast, target, anchor);
     			current = true;
+    			if (remount) run_all(dispose);
+
+    			dispose = [
+    				listen_dev(input, "focus", setFocused, false, false, false),
+    				listen_dev(input, "blur", setUnfocused, false, false, false),
+    				listen_dev(input, "input", /*input_input_handler*/ ctx[14])
+    			];
     		},
+    		p: function update(ctx, [dirty]) {
+    			if (dirty & /*filterString*/ 1) {
+    				set_input_value(input, /*filterString*/ ctx[0]);
+    			}
 
-    		p: function update(changed, ctx) {
-    			if (changed.filterString) input.value = ctx.filterString;
+    			let previous_block_index = current_block_type_index;
+    			current_block_type_index = select_block_type(ctx);
 
-    			const each_value = ctx.filteredList;
+    			if (current_block_type_index === previous_block_index) {
+    				if_blocks[current_block_type_index].p(ctx, dirty);
+    			} else {
+    				group_outros();
 
-    			group_outros();
-    			each_blocks = update_keyed_each(each_blocks, changed, get_key, 1, ctx, each_value, each_1_lookup, div0, outro_and_destroy_block, create_each_block$3, null, get_each_context$3);
-    			check_outros();
+    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
+    					if_blocks[previous_block_index] = null;
+    				});
 
-    			var button0_changes = {};
-    			if (changed.$$scope || changed.$currentSoundFont) button0_changes.$$scope = { changed, ctx };
+    				check_outros();
+    				if_block = if_blocks[current_block_type_index];
+
+    				if (!if_block) {
+    					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+    					if_block.c();
+    				}
+
+    				transition_in(if_block, 1);
+    				if_block.m(div0, null);
+    			}
+
+    			const button0_changes = {};
+
+    			if (dirty & /*$$scope, $currentSoundFont*/ 524292) {
+    				button0_changes.$$scope = { dirty, ctx };
+    			}
+
     			button0.$set(button0_changes);
+    			const button1_changes = {};
+    			if (dirty & /*$showAdsr*/ 8) button1_changes.toggled = /*$showAdsr*/ ctx[3];
 
-    			var button1_changes = {};
-    			if (changed.$showAdsr) button1_changes.toggled = ctx.$showAdsr;
-    			if (changed.$$scope) button1_changes.$$scope = { changed, ctx };
+    			if (dirty & /*$$scope*/ 524288) {
+    				button1_changes.$$scope = { dirty, ctx };
+    			}
+
     			button1.$set(button1_changes);
 
-    			if (changed.$editMode) {
-    				toggle_class(div5, "transparent", !ctx.$editMode);
+    			if (dirty & /*$editMode*/ 16) {
+    				toggle_class(div5, "transparent", !/*$editMode*/ ctx[4]);
     			}
     		},
-
     		i: function intro(local) {
     			if (current) return;
-    			for (var i = 0; i < each_value.length; i += 1) transition_in(each_blocks[i]);
-
+    			transition_in(if_block);
     			transition_in(button0.$$.fragment, local);
-
     			transition_in(button1.$$.fragment, local);
-
+    			transition_in(toast.$$.fragment, local);
     			current = true;
     		},
-
     		o: function outro(local) {
-    			for (i = 0; i < each_blocks.length; i += 1) transition_out(each_blocks[i]);
-
+    			transition_out(if_block);
     			transition_out(button0.$$.fragment, local);
     			transition_out(button1.$$.fragment, local);
+    			transition_out(toast.$$.fragment, local);
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div5);
-    			}
-
-    			for (i = 0; i < each_blocks.length; i += 1) each_blocks[i].d();
-
-    			destroy_component(button0, );
-
-    			destroy_component(button1, );
-
+    			if (detaching) detach_dev(div5);
+    			if_blocks[current_block_type_index].d();
+    			destroy_component(button0);
+    			destroy_component(button1);
+    			if (detaching) detach_dev(t7);
+    			destroy_component(toast, detaching);
     			run_all(dispose);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$c.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
     }
 
     function normalizeInstrumentName(input) {
-      input = input.replace(/_/g, " ");
-
-      return input.charAt(0).toUpperCase() + input.slice(1);
+    	input = input.replace(/_/g, " ");
+    	return input.charAt(0).toUpperCase() + input.slice(1);
     }
 
-    function randId() {
-      return Math.random()
-        .toString(36)
-        .replace(/[^a-z]+/g, "")
-        .substr(2, 10);
+    function randId$1() {
+    	return Math.random().toString(36).replace(/[^a-z]+/g, "").substr(2, 10);
     }
 
     function setFocused() {
-      isFocused.set(true);
+    	isFocused.set(true);
     }
 
     function setUnfocused() {
-      isFocused.set(false);
+    	isFocused.set(false);
     }
 
-    function instance$a($$self, $$props, $$invalidate) {
-    	let $currentSoundFont, $instrumentSets, $activeSet, $showAdsr, $editMode;
+    function instance$c($$self, $$props, $$invalidate) {
+    	let $currentSoundFont;
+    	let $instrumentSets;
+    	let $activeSet;
+    	let $showAdsr;
+    	let $editMode;
+    	validate_store(currentSoundFont, "currentSoundFont");
+    	component_subscribe($$self, currentSoundFont, $$value => $$invalidate(2, $currentSoundFont = $$value));
+    	validate_store(instrumentSets, "instrumentSets");
+    	component_subscribe($$self, instrumentSets, $$value => $$invalidate(10, $instrumentSets = $$value));
+    	validate_store(activeSet, "activeSet");
+    	component_subscribe($$self, activeSet, $$value => $$invalidate(11, $activeSet = $$value));
+    	validate_store(showAdsr, "showAdsr");
+    	component_subscribe($$self, showAdsr, $$value => $$invalidate(3, $showAdsr = $$value));
+    	validate_store(editMode, "editMode");
+    	component_subscribe($$self, editMode, $$value => $$invalidate(4, $editMode = $$value));
+    	let selectedInstrument;
+    	let availInstruments = [];
+    	let filterString = "";
 
-    	validate_store(currentSoundFont, 'currentSoundFont');
-    	subscribe($$self, currentSoundFont, $$value => { $currentSoundFont = $$value; $$invalidate('$currentSoundFont', $currentSoundFont); });
-    	validate_store(instrumentSets, 'instrumentSets');
-    	subscribe($$self, instrumentSets, $$value => { $instrumentSets = $$value; $$invalidate('$instrumentSets', $instrumentSets); });
-    	validate_store(activeSet, 'activeSet');
-    	subscribe($$self, activeSet, $$value => { $activeSet = $$value; $$invalidate('$activeSet', $activeSet); });
-    	validate_store(showAdsr, 'showAdsr');
-    	subscribe($$self, showAdsr, $$value => { $showAdsr = $$value; $$invalidate('$showAdsr', $showAdsr); });
-    	validate_store(editMode, 'editMode');
-    	subscribe($$self, editMode, $$value => { $editMode = $$value; $$invalidate('$editMode', $editMode); });
+    	async function getInstruments() {
+    		try {
+    			let data = await fetch(`https://gleitz.github.io/midi-js-soundfonts/${$currentSoundFont}/names.json`);
+    			$$invalidate(9, availInstruments = await data.json());
+    			selectedInstrument = availInstruments[0];
+    		} catch(error) {
+    			window.popToast("Error loading instruments: " + error.message);
+    		}
+    	}
 
-    	
+    	getInstruments();
 
-      let selectedInstrument;
-      let availInstruments = [];
+    	function addPickedInstrument(instrument) {
+    		if (instrument == null) return;
+    		selectedInstrument = instrument;
+    		addInstrument();
+    	}
 
-      let filterString = "";
+    	function addInstrument() {
+    		if (selectedInstrument == null) return;
+    		let instrumentData = Soundfont.instrument(ac, selectedInstrument, { soundfont: $currentSoundFont });
 
-      async function getInstruments() {
-        let data = await fetch(
-          `https://gleitz.github.io/midi-js-soundfonts/${$currentSoundFont}/names.json`
-        );
-        $$invalidate('availInstruments', availInstruments = await data.json());
-        selectedInstrument = availInstruments[0];
-      }
+    		let newInstr = {
+    			id: randId$1(),
+    			name: selectedInstrument,
+    			volume: -1,
+    			octave: 0,
+    			absoluteVolume: true,
+    			data: instrumentData,
+    			soundfont: $currentSoundFont,
+    			adsr: [-0.01, -0.01, -0.01, -0.01]
+    		};
 
-      getInstruments();
+    		let currentSets = $instrumentSets;
+    		currentSets[$activeSet].instruments.push(newInstr);
+    		instrumentSets.set(currentSets);
+    	}
 
-      function addPickedInstrument(instrument) {
-        if (instrument == null) return;
+    	function switchSf() {
+    		let curr = $currentSoundFont;
+    		if (curr == soundFont.fluid) currentSoundFont.set(soundFont.mk);
+    		if (curr == soundFont.mk) currentSoundFont.set(soundFont.fatboy);
+    		if (curr == soundFont.fatboy) currentSoundFont.set(soundFont.fluid);
+    		getInstruments();
+    	} // resetInstrumentSets();
 
-        selectedInstrument = instrument;
-        addInstrument();
-      }
+    	function switchAdsrOpt() {
+    		let curr = $showAdsr;
+    		showAdsr.set(!curr);
+    	}
 
-      function addInstrument() {
-        if (selectedInstrument == null) return;
+    	const writable_props = [];
 
-        let instrumentData = Soundfont.instrument(ac, selectedInstrument, {
-          soundfont: $currentSoundFont
-        });
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<InstrumentList> was created with unknown prop '${key}'`);
+    	});
 
-        let newInstr = {
-          id: randId(),
-          name: selectedInstrument,
-          volume: -1,
-          octave: 0,
-          absoluteVolume: true,
-          data: instrumentData,
-          soundfont: $currentSoundFont,
-          adsr: [-0.01, -0.01, -0.01, -0.01]
-        };
-
-        let currentSets = $instrumentSets;
-
-        currentSets[$activeSet].instruments.push(newInstr);
-
-        instrumentSets.set(currentSets);
-      }
-
-      function switchSf() {
-        let curr = $currentSoundFont;
-
-        if (curr == soundFont.fluid) currentSoundFont.set(soundFont.mk);
-        if (curr == soundFont.mk) currentSoundFont.set(soundFont.fatboy);
-        if (curr == soundFont.fatboy) currentSoundFont.set(soundFont.fluid);
-
-        getInstruments();
-        // resetInstrumentSets();
-      }
-
-      function switchAdsrOpt() {
-        let curr = $showAdsr;
-
-        showAdsr.set(!curr);
-      }
+    	let { $$slots = {}, $$scope } = $$props;
+    	validate_slots("InstrumentList", $$slots, []);
 
     	function input_input_handler() {
     		filterString = this.value;
-    		$$invalidate('filterString', filterString);
+    		$$invalidate(0, filterString);
     	}
 
-    	function click_handler({ item }, e) {
-    		return addPickedInstrument(item);
-    	}
+    	const click_handler = (item, e) => addPickedInstrument(item);
+
+    	$$self.$capture_state = () => ({
+    		slide,
+    		soundFont,
+    		currentSoundFont,
+    		instrumentSets,
+    		ac,
+    		showAdsr,
+    		isFocused,
+    		activeSet,
+    		editMode,
+    		isReordering,
+    		Button,
+    		Toast,
+    		selectedInstrument,
+    		availInstruments,
+    		filterString,
+    		getInstruments,
+    		normalizeInstrumentName,
+    		randId: randId$1,
+    		addPickedInstrument,
+    		addInstrument,
+    		switchSf,
+    		switchAdsrOpt,
+    		setFocused,
+    		setUnfocused,
+    		filteredList,
+    		$currentSoundFont,
+    		$instrumentSets,
+    		$activeSet,
+    		$showAdsr,
+    		$editMode
+    	});
+
+    	$$self.$inject_state = $$props => {
+    		if ("selectedInstrument" in $$props) selectedInstrument = $$props.selectedInstrument;
+    		if ("availInstruments" in $$props) $$invalidate(9, availInstruments = $$props.availInstruments);
+    		if ("filterString" in $$props) $$invalidate(0, filterString = $$props.filterString);
+    		if ("filteredList" in $$props) $$invalidate(1, filteredList = $$props.filteredList);
+    	};
 
     	let filteredList;
 
-    	$$self.$$.update = ($$dirty = { filterString: 1, availInstruments: 1 }) => {
-    		if ($$dirty.filterString || $$dirty.availInstruments) { $$invalidate('filteredList', filteredList =
-            filterString.trim() === ""
-              ? availInstruments
-              : availInstruments.filter(
-                  item => item.toLowerCase().indexOf(filterString.toLowerCase()) !== -1
-                )); }
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	$$self.$$.update = () => {
+    		if ($$self.$$.dirty & /*filterString, availInstruments*/ 513) {
+    			 $$invalidate(1, filteredList = filterString.trim() === ""
+    			? availInstruments
+    			: availInstruments.filter(item => item.toLowerCase().indexOf(filterString.toLowerCase()) !== -1));
+    		}
     	};
 
-    	return {
+    	return [
     		filterString,
-    		addPickedInstrument,
-    		switchSf,
-    		switchAdsrOpt,
     		filteredList,
     		$currentSoundFont,
     		$showAdsr,
     		$editMode,
+    		addPickedInstrument,
+    		switchSf,
+    		switchAdsrOpt,
+    		selectedInstrument,
+    		availInstruments,
+    		$instrumentSets,
+    		$activeSet,
+    		getInstruments,
+    		addInstrument,
     		input_input_handler,
     		click_handler
-    	};
+    	];
     }
 
     class InstrumentList extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$a, create_fragment$a, safe_not_equal, []);
+    		init(this, options, instance$c, create_fragment$c, safe_not_equal, {});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "InstrumentList",
+    			options,
+    			id: create_fragment$c.name
+    		});
+    	}
+    }
+
+    /* src\components\ThemeSwitcher.svelte generated by Svelte v3.20.1 */
+    const file$d = "src\\components\\ThemeSwitcher.svelte";
+
+    // (110:4) <Button on:click={toggleOptionsVisibility} active={optionsVisible}>
+    function create_default_slot$4(ctx) {
+    	let t;
+
+    	const block = {
+    		c: function create() {
+    			t = text("Theme");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, t, anchor);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(t);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot$4.name,
+    		type: "slot",
+    		source: "(110:4) <Button on:click={toggleOptionsVisibility} active={optionsVisible}>",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (124:0) {#if optionsVisible}
+    function create_if_block$8(ctx) {
+    	let div;
+    	let dispose;
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			attr_dev(div, "class", "backdrop svelte-x1obog");
+    			add_location(div, file$d, 124, 2, 2535);
+    		},
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, div, anchor);
+    			if (remount) dispose();
+    			dispose = listen_dev(div, "click", /*click_handler_3*/ ctx[7], false, false, false);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block$8.name,
+    		type: "if",
+    		source: "(124:0) {#if optionsVisible}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function create_fragment$d(ctx) {
+    	let div2;
+    	let div0;
+    	let t0;
+    	let div1;
+    	let ul;
+    	let li0;
+    	let t2;
+    	let li1;
+    	let t4;
+    	let li2;
+    	let t6;
+    	let t7;
+    	let current;
+    	let dispose;
+
+    	const button = new Button({
+    			props: {
+    				active: /*optionsVisible*/ ctx[0],
+    				$$slots: { default: [create_default_slot$4] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
+
+    	button.$on("click", /*toggleOptionsVisibility*/ ctx[3]);
+    	let if_block = /*optionsVisible*/ ctx[0] && create_if_block$8(ctx);
+    	const toast = new Toast({ $$inline: true });
+
+    	const block = {
+    		c: function create() {
+    			div2 = element("div");
+    			div0 = element("div");
+    			create_component(button.$$.fragment);
+    			t0 = space();
+    			div1 = element("div");
+    			ul = element("ul");
+    			li0 = element("li");
+    			li0.textContent = "Auto";
+    			t2 = space();
+    			li1 = element("li");
+    			li1.textContent = "Light";
+    			t4 = space();
+    			li2 = element("li");
+    			li2.textContent = "Dark";
+    			t6 = space();
+    			if (if_block) if_block.c();
+    			t7 = space();
+    			create_component(toast.$$.fragment);
+    			add_location(div0, file$d, 108, 2, 2053);
+    			attr_dev(li0, "class", "svelte-x1obog");
+    			toggle_class(li0, "active", /*$theme*/ ctx[1] === 0);
+    			add_location(li0, file$d, 115, 6, 2243);
+    			attr_dev(li1, "class", "svelte-x1obog");
+    			toggle_class(li1, "active", /*$theme*/ ctx[1] === 1);
+    			add_location(li1, file$d, 116, 6, 2323);
+    			attr_dev(li2, "class", "svelte-x1obog");
+    			toggle_class(li2, "active", /*$theme*/ ctx[1] === 2);
+    			add_location(li2, file$d, 117, 6, 2404);
+    			attr_dev(ul, "class", "svelte-x1obog");
+    			add_location(ul, file$d, 114, 4, 2231);
+    			attr_dev(div1, "class", "options svelte-x1obog");
+    			toggle_class(div1, "visible", /*optionsVisible*/ ctx[0]);
+    			add_location(div1, file$d, 113, 2, 2173);
+    			attr_dev(div2, "class", "container svelte-x1obog");
+    			add_location(div2, file$d, 107, 0, 2026);
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, div2, anchor);
+    			append_dev(div2, div0);
+    			mount_component(button, div0, null);
+    			append_dev(div2, t0);
+    			append_dev(div2, div1);
+    			append_dev(div1, ul);
+    			append_dev(ul, li0);
+    			append_dev(ul, t2);
+    			append_dev(ul, li1);
+    			append_dev(ul, t4);
+    			append_dev(ul, li2);
+    			insert_dev(target, t6, anchor);
+    			if (if_block) if_block.m(target, anchor);
+    			insert_dev(target, t7, anchor);
+    			mount_component(toast, target, anchor);
+    			current = true;
+    			if (remount) run_all(dispose);
+
+    			dispose = [
+    				listen_dev(li0, "click", /*click_handler*/ ctx[4], false, false, false),
+    				listen_dev(li1, "click", /*click_handler_1*/ ctx[5], false, false, false),
+    				listen_dev(li2, "click", /*click_handler_2*/ ctx[6], false, false, false)
+    			];
+    		},
+    		p: function update(ctx, [dirty]) {
+    			const button_changes = {};
+    			if (dirty & /*optionsVisible*/ 1) button_changes.active = /*optionsVisible*/ ctx[0];
+
+    			if (dirty & /*$$scope*/ 256) {
+    				button_changes.$$scope = { dirty, ctx };
+    			}
+
+    			button.$set(button_changes);
+
+    			if (dirty & /*$theme*/ 2) {
+    				toggle_class(li0, "active", /*$theme*/ ctx[1] === 0);
+    			}
+
+    			if (dirty & /*$theme*/ 2) {
+    				toggle_class(li1, "active", /*$theme*/ ctx[1] === 1);
+    			}
+
+    			if (dirty & /*$theme*/ 2) {
+    				toggle_class(li2, "active", /*$theme*/ ctx[1] === 2);
+    			}
+
+    			if (dirty & /*optionsVisible*/ 1) {
+    				toggle_class(div1, "visible", /*optionsVisible*/ ctx[0]);
+    			}
+
+    			if (/*optionsVisible*/ ctx[0]) {
+    				if (if_block) {
+    					if_block.p(ctx, dirty);
+    				} else {
+    					if_block = create_if_block$8(ctx);
+    					if_block.c();
+    					if_block.m(t7.parentNode, t7);
+    				}
+    			} else if (if_block) {
+    				if_block.d(1);
+    				if_block = null;
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(button.$$.fragment, local);
+    			transition_in(toast.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(button.$$.fragment, local);
+    			transition_out(toast.$$.fragment, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div2);
+    			destroy_component(button);
+    			if (detaching) detach_dev(t6);
+    			if (if_block) if_block.d(detaching);
+    			if (detaching) detach_dev(t7);
+    			destroy_component(toast, detaching);
+    			run_all(dispose);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$d.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function instance$d($$self, $$props, $$invalidate) {
+    	let $theme;
+    	validate_store(theme, "theme");
+    	component_subscribe($$self, theme, $$value => $$invalidate(1, $theme = $$value));
+    	let optionsVisible = false;
+
+    	function applyTheme(newVal) {
+    		theme.set(newVal);
+
+    		if ($theme === 0 && window.matchMedia("(prefers-color-scheme: dark)").matches || $theme === 2) {
+    			document.querySelector("html").className = "dark";
+    		} else {
+    			document.querySelector("html").className = "";
+    		}
+
+    		toggleOptionsVisibility();
+    		window.pushToast("Theme set to <i>" + (newVal == 0 ? "auto" : newVal == 1 ? "light" : "dark") + "</i>");
+    	}
+
+    	function toggleOptionsVisibility() {
+    		$$invalidate(0, optionsVisible = !optionsVisible);
+    	}
+
+    	const writable_props = [];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<ThemeSwitcher> was created with unknown prop '${key}'`);
+    	});
+
+    	let { $$slots = {}, $$scope } = $$props;
+    	validate_slots("ThemeSwitcher", $$slots, []);
+    	const click_handler = () => applyTheme(0);
+    	const click_handler_1 = () => applyTheme(1);
+    	const click_handler_2 = () => applyTheme(2);
+    	const click_handler_3 = () => $$invalidate(0, optionsVisible = false);
+
+    	$$self.$capture_state = () => ({
+    		Button,
+    		Toast,
+    		theme,
+    		optionsVisible,
+    		applyTheme,
+    		toggleOptionsVisibility,
+    		$theme
+    	});
+
+    	$$self.$inject_state = $$props => {
+    		if ("optionsVisible" in $$props) $$invalidate(0, optionsVisible = $$props.optionsVisible);
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	return [
+    		optionsVisible,
+    		$theme,
+    		applyTheme,
+    		toggleOptionsVisibility,
+    		click_handler,
+    		click_handler_1,
+    		click_handler_2,
+    		click_handler_3
+    	];
+    }
+
+    class ThemeSwitcher extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$d, create_fragment$d, safe_not_equal, {});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "ThemeSwitcher",
+    			options,
+    			id: create_fragment$d.name
+    		});
     	}
     }
 
@@ -8416,14 +11433,14 @@ var app = (function () {
       var node = audioContext.createGain();
 
       var voltage = node._voltage = getVoltage(audioContext);
-      var value = scale(voltage);
-      var startValue = scale(voltage);
-      var endValue = scale(voltage);
+      var value = scale$1(voltage);
+      var startValue = scale$1(voltage);
+      var endValue = scale$1(voltage);
 
-      node._startAmount = scale(startValue);
-      node._endAmount = scale(endValue);
+      node._startAmount = scale$1(startValue);
+      node._endAmount = scale$1(endValue);
 
-      node._multiplier = scale(value);
+      node._multiplier = scale$1(value);
       node._multiplier.connect(node);
       node._startAmount.connect(node);
       node._endAmount.connect(node);
@@ -8544,7 +11561,7 @@ var app = (function () {
       return voltage
     }
 
-    function scale(node){
+    function scale$1(node){
       var gain = node.context.createGain();
       node.connect(gain);
       return gain
@@ -9021,8 +12038,8 @@ var app = (function () {
     };
 
     var index_min = createCommonjsModule(function (module, exports) {
-    (function(e){{module.exports=e();}})(function(){return function o(e,t,s){function a(n,i){if(!t[n]){if(!e[n]){var l=typeof commonjsRequire=="function"&&commonjsRequire;if(!i&&l)return l(n,!0);if(r)return r(n,!0);var h=new Error("Cannot find module '"+n+"'");throw h.code="MODULE_NOT_FOUND",h}var c=t[n]={exports:{}};e[n][0].call(c.exports,function(t){var s=e[n][1][t];return a(s?s:t)},c,c.exports,o,e,t,s);}return t[n].exports}var r=typeof commonjsRequire=="function"&&commonjsRequire;for(var n=0;n<s.length;n++)a(s[n]);return a}({1:[function(e,t,s){Object.defineProperty(s,"__esModule",{value:true});s["default"]=function(e){function t(e){this._event=e;this._data=e.data;this.receivedTime=e.receivedTime;if(this._data&&this._data.length<2){console.warn("Illegal MIDI message of length",this._data.length);return}this._messageCode=e.data[0]&240;this.channel=e.data[0]&15;switch(this._messageCode){case 128:this.messageType="noteoff";this.key=e.data[1]&127;this.velocity=e.data[2]&127;break;case 144:this.messageType="noteon";this.key=e.data[1]&127;this.velocity=e.data[2]&127;break;case 160:this.messageType="keypressure";this.key=e.data[1]&127;this.pressure=e.data[2]&127;break;case 176:this.messageType="controlchange";this.controllerNumber=e.data[1]&127;this.controllerValue=e.data[2]&127;if(this.controllerNumber===120&&this.controllerValue===0){this.channelModeMessage="allsoundoff";}else if(this.controllerNumber===121){this.channelModeMessage="resetallcontrollers";}else if(this.controllerNumber===122){if(this.controllerValue===0){this.channelModeMessage="localcontroloff";}else{this.channelModeMessage="localcontrolon";}}else if(this.controllerNumber===123&&this.controllerValue===0){this.channelModeMessage="allnotesoff";}else if(this.controllerNumber===124&&this.controllerValue===0){this.channelModeMessage="omnimodeoff";}else if(this.controllerNumber===125&&this.controllerValue===0){this.channelModeMessage="omnimodeon";}else if(this.controllerNumber===126){this.channelModeMessage="monomodeon";}else if(this.controllerNumber===127){this.channelModeMessage="polymodeon";}break;case 192:this.messageType="programchange";this.program=e.data[1];break;case 208:this.messageType="channelpressure";this.pressure=e.data[1]&127;break;case 224:this.messageType="pitchbendchange";var t=e.data[2]&127;var s=e.data[1]&127;this.pitchBend=(t<<8)+s;break}}return new t(e)};t.exports=s["default"];},{}]},{},[1])(1)});
-    //# sourceMappingURL=dist/index.js.map
+    (function(e){{module.exports=e();}})(function(){return function o(e,t,s){function a(n,i){if(!t[n]){if(!e[n]){var l=typeof commonjsRequire=="function"&&commonjsRequire;if(!i&&l)return l(n,!0);if(r)return r(n,!0);var h=new Error("Cannot find module '"+n+"'");throw h.code="MODULE_NOT_FOUND",h}var c=t[n]={exports:{}};e[n][0].call(c.exports,function(t){var s=e[n][1][t];return a(s?s:t)},c,c.exports,o,e,t,s);}return t[n].exports}var r=typeof commonjsRequire=="function"&&commonjsRequire;for(var n=0;n<s.length;n++)a(s[n]);return a}({1:[function(e,t,s){Object.defineProperty(s,"__esModule",{value:true});s["default"]=function(e){function t(e){this._event=e;this._data=e.data;this.receivedTime=e.receivedTime;if(this._data&&this._data.length<2){console.warn("Illegal MIDI message of length",this._data.length);return}this._messageCode=e.data[0]&240;this.channel=e.data[0]&15;switch(this._messageCode){case 128:this.messageType="noteoff";this.key=e.data[1]&127;this.velocity=e.data[2]&127;break;case 144:this.messageType="noteon";this.key=e.data[1]&127;this.velocity=e.data[2]&127;break;case 160:this.messageType="keypressure";this.key=e.data[1]&127;this.pressure=e.data[2]&127;break;case 176:this.messageType="controlchange";this.controllerNumber=e.data[1]&127;this.controllerValue=e.data[2]&127;if(this.controllerNumber===120&&this.controllerValue===0){this.channelModeMessage="allsoundoff";}else if(this.controllerNumber===121){this.channelModeMessage="resetallcontrollers";}else if(this.controllerNumber===122){if(this.controllerValue===0){this.channelModeMessage="localcontroloff";}else {this.channelModeMessage="localcontrolon";}}else if(this.controllerNumber===123&&this.controllerValue===0){this.channelModeMessage="allnotesoff";}else if(this.controllerNumber===124&&this.controllerValue===0){this.channelModeMessage="omnimodeoff";}else if(this.controllerNumber===125&&this.controllerValue===0){this.channelModeMessage="omnimodeon";}else if(this.controllerNumber===126){this.channelModeMessage="monomodeon";}else if(this.controllerNumber===127){this.channelModeMessage="polymodeon";}break;case 192:this.messageType="programchange";this.program=e.data[1];break;case 208:this.messageType="channelpressure";this.pressure=e.data[1]&127;break;case 224:this.messageType="pitchbendchange";var t=e.data[2]&127;var s=e.data[1]&127;this.pitchBend=(t<<8)+s;break}}return new t(e)};t.exports=s["default"];},{}]},{},[1])(1)});
+
     });
 
     unwrapExports(index_min);
@@ -9284,6 +12301,7 @@ var app = (function () {
     function oct (src) { return (parse$1(src) || {}).oct }
 
     var noteParser$1 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
         regex: regex$1,
         parse: parse$1,
         build: build,
@@ -9522,311 +12540,294 @@ var app = (function () {
     if (typeof window !== 'undefined') window.Soundfont = legacy;
     });
 
-    /* src\App.svelte generated by Svelte v3.6.4 */
-    const { window: window_1 } = globals;
+    /* src\App.svelte generated by Svelte v3.20.1 */
 
-    const file$b = "src\\App.svelte";
+    const { console: console_1$1, window: window_1 } = globals;
+    const file$e = "src\\App.svelte";
 
-    // (288:4) <h3 slot="left">
+    // (302:4) <h3 slot="left">
     function create_left_slot(ctx) {
-    	var h3;
+    	let h3;
 
-    	return {
+    	const block = {
     		c: function create() {
     			h3 = element("h3");
     			h3.textContent = "Piano";
-    			attr(h3, "slot", "left");
-    			attr(h3, "class", "svelte-35q2ci");
-    			add_location(h3, file$b, 287, 4, 7291);
+    			attr_dev(h3, "slot", "left");
+    			attr_dev(h3, "class", "svelte-198fumr");
+    			add_location(h3, file$e, 301, 4, 7881);
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, h3, anchor);
+    			insert_dev(target, h3, anchor);
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(h3);
-    			}
+    			if (detaching) detach_dev(h3);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_left_slot.name,
+    		type: "slot",
+    		source: "(302:4) <h3 slot=\\\"left\\\">",
+    		ctx
+    	});
+
+    	return block;
     }
 
-    // (290:4) <Button on:click={stopAllSounds}>
-    function create_default_slot_3$1(ctx) {
-    	var t;
+    // (304:4) <Button on:click={stopAllSounds}>
+    function create_default_slot_2$2(ctx) {
+    	let t;
 
-    	return {
+    	const block = {
     		c: function create() {
     			t = text("Stop all sounds");
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, t, anchor);
+    			insert_dev(target, t, anchor);
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(t);
-    			}
+    			if (detaching) detach_dev(t);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot_2$2.name,
+    		type: "slot",
+    		source: "(304:4) <Button on:click={stopAllSounds}>",
+    		ctx
+    	});
+
+    	return block;
     }
 
-    // (291:4) <Button spaced toggled={$editMode} on:click={toggleEditMode}>
-    function create_default_slot_2$2(ctx) {
-    	var t;
+    // (305:4) <Button spaced toggled={$editMode} on:click={toggleEditMode}>
+    function create_default_slot_1$4(ctx) {
+    	let t;
 
-    	return {
+    	const block = {
     		c: function create() {
-    			t = text("Editing mode");
+    			t = text("Edit mode");
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, t, anchor);
+    			insert_dev(target, t, anchor);
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(t);
-    			}
+    			if (detaching) detach_dev(t);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot_1$4.name,
+    		type: "slot",
+    		source: "(305:4) <Button spaced toggled={$editMode} on:click={toggleEditMode}>",
+    		ctx
+    	});
+
+    	return block;
     }
 
-    // (294:4) <Button spaced on:click={switchDark}>
-    function create_default_slot_1$2(ctx) {
-    	var t0, t1;
+    // (301:2) <TitleBar>
+    function create_default_slot$5(ctx) {
+    	let t0;
+    	let t1;
+    	let t2;
+    	let current;
 
-    	return {
-    		c: function create() {
-    			t0 = text(ctx.themeName);
-    			t1 = text(" theme");
-    		},
+    	const button0 = new Button({
+    			props: {
+    				$$slots: { default: [create_default_slot_2$2] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
 
-    		m: function mount(target, anchor) {
-    			insert(target, t0, anchor);
-    			insert(target, t1, anchor);
-    		},
+    	button0.$on("click", /*stopAllSounds*/ ctx[1]);
 
-    		p: function update(changed, ctx) {
-    			if (changed.themeName) {
-    				set_data(t0, ctx.themeName);
-    			}
-    		},
+    	const button1 = new Button({
+    			props: {
+    				spaced: true,
+    				toggled: /*$editMode*/ ctx[0],
+    				$$slots: { default: [create_default_slot_1$4] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
 
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(t0);
-    				detach(t1);
-    			}
-    		}
-    	};
-    }
+    	button1.$on("click", /*toggleEditMode*/ ctx[2]);
+    	const themeswitcher = new ThemeSwitcher({ $$inline: true });
 
-    // (287:2) <TitleBar>
-    function create_default_slot$3(ctx) {
-    	var t0, t1, t2, current;
-
-    	var button0 = new Button({
-    		props: {
-    		$$slots: { default: [create_default_slot_3$1] },
-    		$$scope: { ctx }
-    	},
-    		$$inline: true
-    	});
-    	button0.$on("click", ctx.stopAllSounds);
-
-    	var button1 = new Button({
-    		props: {
-    		spaced: true,
-    		toggled: ctx.$editMode,
-    		$$slots: { default: [create_default_slot_2$2] },
-    		$$scope: { ctx }
-    	},
-    		$$inline: true
-    	});
-    	button1.$on("click", ctx.toggleEditMode);
-
-    	var button2 = new Button({
-    		props: {
-    		spaced: true,
-    		$$slots: { default: [create_default_slot_1$2] },
-    		$$scope: { ctx }
-    	},
-    		$$inline: true
-    	});
-    	button2.$on("click", ctx.switchDark);
-
-    	return {
+    	const block = {
     		c: function create() {
     			t0 = space();
-    			button0.$$.fragment.c();
+    			create_component(button0.$$.fragment);
     			t1 = space();
-    			button1.$$.fragment.c();
+    			create_component(button1.$$.fragment);
     			t2 = space();
-    			button2.$$.fragment.c();
+    			create_component(themeswitcher.$$.fragment);
     		},
-
     		m: function mount(target, anchor) {
-    			insert(target, t0, anchor);
+    			insert_dev(target, t0, anchor);
     			mount_component(button0, target, anchor);
-    			insert(target, t1, anchor);
+    			insert_dev(target, t1, anchor);
     			mount_component(button1, target, anchor);
-    			insert(target, t2, anchor);
-    			mount_component(button2, target, anchor);
+    			insert_dev(target, t2, anchor);
+    			mount_component(themeswitcher, target, anchor);
     			current = true;
     		},
+    		p: function update(ctx, dirty) {
+    			const button0_changes = {};
 
-    		p: function update(changed, ctx) {
-    			var button0_changes = {};
-    			if (changed.$$scope) button0_changes.$$scope = { changed, ctx };
+    			if (dirty & /*$$scope*/ 32768) {
+    				button0_changes.$$scope = { dirty, ctx };
+    			}
+
     			button0.$set(button0_changes);
+    			const button1_changes = {};
+    			if (dirty & /*$editMode*/ 1) button1_changes.toggled = /*$editMode*/ ctx[0];
 
-    			var button1_changes = {};
-    			if (changed.$editMode) button1_changes.toggled = ctx.$editMode;
-    			if (changed.$$scope) button1_changes.$$scope = { changed, ctx };
+    			if (dirty & /*$$scope*/ 32768) {
+    				button1_changes.$$scope = { dirty, ctx };
+    			}
+
     			button1.$set(button1_changes);
-
-    			var button2_changes = {};
-    			if (changed.$$scope || changed.themeName) button2_changes.$$scope = { changed, ctx };
-    			button2.$set(button2_changes);
     		},
-
     		i: function intro(local) {
     			if (current) return;
     			transition_in(button0.$$.fragment, local);
-
     			transition_in(button1.$$.fragment, local);
-
-    			transition_in(button2.$$.fragment, local);
-
+    			transition_in(themeswitcher.$$.fragment, local);
     			current = true;
     		},
-
     		o: function outro(local) {
     			transition_out(button0.$$.fragment, local);
     			transition_out(button1.$$.fragment, local);
-    			transition_out(button2.$$.fragment, local);
+    			transition_out(themeswitcher.$$.fragment, local);
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(t0);
-    			}
-
+    			if (detaching) detach_dev(t0);
     			destroy_component(button0, detaching);
-
-    			if (detaching) {
-    				detach(t1);
-    			}
-
+    			if (detaching) detach_dev(t1);
     			destroy_component(button1, detaching);
-
-    			if (detaching) {
-    				detach(t2);
-    			}
-
-    			destroy_component(button2, detaching);
+    			if (detaching) detach_dev(t2);
+    			destroy_component(themeswitcher, detaching);
     		}
     	};
-    }
 
-    function create_fragment$b(ctx) {
-    	var div1, t0, t1, t2, div0, t3, t4, current, dispose;
-
-    	var titlebar = new TitleBar({
-    		props: {
-    		$$slots: {
-    		default: [create_default_slot$3],
-    		left: [create_left_slot]
-    	},
-    		$$scope: { ctx }
-    	},
-    		$$inline: true
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot$5.name,
+    		type: "slot",
+    		source: "(301:2) <TitleBar>",
+    		ctx
     	});
 
-    	var controls = new Controls({ $$inline: true });
+    	return block;
+    }
 
-    	var pianogrid = new PianoGrid({ $$inline: true });
+    function create_fragment$e(ctx) {
+    	let div1;
+    	let t0;
+    	let t1;
+    	let t2;
+    	let div0;
+    	let t3;
+    	let t4;
+    	let t5;
+    	let current;
+    	let dispose;
 
-    	var instrumentlist = new InstrumentList({ $$inline: true });
+    	const titlebar = new TitleBar({
+    			props: {
+    				$$slots: {
+    					default: [create_default_slot$5],
+    					left: [create_left_slot]
+    				},
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
 
-    	var seteditor = new SetEditor({ $$inline: true });
+    	const controls = new Controls({ $$inline: true });
+    	const pianogrid = new PianoGrid({ $$inline: true });
+    	const instrumentlist = new InstrumentList({ $$inline: true });
+    	const seteditor = new SetEditor({ $$inline: true });
+    	const setlist = new SetList({ $$inline: true });
+    	const toast = new Toast({ $$inline: true });
 
-    	var setlist = new SetList({ $$inline: true });
-
-    	return {
+    	const block = {
     		c: function create() {
     			div1 = element("div");
-    			titlebar.$$.fragment.c();
+    			create_component(titlebar.$$.fragment);
     			t0 = space();
-    			controls.$$.fragment.c();
+    			create_component(controls.$$.fragment);
     			t1 = space();
-    			pianogrid.$$.fragment.c();
+    			create_component(pianogrid.$$.fragment);
     			t2 = space();
     			div0 = element("div");
-    			instrumentlist.$$.fragment.c();
+    			create_component(instrumentlist.$$.fragment);
     			t3 = space();
-    			seteditor.$$.fragment.c();
+    			create_component(seteditor.$$.fragment);
     			t4 = space();
-    			setlist.$$.fragment.c();
-    			attr(div0, "class", "split svelte-35q2ci");
-    			add_location(div0, file$b, 300, 2, 7611);
-    			attr(div1, "class", "container");
-    			add_location(div1, file$b, 284, 0, 7246);
-
-    			dispose = [
-    				listen(window_1, "keydown", ctx.handleKeyDown),
-    				listen(window_1, "keyup", ctx.handleKeyUp)
-    			];
+    			create_component(setlist.$$.fragment);
+    			t5 = space();
+    			create_component(toast.$$.fragment);
+    			attr_dev(div0, "class", "split svelte-198fumr");
+    			add_location(div0, file$e, 315, 2, 8230);
+    			attr_dev(div1, "class", "container");
+    			add_location(div1, file$e, 298, 0, 7836);
     		},
-
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div1, anchor);
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, div1, anchor);
     			mount_component(titlebar, div1, null);
-    			append(div1, t0);
+    			append_dev(div1, t0);
     			mount_component(controls, div1, null);
-    			append(div1, t1);
+    			append_dev(div1, t1);
     			mount_component(pianogrid, div1, null);
-    			append(div1, t2);
-    			append(div1, div0);
+    			append_dev(div1, t2);
+    			append_dev(div1, div0);
     			mount_component(instrumentlist, div0, null);
-    			append(div0, t3);
+    			append_dev(div0, t3);
     			mount_component(seteditor, div0, null);
-    			append(div0, t4);
+    			append_dev(div0, t4);
     			mount_component(setlist, div0, null);
+    			insert_dev(target, t5, anchor);
+    			mount_component(toast, target, anchor);
     			current = true;
-    		},
+    			if (remount) run_all(dispose);
 
-    		p: function update(changed, ctx) {
-    			var titlebar_changes = {};
-    			if (changed.$$scope || changed.themeName || changed.$editMode) titlebar_changes.$$scope = { changed, ctx };
+    			dispose = [
+    				listen_dev(window_1, "keydown", /*handleKeyDown*/ ctx[3], false, false, false),
+    				listen_dev(window_1, "keyup", /*handleKeyUp*/ ctx[4], false, false, false)
+    			];
+    		},
+    		p: function update(ctx, [dirty]) {
+    			const titlebar_changes = {};
+
+    			if (dirty & /*$$scope, $editMode*/ 32769) {
+    				titlebar_changes.$$scope = { dirty, ctx };
+    			}
+
     			titlebar.$set(titlebar_changes);
     		},
-
     		i: function intro(local) {
     			if (current) return;
     			transition_in(titlebar.$$.fragment, local);
-
     			transition_in(controls.$$.fragment, local);
-
     			transition_in(pianogrid.$$.fragment, local);
-
     			transition_in(instrumentlist.$$.fragment, local);
-
     			transition_in(seteditor.$$.fragment, local);
-
     			transition_in(setlist.$$.fragment, local);
-
+    			transition_in(toast.$$.fragment, local);
     			current = true;
     		},
-
     		o: function outro(local) {
     			transition_out(titlebar.$$.fragment, local);
     			transition_out(controls.$$.fragment, local);
@@ -9834,313 +12835,372 @@ var app = (function () {
     			transition_out(instrumentlist.$$.fragment, local);
     			transition_out(seteditor.$$.fragment, local);
     			transition_out(setlist.$$.fragment, local);
+    			transition_out(toast.$$.fragment, local);
     			current = false;
     		},
-
     		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div1);
-    			}
-
-    			destroy_component(titlebar, );
-
-    			destroy_component(controls, );
-
-    			destroy_component(pianogrid, );
-
-    			destroy_component(instrumentlist, );
-
-    			destroy_component(seteditor, );
-
-    			destroy_component(setlist, );
-
+    			if (detaching) detach_dev(div1);
+    			destroy_component(titlebar);
+    			destroy_component(controls);
+    			destroy_component(pianogrid);
+    			destroy_component(instrumentlist);
+    			destroy_component(seteditor);
+    			destroy_component(setlist);
+    			if (detaching) detach_dev(t5);
+    			destroy_component(toast, detaching);
     			run_all(dispose);
     		}
     	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$e.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
     }
 
     function clamp$1(value, min, max) {
-      if (value <= min) return min;
-      if (value >= max) return max;
-      return value;
+    	if (value <= min) return min;
+    	if (value >= max) return max;
+    	return value;
     }
 
-    function instance$b($$self, $$props, $$invalidate) {
-    	let $theme, $instrumentSets, $activeSet, $editMode, $isFocused, $keysPressed, $keysDown, $volume, $octaveShift;
+    function randId$2() {
+    	return Math.random().toString(36).replace(/[^a-z]+/g, "").substr(2, 10);
+    }
 
-    	validate_store(theme, 'theme');
-    	subscribe($$self, theme, $$value => { $theme = $$value; $$invalidate('$theme', $theme); });
-    	validate_store(instrumentSets, 'instrumentSets');
-    	subscribe($$self, instrumentSets, $$value => { $instrumentSets = $$value; $$invalidate('$instrumentSets', $instrumentSets); });
-    	validate_store(activeSet, 'activeSet');
-    	subscribe($$self, activeSet, $$value => { $activeSet = $$value; $$invalidate('$activeSet', $activeSet); });
-    	validate_store(editMode, 'editMode');
-    	subscribe($$self, editMode, $$value => { $editMode = $$value; $$invalidate('$editMode', $editMode); });
-    	validate_store(isFocused, 'isFocused');
-    	subscribe($$self, isFocused, $$value => { $isFocused = $$value; $$invalidate('$isFocused', $isFocused); });
-    	validate_store(keysPressed, 'keysPressed');
-    	subscribe($$self, keysPressed, $$value => { $keysPressed = $$value; $$invalidate('$keysPressed', $keysPressed); });
-    	validate_store(keysDown, 'keysDown');
-    	subscribe($$self, keysDown, $$value => { $keysDown = $$value; $$invalidate('$keysDown', $keysDown); });
-    	validate_store(volume, 'volume');
-    	subscribe($$self, volume, $$value => { $volume = $$value; $$invalidate('$volume', $volume); });
-    	validate_store(octaveShift, 'octaveShift');
-    	subscribe($$self, octaveShift, $$value => { $octaveShift = $$value; $$invalidate('$octaveShift', $octaveShift); });
+    function instance$e($$self, $$props, $$invalidate) {
+    	let $theme;
+    	let $instrumentSets;
+    	let $activeSet;
+    	let $editMode;
+    	let $isFocused;
+    	let $keysPressed;
+    	let $keysDown;
+    	let $volume;
+    	let $octaveShift;
+    	validate_store(theme, "theme");
+    	component_subscribe($$self, theme, $$value => $$invalidate(6, $theme = $$value));
+    	validate_store(instrumentSets, "instrumentSets");
+    	component_subscribe($$self, instrumentSets, $$value => $$invalidate(7, $instrumentSets = $$value));
+    	validate_store(activeSet, "activeSet");
+    	component_subscribe($$self, activeSet, $$value => $$invalidate(8, $activeSet = $$value));
+    	validate_store(editMode, "editMode");
+    	component_subscribe($$self, editMode, $$value => $$invalidate(0, $editMode = $$value));
+    	validate_store(isFocused, "isFocused");
+    	component_subscribe($$self, isFocused, $$value => $$invalidate(9, $isFocused = $$value));
+    	validate_store(keysPressed, "keysPressed");
+    	component_subscribe($$self, keysPressed, $$value => $$invalidate(10, $keysPressed = $$value));
+    	validate_store(keysDown, "keysDown");
+    	component_subscribe($$self, keysDown, $$value => $$invalidate(11, $keysDown = $$value));
+    	validate_store(volume, "volume");
+    	component_subscribe($$self, volume, $$value => $$invalidate(12, $volume = $$value));
+    	validate_store(octaveShift, "octaveShift");
+    	component_subscribe($$self, octaveShift, $$value => $$invalidate(13, $octaveShift = $$value));
+    	instrumentSets.useLocalStorage();
+    	showAdsr.useLocalStorage();
+    	currentSoundFont.useLocalStorage();
+    	activeSet.useLocalStorage();
+    	volume.useLocalStorage();
+    	octaveShift.useLocalStorage();
+    	editMode.useLocalStorage();
+    	theme.useLocalStorage();
+    	isReordering.useLocalStorage();
 
-    	
+    	function stopAllSounds() {
+    		try {
+    			if ($instrumentSets[$activeSet].instruments.length < 1) return;
 
-      instrumentSets.useLocalStorage();
-      showAdsr.useLocalStorage();
-      currentSoundFont.useLocalStorage();
-      activeSet.useLocalStorage();
-      volume.useLocalStorage();
-      octaveShift.useLocalStorage();
-      editMode.useLocalStorage();
-      theme.useLocalStorage();
+    			for (let instr of $instrumentSets[$activeSet].instruments) {
+    				console.log(instr);
 
-      function stopAllSounds() {
-        if ($instrumentSets[$activeSet].instruments.length < 1) return;
+    				instr.data.then(k => {
+    					k.stop();
+    				});
+    			}
 
-        for (let instr of $instrumentSets[$activeSet].instruments) {
-          console.log(instr);
-          instr.data.then(k => {
-            k.stop();
-          });
-        }
+    			for (let i in keyCodes) {
+    				document.querySelector("#" + keyCodes[i]).classList.remove("piano-key-highlight");
+    			}
 
-        for (let i in keyCodes) {
-          document
-            .querySelector("#" + keyCodes[i])
-            .classList.remove("piano-key-highlight");
-        }
-      }
+    			window.pushToast("Stopped all sounds", "error");
+    		} catch(error) {
+    			
+    		}
+    	}
 
-      function switchDark() {
-        theme.set($theme++); theme.set($theme);
+    	function applyTheme() {
+    		if ($theme === 0 && window.matchMedia("(prefers-color-scheme: dark)").matches || $theme === 2) {
+    			document.querySelector("html").className = "dark";
+    		} else {
+    			document.querySelector("html").className = "";
+    		}
+    	}
 
-        if ($theme === 3) {
-          theme.set(0);
-        }
+    	function toggleEditMode() {
+    		editMode.set(!$editMode);
+    		instrumentSets.set([...$instrumentSets]);
+    		if ($editMode === false) isReordering.set(false);
+    		window.pushToast("Edit mode " + ($editMode ? "on" : "off"));
+    	}
 
-        applyTheme();
-      }
+    	function handleKeyDown(e) {
+    		if ($isFocused || $editMode) {
+    			return;
+    		} else if (e.keyCode !== 116) {
+    			e.preventDefault();
+    			e.stopPropagation();
+    		}
 
-      function applyTheme() {
-        if (
-          ($theme === 0 &&
-            window.matchMedia("(prefers-color-scheme: dark)").matches) ||
-          $theme === 2
-        ) {
-          document.querySelector("html").className = "dark";
-        } else {
-          document.querySelector("html").className = "";
-        }
+    		let kCode = e.keyCode;
+    		if ($instrumentSets[$activeSet].instruments.length < 1) return;
+    		if (keyCodes[kCode] == null) return;
+    		if (keyNotes[kCode] == null) return;
+    		if ($keysPressed[kCode] === null) return;
+    		if ($keysDown[kCode] === true) return;
+    		document.querySelector("#" + keyCodes[kCode]).classList.add("piano-key-highlight");
+    		set_store_value(keysDown, $keysDown[kCode] = true, $keysDown);
 
-        // console.log(`Current theme: ${themeName}`);
-      }
+    		// keysDown.update(kd => {
+    		//   kd[kCode] = true;
+    		//   return kd;
+    		// });
+    		for (let instrument of $instrumentSets[$activeSet].instruments) {
+    			let vol = instrument.volume > -1
+    			? instrument.absoluteVolume
+    				? $volume * (instrument.volume / 100) / 100
+    				: instrument.volume / 100
+    			: $volume / 100;
 
-      function toggleEditMode() {
-        editMode.set(!$editMode);
-        instrumentSets.set([...$instrumentSets]);
-      }
+    			let adjustedOctShift = clamp$1($octaveShift + instrument.octave, -3, 3);
 
-      function handleKeyDown(e) {
-        if ($isFocused || $editMode) {
-          return;
-        } else if (e.keyCode !== 116) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
+    			instrument.data.then(instr => {
+    				let newAdsr = instrument.adsr;
+    				if (newAdsr[0] < 0) newAdsr[0] = defaultAdsr[0];
+    				if (newAdsr[1] < 0) newAdsr[1] = defaultAdsr[1];
+    				if (newAdsr[2] < 0) newAdsr[2] = defaultAdsr[2];
+    				if (newAdsr[3] < 0) newAdsr[3] = defaultAdsr[3];
+    				let note = (parseInt(keyNotes[kCode]) + 12 * adjustedOctShift).toString();
 
-        let kCode = e.keyCode;
+    				try {
+    					let inst = instr.play(note, ac.currentTime, { loop: true, adsr: newAdsr, gain: vol });
 
-        if ($instrumentSets[$activeSet].instruments.length < 1) return;
-        if (keyCodes[kCode] == null) return;
-        if (keyNotes[kCode] == null) return;
-        if ($keysPressed[kCode] === null) return;
-        if ($keysDown[kCode] === true) return;
+    					if ($keysPressed[kCode].indexOf(inst) === -1) {
+    						let currentPressed = $keysPressed[kCode];
+    						set_store_value(keysPressed, $keysPressed[kCode] = [...currentPressed, inst], $keysPressed);
+    					} // keysPressed.update(kp => {
+    					//   kp[kCode] = [...currentPressed, inst];
+    				} catch(error) {
+    					window.popToast("Error: " + error.message); //   return kp;
+    				}
+    			});
+    		}
+    	}
 
-        document
-          .querySelector("#" + keyCodes[kCode])
-          .classList.add("piano-key-highlight");
+    	function handleKeyUp(e) {
+    		if ($isFocused || $editMode) {
+    			return;
+    		} else if (e.keyCode !== 116) {
+    			e.preventDefault();
+    			e.stopPropagation();
+    		}
 
-        $keysDown[kCode] = true; keysDown.set($keysDown);
-        // keysDown.update(kd => {
-        //   kd[kCode] = true;
-        //   return kd;
-        // });
+    		let kCode = e.keyCode;
 
-        for (let instrument of $instrumentSets[$activeSet].instruments) {
-          let vol =
-            instrument.volume > -1
-              ? instrument.absoluteVolume
-                ? ($volume * (instrument.volume / 100)) / 100
-                : instrument.volume / 100
-              : $volume / 100;
+    		if (kCode >= 48 && kCode <= 58) {
+    			stopAllSounds();
+    			let newCode = kCode - 49;
 
-          let adjustedOctShift = clamp$1($octaveShift + instrument.octave, -3, 3);
+    			if (kCode == 48) {
+    				newCode = 9;
+    			}
 
-          instrument.data.then(instr => {
-            let newAdsr = instrument.adsr;
+    			if ($instrumentSets[newCode] != undefined) activeSet.set(newCode); else activeSet.set(0);
+    		}
 
-            if (newAdsr[0] < 0) newAdsr[0] = defaultAdsr[0];
-            if (newAdsr[1] < 0) newAdsr[1] = defaultAdsr[1];
-            if (newAdsr[2] < 0) newAdsr[2] = defaultAdsr[2];
-            if (newAdsr[3] < 0) newAdsr[3] = defaultAdsr[3];
+    		if (kCode === 16) {
+    			if ($octaveShift <= 2) {
+    				// octaveShift.update(os => os + 1);
+    				octaveShift.set($octaveShift + 1);
+    			}
 
-            let note = (
-              parseInt(keyNotes[kCode]) +
-              12 * adjustedOctShift
-            ).toString();
+    			return;
+    		}
 
-            let inst = instr.play(note, ac.currentTime, {
-              loop: true,
-              adsr: newAdsr,
-              gain: vol
-            });
-            if ($keysPressed[kCode].indexOf(inst) === -1) {
-              let currentPressed = $keysPressed[kCode];
+    		if (kCode === 17) {
+    			if ($octaveShift >= -2) {
+    				// octaveShift.update(os => os - 1);
+    				octaveShift.set($octaveShift - 1);
+    			}
 
-              $keysPressed[kCode] = [...currentPressed, inst]; keysPressed.set($keysPressed);
-              // keysPressed.update(kp => {
-              //   kp[kCode] = [...currentPressed, inst];
-              //   return kp;
-              // });
-            }
-          });
-        }
-      }
+    			return;
+    		}
 
-      function handleKeyUp(e) {
-        if ($isFocused || $editMode) {
-          return;
-        } else if (e.keyCode !== 116) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
+    		if (kCode === 37) {
+    			// if ($volume >= 1) volume.update(v => v - 1);
+    			if ($volume >= 1) volume.set($volume - 1);
 
-        let kCode = e.keyCode;
+    			return;
+    		}
 
-        // alert(kCode);
+    		if (kCode === 40) {
+    			// if ($volume >= 10) volume.update(v => v - 10);
+    			// if ($volume - 10 < 0) volume.update(v => v = 0);
+    			if ($volume >= 10) volume.set($volume - 10);
 
-        if (kCode >= 48 && kCode <= 58) {
-          stopAllSounds();
+    			if ($volume - 10 < 0) volume.set(0);
+    			return;
+    		}
 
-          let newCode = kCode - 49;
+    		if (kCode === 39) {
+    			// if ($volume < 99) volume.update(v => v + 1);
+    			if ($volume < 99) volume.set($volume + 1);
 
-          if (kCode == 48) {
-            newCode = 9;
-          }
+    			return;
+    		}
 
-          activeSet.set(newCode);
-        }
+    		if (kCode === 38) {
+    			// if ($volume <= 90) volume.update(v => v + 10);
+    			// if($volume + 10 > 100) volume.update(v => v = 100);
+    			if ($volume <= 90) volume.set($volume + 10);
 
-        if (kCode === 16) {
-          if ($octaveShift <= 2) {
-            // octaveShift.update(os => os + 1);
-            octaveShift.set($octaveShift + 1);
-          }
-          return;
-        }
+    			if ($volume + 10 > 100) volume.set(100);
+    			return;
+    		}
 
-        if (kCode === 17) {
-          if ($octaveShift >= -2) {
-            // octaveShift.update(os => os - 1);
-            octaveShift.set($octaveShift - 1);
-          }
-          return;
-        }
+    		if ($instrumentSets[$activeSet].instruments.length < 1) return;
+    		if (keyCodes[kCode] == null) return;
+    		if (keyNotes[kCode] == null) return;
+    		if ($keysPressed[kCode] === null) return;
+    		if ($keysDown[kCode] === false) return;
+    		document.querySelector("#" + keyCodes[kCode]).classList.remove("piano-key-highlight");
+    		set_store_value(keysDown, $keysDown[kCode] = false, $keysDown);
 
-        if (kCode === 37) {
-          // if ($volume >= 1) volume.update(v => v - 1);
-          if ($volume >= 1) volume.set($volume - 1);
-          return;
-        }
+    		// keysDown.update(kd => {
+    		//   kd[kCode] = false;
+    		//   return kd;
+    		// });
+    		for (var i of $keysPressed[kCode]) {
+    			try {
+    				i.stop();
+    			} catch(err) {
+    				console.error("Errored stop, stopping all.");
+    				console.error("Error: ", err.message);
+    				stopAllSounds();
+    			}
+    		}
 
-        if (kCode === 40) {
-          // if ($volume >= 10) volume.update(v => v - 10);
-          // if ($volume - 10 < 0) volume.update(v => v = 0);
-          if ($volume >= 10) volume.set($volume - 10);
-          if ($volume - 10 < 0) volume.set(0);
-          return;
-        }
+    		set_store_value(keysPressed, $keysPressed[kCode] = [], $keysPressed);
+    	} // keysPressed.update(kp => {
+    	//   kp[kCode] = [];
 
-        if (kCode === 39) {
-          // if ($volume < 99) volume.update(v => v + 1);
-          if ($volume < 99) volume.set($volume + 1);
-          return;
-        }
+    	//   return kp;
+    	// });
+    	// console.log('Pressed key ' + keyCodes[kCode] + ' (key code ' + kCode + ', note ' + keyNotes[kCode] + ')')
+    	onMount(() => {
+    		let colorSchemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    		colorSchemeQuery.addEventListener("change", applyTheme);
+    		applyTheme();
 
-        if (kCode === 38) {
-          // if ($volume <= 90) volume.update(v => v + 10);
-          // if($volume + 10 > 100) volume.update(v => v = 100);
-          if ($volume <= 90) volume.set($volume + 10);
-          if ($volume + 10 > 100) volume.set(100);
-          return;
-        }
+    		for (let set of $instrumentSets) {
+    			if (set.id == null) {
+    				set.id = randId$2();
+    			}
+    		}
+    	});
 
-        if ($instrumentSets[$activeSet].instruments.length < 1) return;
-        if (keyCodes[kCode] == null) return;
-        if (keyNotes[kCode] == null) return;
-        if ($keysPressed[kCode] === null) return;
-        if ($keysDown[kCode] === false) return;
+    	const writable_props = [];
 
-        document
-          .querySelector("#" + keyCodes[kCode])
-          .classList.remove("piano-key-highlight");
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1$1.warn(`<App> was created with unknown prop '${key}'`);
+    	});
 
-        $keysDown[kCode] = false; keysDown.set($keysDown);
-        // keysDown.update(kd => {
-        //   kd[kCode] = false;
-        //   return kd;
-        // });
+    	let { $$slots = {}, $$scope } = $$props;
+    	validate_slots("App", $$slots, []);
 
-        for (var i of $keysPressed[kCode]) {
-          try {
-            i.stop();
-          } catch (err) {
-            console.error("Errored stop, stopping all.");
-            console.error("Error: ", err.message);
-            stopAllSounds();
-          }
-        }
-
-        $keysPressed[kCode] = []; keysPressed.set($keysPressed);
-        // keysPressed.update(kp => {
-        //   kp[kCode] = [];
-        //   return kp;
-        // });
-
-        // console.log('Pressed key ' + keyCodes[kCode] + ' (key code ' + kCode + ', note ' + keyNotes[kCode] + ')')
-      }
-
-      onMount(() => {
-        applyTheme();
-        let colorSchemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
-        colorSchemeQuery.addEventListener("change", applyTheme);
-      });
-
-    	let themeName;
-
-    	$$self.$$.update = ($$dirty = { $theme: 1 }) => {
-    		if ($$dirty.$theme) { $$invalidate('themeName', themeName = $theme === 0 ? "Auto" : $theme === 1 ? "Light" : "Dark"); }
-    	};
-
-    	return {
+    	$$self.$capture_state = () => ({
+    		onMount,
+    		onDestroy,
+    		Button,
+    		TitleBar,
+    		Controls,
+    		PianoGrid,
+    		SetEditor,
+    		SetList,
+    		InstrumentList,
+    		ThemeSwitcher,
+    		Toast,
+    		soundFont,
+    		keyCodes,
+    		keyNotes,
+    		activeSet,
+    		instrumentSets,
+    		keysDown,
+    		keysPressed,
+    		volume,
+    		octaveShift,
+    		currentSoundFont,
+    		ac,
+    		defaultAdsr,
+    		isFocused,
+    		showAdsr,
+    		editMode,
+    		theme,
+    		isReordering,
+    		Soundfont: lib$2,
+    		clamp: clamp$1,
     		stopAllSounds,
-    		switchDark,
+    		applyTheme,
     		toggleEditMode,
     		handleKeyDown,
     		handleKeyUp,
+    		randId: randId$2,
     		themeName,
-    		$editMode
+    		$theme,
+    		$instrumentSets,
+    		$activeSet,
+    		$editMode,
+    		$isFocused,
+    		$keysPressed,
+    		$keysDown,
+    		$volume,
+    		$octaveShift
+    	});
+
+    	$$self.$inject_state = $$props => {
+    		if ("themeName" in $$props) themeName = $$props.themeName;
     	};
+
+    	let themeName;
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	$$self.$$.update = () => {
+    		if ($$self.$$.dirty & /*$theme*/ 64) {
+    			 themeName = $theme === 0 ? "Auto" : $theme === 1 ? "Light" : "Dark";
+    		}
+    	};
+
+    	return [$editMode, stopAllSounds, toggleEditMode, handleKeyDown, handleKeyUp];
     }
 
     class App extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$b, create_fragment$b, safe_not_equal, []);
+    		init(this, options, instance$e, create_fragment$e, safe_not_equal, {});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "App",
+    			options,
+    			id: create_fragment$e.name
+    		});
     	}
     }
 

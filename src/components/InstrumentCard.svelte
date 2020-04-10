@@ -23,6 +23,7 @@
   export let soundfont;
   export let adsr;
   export let absoluteVolume;
+  export let nohover = false;
 
   let optionsVisible = false;
 
@@ -167,9 +168,8 @@
 </style>
 
 <Card
-  on:mouseover={() => (optionsVisible = true)}
+  on:mouseover={() => (optionsVisible = nohover ? false : true)}
   on:mouseleave={() => (optionsVisible = false)}>
-
   <div class="row">
     <div class="status">
       <h4 class="uppercase">{normalizedName(name)}</h4>
