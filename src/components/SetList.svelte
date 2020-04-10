@@ -106,13 +106,6 @@
 </script>
 
 <style>
-  .list {
-    display: flex;
-    flex-direction: column;
-    margin: 0;
-    padding: 0;
-  }
-
   .container {
     display: flex;
     flex-direction: column;
@@ -136,17 +129,6 @@
 
   .remove-btm-margin {
     margin-bottom: -0.6rem;
-  }
-
-  .shift-name {
-    transform: translateY(0.2rem) !important;
-  }
-
-  .instrument {
-    display: block;
-    opacity: 0.6;
-    margin: 0;
-    font-size: 0.9rem;
   }
 
   .f-grow {
@@ -291,7 +273,7 @@
           <div
             class="f-shrink transform-key"
             transition:fade={{ duration: 150, delay: 50 * i }}>
-            <KeyboardKey square key={i + 1 < 1 ? i + 1 : i >= 1 ? '' : 0} />
+            <KeyboardKey square key={i + 1 < 10 ? i + 1 : i >= 10 ? '' : 0} />
           </div>
         {:else if $editMode && i >= 1 && i !== $activeSet}
           <div
