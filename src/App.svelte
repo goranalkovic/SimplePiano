@@ -330,8 +330,8 @@
         Chord mode
         <span
           style="opacity: 0.6; margin-left: 5px; font-family: 'Inter',
-          sans-serif; border: 1px solid black; border-radius: 2px; padding: 0
-          4px;">
+          sans-serif; border: 1px solid var(--body-text); border-radius: 2px;
+          padding: 0 4px;">
           ~
         </span>
       </div>
