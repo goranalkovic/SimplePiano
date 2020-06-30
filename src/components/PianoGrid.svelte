@@ -231,7 +231,8 @@
     <div id="T" class="black-key">
       {#if $chordMode}
         <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
-          C#
+          C# <br />
+          Db
         </span>
       {/if}
       <span>T</span>
