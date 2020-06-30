@@ -10,6 +10,7 @@
   import InstrumentList from "./components/InstrumentList.svelte";
   import ThemeSwitcher from "./components/ThemeSwitcher.svelte";
   import Toast from "./components/Toast.svelte";
+  import KeyboardKey from "./components/KeyboardKey.svelte";
 
   import {
     soundFont,
@@ -28,7 +29,9 @@
     showAdsr,
     editMode,
     theme,
-    isReordering
+    isReordering,
+    chordMode,
+    chordNotes,
   } from "./stores.js";
 
   import Soundfont from "soundfont-player";
@@ -42,6 +45,7 @@
   editMode.useLocalStorage();
   theme.useLocalStorage();
   isReordering.useLocalStorage();
+  chordMode.useLocalStorage();
 
   $: themeName = $theme === 0 ? "Auto" : $theme === 1 ? "Light" : "Dark";
 
@@ -57,7 +61,7 @@
 
       for (let instr of $instrumentSets[$activeSet].instruments) {
         console.log(instr);
-        instr.data.then(k => {
+        instr.data.then((k) => {
           k.stop();
         });
       }
@@ -91,6 +95,11 @@
 
     window.pushToast("Edit mode " + ($editMode ? "on" : "off"));
   }
+  function toggleChordMode() {
+    chordMode.set(!$chordMode);
+
+    window.pushToast("Chord mode " + ($chordMode ? "on" : "off"));
+  }
 
   function handleKeyDown(e) {
     if ($isFocused || $editMode) {
@@ -101,6 +110,8 @@
     }
 
     let kCode = e.keyCode;
+
+    // console.log(kCode);
 
     if ($instrumentSets[$activeSet].instruments.length < 1) return;
     if (keyCodes[kCode] == null) return;
@@ -128,7 +139,7 @@
 
       let adjustedOctShift = clamp($octaveShift + instrument.octave, -3, 3);
 
-      instrument.data.then(instr => {
+      instrument.data.then((instr) => {
         let newAdsr = instrument.adsr;
 
         if (newAdsr[0] < 0) newAdsr[0] = defaultAdsr[0];
@@ -136,28 +147,32 @@
         if (newAdsr[2] < 0) newAdsr[2] = defaultAdsr[2];
         if (newAdsr[3] < 0) newAdsr[3] = defaultAdsr[3];
 
-        let note = (
-          parseInt(keyNotes[kCode]) +
-          12 * adjustedOctShift
-        ).toString();
+        let noteCollection = $chordMode ? chordNotes[kCode] : keyNotes[kCode];
 
-        try {
-          let inst = instr.play(note, ac.currentTime, {
-            loop: true,
-            adsr: newAdsr,
-            gain: vol
-          });
-          if ($keysPressed[kCode].indexOf(inst) === -1) {
-            let currentPressed = $keysPressed[kCode];
+        for (let noteCode of noteCollection) {
+          let note = (
+            parseInt($chordMode ? keyNotes[noteCode] : noteCode) +
+            12 * adjustedOctShift
+          ).toString();
 
-            $keysPressed[kCode] = [...currentPressed, inst];
-            // keysPressed.update(kp => {
-            //   kp[kCode] = [...currentPressed, inst];
-            //   return kp;
-            // });
+          try {
+            let inst = instr.play(note, ac.currentTime, {
+              loop: true,
+              adsr: newAdsr,
+              gain: vol,
+            });
+            if ($keysPressed[kCode].indexOf(inst) === -1) {
+              let currentPressed = $keysPressed[kCode];
+
+              $keysPressed[kCode] = [...currentPressed, inst];
+              // keysPressed.update(kp => {
+              //   kp[kCode] = [...currentPressed, inst];
+              //   return kp;
+              // });
+            }
+          } catch (error) {
+            window.popToast("Error: " + error.message);
           }
-        } catch (error) {
-          window.popToast("Error: " + error.message);
         }
       });
     }
@@ -227,6 +242,11 @@
       // if($volume + 10 > 100) volume.update(v => v = 100);
       if ($volume <= 90) volume.set($volume + 10);
       if ($volume + 10 > 100) volume.set(100);
+      return;
+    }
+
+    if (kCode === 192) {
+      toggleChordMode();
       return;
     }
 
@@ -305,7 +325,17 @@
     <Button spaced toggled={$editMode} on:click={toggleEditMode}>
       Edit mode
     </Button>
-    <!-- <Button spaced on:click={switchDark}>{themeName} theme</Button> -->
+    <Button spaced toggled={$chordMode} on:click={toggleChordMode}>
+      <div style="display: flex">
+        Chord mode
+        <span
+          style="opacity: 0.6; margin-left: 5px; font-family: 'Inter',
+          sans-serif; border: 1px solid black; border-radius: 2px; padding: 0
+          4px;">
+          ~
+        </span>
+      </div>
+    </Button>
     <ThemeSwitcher />
   </TitleBar>
 

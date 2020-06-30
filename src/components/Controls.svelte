@@ -11,8 +11,8 @@
       { label: "-1", key: "←" },
       { label: "+1", key: "→" },
       { label: "+10", key: "↑" },
-      { label: "-10", key: "↓" }
-    ]
+      { label: "-10", key: "↓" },
+    ],
   };
 
   let octaveControl = {
@@ -22,8 +22,8 @@
     step: 0.5,
     keyboardKeys: [
       { label: "Up", key: "⇧", square: false },
-      { label: "Dn", key: "<small>Ctrl</small>", square: false }
-    ]
+      { label: "Dn", key: "<small>Ctrl</small>", square: false },
+    ],
   };
 </script>
 

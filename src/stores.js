@@ -12,7 +12,7 @@ const createWritableStore = (key, startValue) => {
             const json = store.get(key);
 
             if (key === 'instruments' && json) {
-                let updateable = [...json]
+                let updateable = [...json];
 
                 for (let instrSet of updateable) {
                     if (instrSet.instruments.length < 1) continue;
@@ -41,13 +41,13 @@ const createWritableStore = (key, startValue) => {
             });
         }
     };
-}
+};
 
 export const soundFont = {
     fluid: 'FluidR3_GM',
     mk: 'MusyngKite',
     fatboy: 'FatBoy'
-}
+};
 
 export const keyCodes = {
     20: "⇪",
@@ -77,30 +77,57 @@ export const keyCodes = {
 };
 
 export const keyNotes = {
-    65: "55",
-    83: "57",
-    68: "59",
-    70: "60",
-    71: "62",
-    72: "64",
-    74: "65",
-    75: "67",
-    76: "69",
-    186: "71",
-    222: "72",
-    220: "74",
-    13: "76",
-    81: "54",
-    87: "56",
-    69: "58",
-    84: "61",
-    90: "63",
-    73: "66",
-    79: "68",
-    80: "70",
-    221: "73",
-    8: "75",
-    20: "53"
+    65: ["55"],
+    83: ["57"],
+    68: ["59"],
+    70: ["60"],
+    71: ["62"],
+    72: ["64"],
+    74: ["65"],
+    75: ["67"],
+    76: ["69"],
+    186: ["71"],
+    222: ["72"],
+    220: ["74"],
+    13: ["76"],
+    81: ["54"],
+    87: ["56"],
+    69: ["58"],
+    84: ["61"],
+    90: ["63"],
+    73: ["66"],
+    79: ["68"],
+    80: ["70"],
+    221: ["73"],
+    8: ["75"],
+    20: ["53"]
+};
+
+export const chordNotes = {
+    65: ["71", "75", "80"],
+    83: ["70", "72", "76"],
+    68: ["84", "73", "186"],
+    70: ["70", "72", "75"],
+    71: ["75", "73", "76"],
+    72: ["72", "79", "186"],
+    74: ["70", "74", "76"],
+    75: ["71", "75", "186"],
+    76: ["84", "72", "76"],
+    186: ["90", "73", "186"],
+    222: ["70", "90", "75"],
+    220: ["71", "74", "76"],
+    13: ["72", "75", "186"],
+    81: ["84", "73", "76"],
+    87: ["90", "79", "186"],
+    69: ["84", "74", "80"],
+    84: ["84", "74", "79"],
+    90: ["90", "75", "80"],
+    73: ["84", "73", "80"],
+    79: ["70", "90", "79"],
+    80: ["71", "74", "80"],
+    221: ["84", "72", "79"],
+    8: ["90", "73", "80"],
+    20: ["70", "74", "79"]
 };
 
 export const keysPressed = writable({
@@ -169,6 +196,7 @@ export const volume = createWritableStore('volume', 25);
 export const octaveShift = createWritableStore('octaveShift', 0);
 export const showAdsr = createWritableStore('showAdsr', false);
 export const editMode = createWritableStore('editMode', false);
+export const chordMode = createWritableStore('chordMode', false);
 export const theme = createWritableStore('theme', 0);
 export const isReordering = createWritableStore('isReordering', false);
 export const isFocused = writable(false);
