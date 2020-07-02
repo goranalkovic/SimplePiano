@@ -1,6 +1,13 @@
 <script>
-  import { isFocused, editMode, chordMode } from "../stores";
+  import {
+    isFocused,
+    editMode,
+    chordMode,
+    chords,
+    chordNotes,
+  } from "../stores";
   import { fade, slide } from "svelte/transition";
+  import Button from "./Button.svelte";
 </script>
 
 <style>
@@ -8,7 +15,7 @@
     background: transparent;
     color: transparent;
     height: 7rem;
-    width: 2rem;
+    width: 2.5rem;
     margin-right: 0.2rem;
     pointer-events: none;
   }
@@ -33,7 +40,7 @@
   .black-key,
   .white-key {
     margin-right: 0.2rem;
-    width: 2rem;
+    width: 2.5rem;
     border-radius: 0 0 3px 3px;
     box-shadow: var(--shadow-small);
     display: flex;
@@ -66,15 +73,26 @@
     left: 1rem;
   }
 
-  .transparent .piano-grid {
+  /* .transparent .piano-grid {
     opacity: 0.2;
+  } */
+
+  .transparent .black-key,
+  .transparent .white-key {
+    /* background: var(--white-key-color); */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    width: 4rem;
+  }
+
+  .transparent .blank-black-key {
+    width: 4rem;
   }
 
   .edit-mode-warn {
     position: absolute;
 
     left: 40%;
-    top: 40%;
+    top: -15%;
 
     font-weight: 500;
     z-index: 2000;
@@ -93,105 +111,234 @@
     margin-bottom: 0.2rem;
     text-align: center;
   }
+
+  select {
+    width: 3.5rem;
+    border: none;
+    padding: 0.5rem 0;
+    margin-bottom: 0.1rem;
+    font-family: "Rubik", sans-serif;
+    font-size: 0.8rem;
+  }
+
+  .white-key select {
+    background: var(--black-key-color);
+  }
+
+  .black-key select {
+    background: var(--white-key-color);
+  }
 </style>
 
 <div
   class="piano-grid-container {$isFocused || $editMode ? 'transparent' : ''}">
   <div class="piano-grid">
     <div id="⇪" class="white-key">
-      {#if $chordMode}
+      {#if $editMode}
+        <select bind:value={$chordNotes[20]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
         <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
-          Fm
+          {@html $chordNotes[20]}
         </span>
       {/if}
       <span>⇪</span>
     </div>
     <div id="A" class="white-key">
-      {#if $chordMode}
+      {#if $editMode}
+        <select bind:value={$chordNotes[65]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
         <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
-          Gm
+          {@html $chordNotes[65]}
         </span>
       {/if}
       <span>A</span>
     </div>
     <div id="S" class="white-key">
-      {#if $chordMode}
+      {#if $editMode}
+        <select bind:value={$chordNotes[83]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
         <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
-          Am
+          {@html $chordNotes[83]}
         </span>
       {/if}
       <span>S</span>
     </div>
     <div id="D" class="white-key">
-      {#if $chordMode}
+      {#if $editMode}
+        <select bind:value={$chordNotes[68]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
         <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
-          Hm
+          {@html $chordNotes[68]}
         </span>
       {/if}
       <span>D</span>
     </div>
     <div id="F" class="white-key">
-      {#if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>C</span>
+      {#if $editMode}
+        <select bind:value={$chordNotes[70]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
+        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+          {@html $chordNotes[70]}
+        </span>
       {/if}
       <span>F</span>
     </div>
     <div id="G" class="white-key">
-      {#if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>D</span>
+      {#if $editMode}
+        <select bind:value={$chordNotes[71]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
+        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+          {@html $chordNotes[71]}
+        </span>
       {/if}
       <span>G</span>
     </div>
     <div id="H" class="white-key">
-      {#if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>E</span>
+      {#if $editMode}
+        <select bind:value={$chordNotes[72]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
+        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+          {@html $chordNotes[72]}
+        </span>
       {/if}
       <span>H</span>
     </div>
     <div id="J" class="white-key">
-      {#if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>F</span>
+      {#if $editMode}
+        <select bind:value={$chordNotes[74]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
+        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+          {@html $chordNotes[74]}
+        </span>
       {/if}
       <span>J</span>
     </div>
     <div id="K" class="white-key">
-      {#if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>G</span>
+      {#if $editMode}
+        <select bind:value={$chordNotes[75]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
+        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+          {@html $chordNotes[75]}
+        </span>
       {/if}
       <span>K</span>
     </div>
     <div id="L" class="white-key">
-      {#if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>A</span>
+      {#if $editMode}
+        <select bind:value={$chordNotes[76]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
+        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+          {@html $chordNotes[76]}
+        </span>
       {/if}
       <span>L</span>
     </div>
     <div id="Č" class="white-key">
-      {#if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>H</span>
+      {#if $editMode}
+        <select bind:value={$chordNotes[186]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
+        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+          {@html $chordNotes[186]}
+        </span>
       {/if}
       <span>Č</span>
     </div>
     <div id="Ć" class="white-key">
-      {#if $chordMode}
+      {#if $editMode}
+        <select bind:value={$chordNotes[222]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
         <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
-          Cm
+          {@html $chordNotes[222]}
         </span>
       {/if}
       <span>Ć</span>
     </div>
     <div id="Ž" class="white-key">
-      {#if $chordMode}
+      {#if $editMode}
+        <select bind:value={$chordNotes[220]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
         <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
-          Dm
+          {@html $chordNotes[220]}
         </span>
       {/if}
       <span>Ž</span>
     </div>
     <div id="↵" class="white-key">
-      {#if $chordMode}
+      {#if $editMode}
+        <select bind:value={$chordNotes[13]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
         <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
-          Em
+          {@html $chordNotes[13]}
         </span>
       {/if}
       <span>↵</span>
@@ -200,97 +347,154 @@
 
   <div class="piano-grid">
     <div id="Q" class="black-key">
-      {#if $chordMode}
+      {#if $editMode}
+        <select bind:value={$chordNotes[81]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
         <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
-          F#m
-          <br />
-          Gbm
+          {@html $chordNotes[81]}
         </span>
       {/if}
       <span>Q</span>
     </div>
     <div id="W" class="black-key">
-      {#if $chordMode}
+      {#if $editMode}
+        <select bind:value={$chordNotes[87]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
         <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
-          G#m
-          <br />
-          Abm
+          {@html $chordNotes[87]}
         </span>
       {/if}
       <span>W</span>
     </div>
     <div id="E" class="black-key">
-      {#if $chordMode}
+      {#if $editMode}
+        <select bind:value={$chordNotes[69]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
         <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
-          Bm
+          {@html $chordNotes[69]}
         </span>
       {/if}
       <span>E</span>
     </div>
     <div class="blank-black-key" />
     <div id="T" class="black-key">
-      {#if $chordMode}
+      {#if $editMode}
+        <select bind:value={$chordNotes[84]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
         <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
-          C# <br />
-          Db
+          {@html $chordNotes[84]}
         </span>
       {/if}
       <span>T</span>
     </div>
     <div id="Z" class="black-key">
-      {#if $chordMode}
+      {#if $editMode}
+        <select bind:value={$chordNotes[90]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
         <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
-          D#
-          <br />
-          Eb
+          {@html $chordNotes[90]}
         </span>
       {/if}
       <span>Z</span>
     </div>
     <div class="blank-black-key" />
     <div id="I" class="black-key">
-      {#if $chordMode}
+      {#if $editMode}
+        <select bind:value={$chordNotes[73]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
         <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
-          F#
-          <br />
-          Gb
+          {@html $chordNotes[73]}
         </span>
       {/if}
       <span>I</span>
     </div>
     <div id="O" class="black-key">
-      {#if $chordMode}
+      {#if $editMode}
+        <select bind:value={$chordNotes[79]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
         <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
-          G#
-          <br />
-          Ab
+          {@html $chordNotes[79]}
         </span>
       {/if}
       <span>O</span>
     </div>
     <div id="P" class="black-key">
-      {#if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>B</span>
+      {#if $editMode}
+        <select bind:value={$chordNotes[80]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
+        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+          {@html $chordNotes[80]}
+        </span>
       {/if}
       <span>P</span>
     </div>
     <div class="blank-black-key" />
     <div id="Đ" class="black-key">
-      {#if $chordMode}
+      {#if $editMode}
+        <select bind:value={$chordNotes[221]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
         <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
-          C#m
-          <br />
-          Dbm
+          {@html $chordNotes[221]}
         </span>
       {/if}
       <span>Đ</span>
     </div>
     <div id="⌫" class="black-key">
-      {#if $chordMode}
+      {#if $editMode}
+        <select bind:value={$chordNotes[8]} transition:fade>
+          <option value="">-</option>
+          {#each Object.keys(chords) as item}
+            <option value={item}>{item.replace('<br>', '/')}</option>
+          {/each}
+        </select>
+      {:else if $chordMode}
         <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
-          D#m
-          <br />
-          Ebm
+          {@html $chordNotes[8]}
         </span>
       {/if}
       <span>⌫</span>

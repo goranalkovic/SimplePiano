@@ -166,6 +166,19 @@ var app = (function () {
     function set_style(node, key, value, important) {
         node.style.setProperty(key, value, important ? 'important' : '');
     }
+    function select_option(select, value) {
+        for (let i = 0; i < select.options.length; i += 1) {
+            const option = select.options[i];
+            if (option.__value === value) {
+                option.selected = true;
+                return;
+            }
+        }
+    }
+    function select_value(select) {
+        const selected_option = select.querySelector(':checked') || select.options[0];
+        return selected_option && selected_option.__value;
+    }
     function toggle_class(element, name, toggle) {
         element.classList[toggle ? 'add' : 'remove'](name);
     }
@@ -4554,32 +4567,32 @@ var app = (function () {
         20: ["53"]
     };
 
-    const chordNotes = {
-        65: ["71", "75", "80"],
-        83: ["70", "72", "76"],
-        68: ["84", "73", "186"],
-        70: ["70", "72", "75"],
-        71: ["75", "73", "76"],
-        72: ["72", "79", "186"],
-        74: ["70", "74", "76"],
-        75: ["71", "75", "186"],
-        76: ["84", "72", "76"],
-        186: ["90", "73", "186"],
-        222: ["70", "90", "75"],
-        220: ["71", "74", "76"],
-        13: ["72", "75", "186"],
-        81: ["84", "73", "76"],
-        87: ["90", "79", "186"],
-        69: ["84", "74", "80"],
-        84: ["84", "74", "79"],
-        90: ["90", "75", "80"],
-        73: ["84", "73", "80"],
-        79: ["70", "90", "79"],
-        80: ["71", "74", "80"],
-        221: ["84", "72", "79"],
-        8: ["90", "73", "80"],
-        20: ["70", "74", "79"]
-    };
+    const chordNotes = createWritableStore('chordNotes', {
+        65: "Gm",
+        83: "Am",
+        68: "Hm",
+        70: "C",
+        71: "D",
+        72: "E",
+        74: "F",
+        75: "G",
+        76: "A",
+        186: "H",
+        222: "Cm",
+        220: "Dm",
+        13: "Em",
+        81: "F#m<br>Gbm",
+        87: "G#m<br>Abm",
+        69: "Bm",
+        84: "C#<br>Db",
+        90: "D#<br>Eb",
+        73: "F#<br>Gb",
+        79: "G#<br>Ab",
+        80: "B",
+        221: "C#m<br>Dbm",
+        8: "D#m<br>Ebm",
+        20: "Fm"
+    });
 
     const keysPressed = writable({
         20: [],
@@ -4660,6 +4673,156 @@ var app = (function () {
             }
         ]
     );
+
+    const defaultChords = {
+        65: "Gm",
+        83: "Am",
+        68: "Hm",
+        70: "C",
+        71: "D",
+        72: "E",
+        74: "F",
+        75: "G",
+        76: "A",
+        186: "H",
+        222: "Cm",
+        220: "Dm",
+        13: "Em",
+        81: "F#m<br>Gbm",
+        87: "G#m<br>Abm",
+        69: "Bm",
+        84: "C#<br>Db",
+        90: "D#<br>Eb",
+        73: "F#<br>Gb",
+        79: "G#<br>Ab",
+        80: "B",
+        221: "C#m<br>Dbm",
+        8: "D#m<br>Ebm",
+        20: "Fm"
+    };
+
+    const chords = {
+        "C": ["70", "72", "75"],
+        "C#<br>Db": ["84", "74", "79"],
+        "D": ["71", "73", "76"],
+        "D#<br>Eb": ["90", "75", "80"],
+        "E": ["72", "79", "186"],
+        "F": ["70", "74", "76"],
+        "F#<br>Gb": ["84", "73", "80"],
+        "G": ["71", "75", "186"],
+        "G#<br>Ab": ["70", "90", "79"],
+        "A": ["84", "72", "76"],
+        "B": ["71", "74", "80"],
+        "H": ["90", "73", "186"],
+        "Cm": ["70", "90", "75"],
+        "C#m<br>Dbm": ["84", "72", "79"],
+        "Dm": ["71", "74", "76"],
+        "D#m<br>Ebm": ["90", "73", "80"],
+        "Em": ["72", "75", "186"],
+        "Fm": ["70", "74", "79"],
+        "F#m<br>Gbm": ["84", "73", "76"],
+        "Gm": ["71", "75", "80"],
+        "G#m<br>Abm": ["90", "79", "186"],
+        "Am": ["70", "72", "76"],
+        "Hm": ["71", "73", "186"],
+        "Bm": ["84", "74", "80"],
+        "C7": ["70", "72", "75", "80"],
+        "C#7<br>Db7": ["84", "74", "79", "186"],
+        "D7": ["70", "71", "73", "76"],
+        "D#7<br>Eb7": ["84", "90", "75", "80"],
+        "E7": ["71", "72", "79", "186"],
+        "F7": ["70", "90", "74", "76"],
+        "F#7<br>Gb7": ["84", "72", "73", "80"],
+        "G7": ["71", "74", "75", "186"],
+        "G#7<br>Ab7": ["70", "90", "73", "79"],
+        "A7": ["84", "72", "75", "76"],
+        "B7": ["71", "74", "79", "80"],
+        "H7": ["90", "73", "76", "186"],
+        "Cdim": ["70", "90", "73", "76"],
+        "C#dim<br>Dbdim": ["84", "72", "75", "80"],
+        "Ddim": ["71", "74", "79", "186"],
+        "D#dim<br>Ebdim": ["70", "90", "73", "75"],
+        "Edim": ["84", "72", "75", "80"],
+        "Fdim": ["71", "74", "79", "186"],
+        "F#dim<br>Gbdim": ["70", "90", "73", "76"],
+        "Gdim": ["84", "72", "75", "80"],
+        "G#dim<br>Abdim": ["71", "74", "79", "186"],
+        "Adim": ["70", "90", "73", "76"],
+        "Bdim": ["84", "72", "75", "80"],
+        "Hdim": ["71", "74", "79", "186"],
+        "Cm7": ["70", "90", "75", "80"],
+        "C#m7<br>Dbm7": ["84", "72", "79", "186"],
+        "Dm7": ["70", "71", "74", "76"],
+        "D#m7<br>Ebm7": ["84", "90", "73", "80"],
+        "Em7": ["71", "72", "75", "186"],
+        "Fm7": ["70", "90", "74", "79"],
+        "F#m7<br>Gbm7": ["84", "72", "73", "76"],
+        "Gm7": ["71", "74", "75", "80"],
+        "G#m7<br>Abm7": ["90", "73", "79", "186"],
+        "Am7": ["70", "72", "75", "76"],
+        "Bm7": ["84", "74", "79", "80"],
+        "Hm7": ["71", "73", "76", "186"],
+        "Cm6": ["70", "90", "75", "76"],
+        "C#m6<br>Dbm6": ["84", "72", "79", "80"],
+        "Dm6": ["71", "74", "76", "186"],
+        "D#m6<br>Ebm6": ["70", "90", "73", "80"],
+        "Em6": ["84", "72", "75", "186"],
+        "Fm6": ["70", "71", "74", "79"],
+        "F#m6<br>Gbm6": ["84", "90", "73", "76"],
+        "Gm6": ["71", "72", "75", "80"],
+        "G#m6<br>Abm6": ["90", "74", "79", "186"],
+        "Am6": ["70", "72", "73", "76"],
+        "Bm6": ["84", "74", "75", "80"],
+        "Hm6": ["71", "73", "79", "186"],
+        "Cm9": ["70", "71", "90", "75"],
+        "C#m9<br>Dbm9": ["84", "90", "72", "79"],
+        "Dm9": ["71", "72", "74", "76"],
+        "D#m9<br>Ebm9": ["90", "74", "73", "80"],
+        "Em9": ["72", "73", "75", "186"],
+        "Fm9": ["70", "74", "75", "79"],
+        "F#m9<br>Gbm9": ["84", "73", "79", "76"],
+        "Gm9": ["71", "75", "76", "80"],
+        "G#m9<br>Abm9": ["90", "79", "80", "186"],
+        "Am9": ["70", "72", "76", "186"],
+        "Bm9": ["70", "84", "74", "80"],
+        "Hm9": ["84", "71", "73", "186"],
+        "C6": ["70", "72", "75", "76"],
+        "C#6<br>Db6": ["84", "74", "79", "80"],
+        "D6": ["71", "73", "76", "186"],
+        "D#6<br>Eb6": ["70", "90", "75", "80"],
+        "E6": ["84", "72", "79", "186"],
+        "F6": ["70", "71", "74", "76"],
+        "F#6<br>Gb6": ["84", "90", "73", "80"],
+        "G6": ["71", "72", "75", "186"],
+        "G#6<br>Ab6": ["70", "90", "74", "79"],
+        "A6": ["84", "72", "73", "76"],
+        "B6": ["71", "74", "75", "80"],
+        "H6": ["90", "73", "79", "186"],
+        "C9": ["70", "71", "72", "75"],
+        "C#9<br>Db9": ["84", "90", "74", "79"],
+        "D9": ["71", "72", "73", "76"],
+        "D#9<br>Eb9": ["90", "74", "75", "80"],
+        "E9": ["72", "73", "79", "186"],
+        "F9": ["70", "74", "75", "76"],
+        "F#9<br>Gb9": ["84", "73", "79", "80"],
+        "G9": ["71", "75", "76", "186"],
+        "G#9<br>Ab9": ["70", "90", "79", "80"],
+        "A9": ["84", "72", "76", "186"],
+        "B9": ["70", "71", "74", "80"],
+        "H9": ["84", "90", "73", "186"],
+        "Csus4": ["70", "74", "75"],
+        "C#sus4<br>Dbsus4": ["84", "73", "79"],
+        "Dsus4": ["71", "75", "76"],
+        "D#sus4<br>Ebsus4": ["90", "79", "80"],
+        "Esus4": ["72", "76", "186"],
+        "Fsus4": ["70", "74", "80"],
+        "F#sus4<br>Gbsus4": ["84", "73", "186"],
+        "Gsus4": ["70", "71", "75"],
+        "G#sus4<br>Absus4": ["84", "90", "79"],
+        "Asus4": ["71", "72", "76"],
+        "Bsus4": ["90", "74", "80"],
+        "Hsus4": ["72", "73", "186"],
+    };
 
     /* src\components\KeyboardKey.svelte generated by Svelte v3.20.1 */
 
@@ -5756,25 +5919,2526 @@ var app = (function () {
     }
 
     /* src\components\PianoGrid.svelte generated by Svelte v3.20.1 */
+
+    const { Object: Object_1 } = globals;
     const file$5 = "src\\components\\PianoGrid.svelte";
 
-    // (102:6) {#if $chordMode}
-    function create_if_block_24(ctx) {
+    function get_each_context$1(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_1(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_2(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_3(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_4(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_5(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_6(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_7(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_8(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_9(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_10(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_11(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_12(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_13(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_14(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_15(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_16(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_17(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_18(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_19(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_20(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_21(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_22(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_23(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[28] = list[i];
+    	return child_ctx;
+    }
+
+    // (144:27) 
+    function create_if_block_48(ctx) {
     	let span;
+    	let raw_value = /*$chordNotes*/ ctx[2][20] + "";
     	let span_transition;
     	let current;
 
     	const block = {
     		c: function create() {
     			span = element("span");
-    			span.textContent = "Fm";
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 102, 8, 2051);
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 144, 8, 2989);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
+    			span.innerHTML = raw_value;
     			current = true;
     		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][20] + "")) span.innerHTML = raw_value;		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
+    				span_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
+    			span_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(span);
+    			if (detaching && span_transition) span_transition.end();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_48.name,
+    		type: "if",
+    		source: "(144:27) ",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (137:6) {#if $editMode}
+    function create_if_block_47(ctx) {
+    	let select;
+    	let option;
+    	let select_transition;
+    	let current;
+    	let dispose;
+    	let each_value_23 = Object.keys(chords);
+    	validate_each_argument(each_value_23);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_23.length; i += 1) {
+    		each_blocks[i] = create_each_block_23(get_each_context_23(ctx, each_value_23, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 138, 10, 2767);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][20] === void 0) add_render_callback(() => /*select_change_handler*/ ctx[4].call(select));
+    			add_location(select, file$5, 137, 8, 2702);
+    		},
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][20]);
+    			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler*/ ctx[4]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_23 = Object.keys(chords);
+    				validate_each_argument(each_value_23);
+    				let i;
+
+    				for (i = 0; i < each_value_23.length; i += 1) {
+    					const child_ctx = get_each_context_23(ctx, each_value_23, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_23(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_23.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][20]);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_47.name,
+    		type: "if",
+    		source: "(137:6) {#if $editMode}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (140:10) {#each Object.keys(chords) as item}
+    function create_each_block_23(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 140, 12, 2855);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_23.name,
+    		type: "each",
+    		source: "(140:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (159:27) 
+    function create_if_block_46(ctx) {
+    	let span;
+    	let raw_value = /*$chordNotes*/ ctx[2][65] + "";
+    	let span_transition;
+    	let current;
+
+    	const block = {
+    		c: function create() {
+    			span = element("span");
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 159, 8, 3508);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, span, anchor);
+    			span.innerHTML = raw_value;
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][65] + "")) span.innerHTML = raw_value;		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
+    				span_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
+    			span_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(span);
+    			if (detaching && span_transition) span_transition.end();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_46.name,
+    		type: "if",
+    		source: "(159:27) ",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (152:6) {#if $editMode}
+    function create_if_block_45(ctx) {
+    	let select;
+    	let option;
+    	let select_transition;
+    	let current;
+    	let dispose;
+    	let each_value_22 = Object.keys(chords);
+    	validate_each_argument(each_value_22);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_22.length; i += 1) {
+    		each_blocks[i] = create_each_block_22(get_each_context_22(ctx, each_value_22, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 153, 10, 3286);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][65] === void 0) add_render_callback(() => /*select_change_handler_1*/ ctx[5].call(select));
+    			add_location(select, file$5, 152, 8, 3221);
+    		},
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][65]);
+    			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_1*/ ctx[5]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_22 = Object.keys(chords);
+    				validate_each_argument(each_value_22);
+    				let i;
+
+    				for (i = 0; i < each_value_22.length; i += 1) {
+    					const child_ctx = get_each_context_22(ctx, each_value_22, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_22(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_22.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][65]);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_45.name,
+    		type: "if",
+    		source: "(152:6) {#if $editMode}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (155:10) {#each Object.keys(chords) as item}
+    function create_each_block_22(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 155, 12, 3374);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_22.name,
+    		type: "each",
+    		source: "(155:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (174:27) 
+    function create_if_block_44(ctx) {
+    	let span;
+    	let raw_value = /*$chordNotes*/ ctx[2][83] + "";
+    	let span_transition;
+    	let current;
+
+    	const block = {
+    		c: function create() {
+    			span = element("span");
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 174, 8, 4027);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, span, anchor);
+    			span.innerHTML = raw_value;
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][83] + "")) span.innerHTML = raw_value;		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
+    				span_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
+    			span_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(span);
+    			if (detaching && span_transition) span_transition.end();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_44.name,
+    		type: "if",
+    		source: "(174:27) ",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (167:6) {#if $editMode}
+    function create_if_block_43(ctx) {
+    	let select;
+    	let option;
+    	let select_transition;
+    	let current;
+    	let dispose;
+    	let each_value_21 = Object.keys(chords);
+    	validate_each_argument(each_value_21);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_21.length; i += 1) {
+    		each_blocks[i] = create_each_block_21(get_each_context_21(ctx, each_value_21, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 168, 10, 3805);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][83] === void 0) add_render_callback(() => /*select_change_handler_2*/ ctx[6].call(select));
+    			add_location(select, file$5, 167, 8, 3740);
+    		},
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][83]);
+    			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_2*/ ctx[6]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_21 = Object.keys(chords);
+    				validate_each_argument(each_value_21);
+    				let i;
+
+    				for (i = 0; i < each_value_21.length; i += 1) {
+    					const child_ctx = get_each_context_21(ctx, each_value_21, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_21(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_21.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][83]);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_43.name,
+    		type: "if",
+    		source: "(167:6) {#if $editMode}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (170:10) {#each Object.keys(chords) as item}
+    function create_each_block_21(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 170, 12, 3893);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_21.name,
+    		type: "each",
+    		source: "(170:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (189:27) 
+    function create_if_block_42(ctx) {
+    	let span;
+    	let raw_value = /*$chordNotes*/ ctx[2][68] + "";
+    	let span_transition;
+    	let current;
+
+    	const block = {
+    		c: function create() {
+    			span = element("span");
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 189, 8, 4546);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, span, anchor);
+    			span.innerHTML = raw_value;
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][68] + "")) span.innerHTML = raw_value;		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
+    				span_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
+    			span_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(span);
+    			if (detaching && span_transition) span_transition.end();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_42.name,
+    		type: "if",
+    		source: "(189:27) ",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (182:6) {#if $editMode}
+    function create_if_block_41(ctx) {
+    	let select;
+    	let option;
+    	let select_transition;
+    	let current;
+    	let dispose;
+    	let each_value_20 = Object.keys(chords);
+    	validate_each_argument(each_value_20);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_20.length; i += 1) {
+    		each_blocks[i] = create_each_block_20(get_each_context_20(ctx, each_value_20, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 183, 10, 4324);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][68] === void 0) add_render_callback(() => /*select_change_handler_3*/ ctx[7].call(select));
+    			add_location(select, file$5, 182, 8, 4259);
+    		},
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][68]);
+    			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_3*/ ctx[7]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_20 = Object.keys(chords);
+    				validate_each_argument(each_value_20);
+    				let i;
+
+    				for (i = 0; i < each_value_20.length; i += 1) {
+    					const child_ctx = get_each_context_20(ctx, each_value_20, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_20(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_20.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][68]);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_41.name,
+    		type: "if",
+    		source: "(182:6) {#if $editMode}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (185:10) {#each Object.keys(chords) as item}
+    function create_each_block_20(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 185, 12, 4412);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_20.name,
+    		type: "each",
+    		source: "(185:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (204:27) 
+    function create_if_block_40(ctx) {
+    	let span;
+    	let raw_value = /*$chordNotes*/ ctx[2][70] + "";
+    	let span_transition;
+    	let current;
+
+    	const block = {
+    		c: function create() {
+    			span = element("span");
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 204, 8, 5065);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, span, anchor);
+    			span.innerHTML = raw_value;
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][70] + "")) span.innerHTML = raw_value;		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
+    				span_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
+    			span_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(span);
+    			if (detaching && span_transition) span_transition.end();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_40.name,
+    		type: "if",
+    		source: "(204:27) ",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (197:6) {#if $editMode}
+    function create_if_block_39(ctx) {
+    	let select;
+    	let option;
+    	let select_transition;
+    	let current;
+    	let dispose;
+    	let each_value_19 = Object.keys(chords);
+    	validate_each_argument(each_value_19);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_19.length; i += 1) {
+    		each_blocks[i] = create_each_block_19(get_each_context_19(ctx, each_value_19, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 198, 10, 4843);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][70] === void 0) add_render_callback(() => /*select_change_handler_4*/ ctx[8].call(select));
+    			add_location(select, file$5, 197, 8, 4778);
+    		},
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][70]);
+    			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_4*/ ctx[8]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_19 = Object.keys(chords);
+    				validate_each_argument(each_value_19);
+    				let i;
+
+    				for (i = 0; i < each_value_19.length; i += 1) {
+    					const child_ctx = get_each_context_19(ctx, each_value_19, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_19(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_19.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][70]);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_39.name,
+    		type: "if",
+    		source: "(197:6) {#if $editMode}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (200:10) {#each Object.keys(chords) as item}
+    function create_each_block_19(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 200, 12, 4931);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_19.name,
+    		type: "each",
+    		source: "(200:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (219:27) 
+    function create_if_block_38(ctx) {
+    	let span;
+    	let raw_value = /*$chordNotes*/ ctx[2][71] + "";
+    	let span_transition;
+    	let current;
+
+    	const block = {
+    		c: function create() {
+    			span = element("span");
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 219, 8, 5584);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, span, anchor);
+    			span.innerHTML = raw_value;
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][71] + "")) span.innerHTML = raw_value;		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
+    				span_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
+    			span_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(span);
+    			if (detaching && span_transition) span_transition.end();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_38.name,
+    		type: "if",
+    		source: "(219:27) ",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (212:6) {#if $editMode}
+    function create_if_block_37(ctx) {
+    	let select;
+    	let option;
+    	let select_transition;
+    	let current;
+    	let dispose;
+    	let each_value_18 = Object.keys(chords);
+    	validate_each_argument(each_value_18);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_18.length; i += 1) {
+    		each_blocks[i] = create_each_block_18(get_each_context_18(ctx, each_value_18, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 213, 10, 5362);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][71] === void 0) add_render_callback(() => /*select_change_handler_5*/ ctx[9].call(select));
+    			add_location(select, file$5, 212, 8, 5297);
+    		},
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][71]);
+    			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_5*/ ctx[9]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_18 = Object.keys(chords);
+    				validate_each_argument(each_value_18);
+    				let i;
+
+    				for (i = 0; i < each_value_18.length; i += 1) {
+    					const child_ctx = get_each_context_18(ctx, each_value_18, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_18(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_18.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][71]);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_37.name,
+    		type: "if",
+    		source: "(212:6) {#if $editMode}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (215:10) {#each Object.keys(chords) as item}
+    function create_each_block_18(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 215, 12, 5450);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_18.name,
+    		type: "each",
+    		source: "(215:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (234:27) 
+    function create_if_block_36(ctx) {
+    	let span;
+    	let raw_value = /*$chordNotes*/ ctx[2][72] + "";
+    	let span_transition;
+    	let current;
+
+    	const block = {
+    		c: function create() {
+    			span = element("span");
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 234, 8, 6103);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, span, anchor);
+    			span.innerHTML = raw_value;
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][72] + "")) span.innerHTML = raw_value;		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
+    				span_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
+    			span_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(span);
+    			if (detaching && span_transition) span_transition.end();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_36.name,
+    		type: "if",
+    		source: "(234:27) ",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (227:6) {#if $editMode}
+    function create_if_block_35(ctx) {
+    	let select;
+    	let option;
+    	let select_transition;
+    	let current;
+    	let dispose;
+    	let each_value_17 = Object.keys(chords);
+    	validate_each_argument(each_value_17);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_17.length; i += 1) {
+    		each_blocks[i] = create_each_block_17(get_each_context_17(ctx, each_value_17, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 228, 10, 5881);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][72] === void 0) add_render_callback(() => /*select_change_handler_6*/ ctx[10].call(select));
+    			add_location(select, file$5, 227, 8, 5816);
+    		},
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][72]);
+    			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_6*/ ctx[10]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_17 = Object.keys(chords);
+    				validate_each_argument(each_value_17);
+    				let i;
+
+    				for (i = 0; i < each_value_17.length; i += 1) {
+    					const child_ctx = get_each_context_17(ctx, each_value_17, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_17(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_17.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][72]);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_35.name,
+    		type: "if",
+    		source: "(227:6) {#if $editMode}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (230:10) {#each Object.keys(chords) as item}
+    function create_each_block_17(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 230, 12, 5969);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_17.name,
+    		type: "each",
+    		source: "(230:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (249:27) 
+    function create_if_block_34(ctx) {
+    	let span;
+    	let raw_value = /*$chordNotes*/ ctx[2][74] + "";
+    	let span_transition;
+    	let current;
+
+    	const block = {
+    		c: function create() {
+    			span = element("span");
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 249, 8, 6622);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, span, anchor);
+    			span.innerHTML = raw_value;
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][74] + "")) span.innerHTML = raw_value;		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
+    				span_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
+    			span_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(span);
+    			if (detaching && span_transition) span_transition.end();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_34.name,
+    		type: "if",
+    		source: "(249:27) ",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (242:6) {#if $editMode}
+    function create_if_block_33(ctx) {
+    	let select;
+    	let option;
+    	let select_transition;
+    	let current;
+    	let dispose;
+    	let each_value_16 = Object.keys(chords);
+    	validate_each_argument(each_value_16);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_16.length; i += 1) {
+    		each_blocks[i] = create_each_block_16(get_each_context_16(ctx, each_value_16, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 243, 10, 6400);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][74] === void 0) add_render_callback(() => /*select_change_handler_7*/ ctx[11].call(select));
+    			add_location(select, file$5, 242, 8, 6335);
+    		},
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][74]);
+    			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_7*/ ctx[11]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_16 = Object.keys(chords);
+    				validate_each_argument(each_value_16);
+    				let i;
+
+    				for (i = 0; i < each_value_16.length; i += 1) {
+    					const child_ctx = get_each_context_16(ctx, each_value_16, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_16(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_16.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][74]);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_33.name,
+    		type: "if",
+    		source: "(242:6) {#if $editMode}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (245:10) {#each Object.keys(chords) as item}
+    function create_each_block_16(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 245, 12, 6488);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_16.name,
+    		type: "each",
+    		source: "(245:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (264:27) 
+    function create_if_block_32(ctx) {
+    	let span;
+    	let raw_value = /*$chordNotes*/ ctx[2][75] + "";
+    	let span_transition;
+    	let current;
+
+    	const block = {
+    		c: function create() {
+    			span = element("span");
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 264, 8, 7141);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, span, anchor);
+    			span.innerHTML = raw_value;
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][75] + "")) span.innerHTML = raw_value;		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
+    				span_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
+    			span_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(span);
+    			if (detaching && span_transition) span_transition.end();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_32.name,
+    		type: "if",
+    		source: "(264:27) ",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (257:6) {#if $editMode}
+    function create_if_block_31(ctx) {
+    	let select;
+    	let option;
+    	let select_transition;
+    	let current;
+    	let dispose;
+    	let each_value_15 = Object.keys(chords);
+    	validate_each_argument(each_value_15);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_15.length; i += 1) {
+    		each_blocks[i] = create_each_block_15(get_each_context_15(ctx, each_value_15, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 258, 10, 6919);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][75] === void 0) add_render_callback(() => /*select_change_handler_8*/ ctx[12].call(select));
+    			add_location(select, file$5, 257, 8, 6854);
+    		},
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][75]);
+    			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_8*/ ctx[12]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_15 = Object.keys(chords);
+    				validate_each_argument(each_value_15);
+    				let i;
+
+    				for (i = 0; i < each_value_15.length; i += 1) {
+    					const child_ctx = get_each_context_15(ctx, each_value_15, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_15(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_15.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][75]);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_31.name,
+    		type: "if",
+    		source: "(257:6) {#if $editMode}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (260:10) {#each Object.keys(chords) as item}
+    function create_each_block_15(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 260, 12, 7007);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_15.name,
+    		type: "each",
+    		source: "(260:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (279:27) 
+    function create_if_block_30(ctx) {
+    	let span;
+    	let raw_value = /*$chordNotes*/ ctx[2][76] + "";
+    	let span_transition;
+    	let current;
+
+    	const block = {
+    		c: function create() {
+    			span = element("span");
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 279, 8, 7660);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, span, anchor);
+    			span.innerHTML = raw_value;
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][76] + "")) span.innerHTML = raw_value;		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
+    				span_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
+    			span_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(span);
+    			if (detaching && span_transition) span_transition.end();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_30.name,
+    		type: "if",
+    		source: "(279:27) ",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (272:6) {#if $editMode}
+    function create_if_block_29(ctx) {
+    	let select;
+    	let option;
+    	let select_transition;
+    	let current;
+    	let dispose;
+    	let each_value_14 = Object.keys(chords);
+    	validate_each_argument(each_value_14);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_14.length; i += 1) {
+    		each_blocks[i] = create_each_block_14(get_each_context_14(ctx, each_value_14, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 273, 10, 7438);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][76] === void 0) add_render_callback(() => /*select_change_handler_9*/ ctx[13].call(select));
+    			add_location(select, file$5, 272, 8, 7373);
+    		},
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][76]);
+    			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_9*/ ctx[13]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_14 = Object.keys(chords);
+    				validate_each_argument(each_value_14);
+    				let i;
+
+    				for (i = 0; i < each_value_14.length; i += 1) {
+    					const child_ctx = get_each_context_14(ctx, each_value_14, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_14(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_14.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][76]);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_29.name,
+    		type: "if",
+    		source: "(272:6) {#if $editMode}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (275:10) {#each Object.keys(chords) as item}
+    function create_each_block_14(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 275, 12, 7526);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_14.name,
+    		type: "each",
+    		source: "(275:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (294:27) 
+    function create_if_block_28(ctx) {
+    	let span;
+    	let raw_value = /*$chordNotes*/ ctx[2][186] + "";
+    	let span_transition;
+    	let current;
+
+    	const block = {
+    		c: function create() {
+    			span = element("span");
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 294, 8, 8180);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, span, anchor);
+    			span.innerHTML = raw_value;
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][186] + "")) span.innerHTML = raw_value;		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
+    				span_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
+    			span_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(span);
+    			if (detaching && span_transition) span_transition.end();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_28.name,
+    		type: "if",
+    		source: "(294:27) ",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (287:6) {#if $editMode}
+    function create_if_block_27(ctx) {
+    	let select;
+    	let option;
+    	let select_transition;
+    	let current;
+    	let dispose;
+    	let each_value_13 = Object.keys(chords);
+    	validate_each_argument(each_value_13);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_13.length; i += 1) {
+    		each_blocks[i] = create_each_block_13(get_each_context_13(ctx, each_value_13, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 288, 10, 7958);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][186] === void 0) add_render_callback(() => /*select_change_handler_10*/ ctx[14].call(select));
+    			add_location(select, file$5, 287, 8, 7892);
+    		},
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][186]);
+    			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_10*/ ctx[14]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_13 = Object.keys(chords);
+    				validate_each_argument(each_value_13);
+    				let i;
+
+    				for (i = 0; i < each_value_13.length; i += 1) {
+    					const child_ctx = get_each_context_13(ctx, each_value_13, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_13(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_13.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][186]);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_27.name,
+    		type: "if",
+    		source: "(287:6) {#if $editMode}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (290:10) {#each Object.keys(chords) as item}
+    function create_each_block_13(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 290, 12, 8046);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_13.name,
+    		type: "each",
+    		source: "(290:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (309:27) 
+    function create_if_block_26(ctx) {
+    	let span;
+    	let raw_value = /*$chordNotes*/ ctx[2][222] + "";
+    	let span_transition;
+    	let current;
+
+    	const block = {
+    		c: function create() {
+    			span = element("span");
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 309, 8, 8701);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, span, anchor);
+    			span.innerHTML = raw_value;
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][222] + "")) span.innerHTML = raw_value;		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
+    				span_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
+    			span_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(span);
+    			if (detaching && span_transition) span_transition.end();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_26.name,
+    		type: "if",
+    		source: "(309:27) ",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (302:6) {#if $editMode}
+    function create_if_block_25(ctx) {
+    	let select;
+    	let option;
+    	let select_transition;
+    	let current;
+    	let dispose;
+    	let each_value_12 = Object.keys(chords);
+    	validate_each_argument(each_value_12);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_12.length; i += 1) {
+    		each_blocks[i] = create_each_block_12(get_each_context_12(ctx, each_value_12, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 303, 10, 8479);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][222] === void 0) add_render_callback(() => /*select_change_handler_11*/ ctx[15].call(select));
+    			add_location(select, file$5, 302, 8, 8413);
+    		},
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][222]);
+    			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_11*/ ctx[15]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_12 = Object.keys(chords);
+    				validate_each_argument(each_value_12);
+    				let i;
+
+    				for (i = 0; i < each_value_12.length; i += 1) {
+    					const child_ctx = get_each_context_12(ctx, each_value_12, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_12(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_12.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][222]);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_25.name,
+    		type: "if",
+    		source: "(302:6) {#if $editMode}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (305:10) {#each Object.keys(chords) as item}
+    function create_each_block_12(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 305, 12, 8567);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_12.name,
+    		type: "each",
+    		source: "(305:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (324:27) 
+    function create_if_block_24(ctx) {
+    	let span;
+    	let raw_value = /*$chordNotes*/ ctx[2][220] + "";
+    	let span_transition;
+    	let current;
+
+    	const block = {
+    		c: function create() {
+    			span = element("span");
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 324, 8, 9222);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, span, anchor);
+    			span.innerHTML = raw_value;
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][220] + "")) span.innerHTML = raw_value;		},
     		i: function intro(local) {
     			if (current) return;
 
@@ -5800,48 +8464,107 @@ var app = (function () {
     		block,
     		id: create_if_block_24.name,
     		type: "if",
-    		source: "(102:6) {#if $chordMode}",
+    		source: "(324:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (110:6) {#if $chordMode}
+    // (317:6) {#if $editMode}
     function create_if_block_23(ctx) {
-    	let span;
-    	let span_transition;
+    	let select;
+    	let option;
+    	let select_transition;
     	let current;
+    	let dispose;
+    	let each_value_11 = Object.keys(chords);
+    	validate_each_argument(each_value_11);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_11.length; i += 1) {
+    		each_blocks[i] = create_each_block_11(get_each_context_11(ctx, each_value_11, i));
+    	}
 
     	const block = {
     		c: function create() {
-    			span = element("span");
-    			span.textContent = "Gm";
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 110, 8, 2263);
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 318, 10, 9000);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][220] === void 0) add_render_callback(() => /*select_change_handler_12*/ ctx[16].call(select));
+    			add_location(select, file$5, 317, 8, 8934);
     		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, span, anchor);
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][220]);
     			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_12*/ ctx[16]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_11 = Object.keys(chords);
+    				validate_each_argument(each_value_11);
+    				let i;
+
+    				for (i = 0; i < each_value_11.length; i += 1) {
+    					const child_ctx = get_each_context_11(ctx, each_value_11, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_11(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_11.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][220]);
+    			}
     		},
     		i: function intro(local) {
     			if (current) return;
 
     			add_render_callback(() => {
-    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
-    				span_transition.run(1);
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
     			});
 
     			current = true;
     		},
     		o: function outro(local) {
-    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
-    			span_transition.run(0);
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(span);
-    			if (detaching && span_transition) span_transition.end();
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
     		}
     	};
 
@@ -5849,30 +8572,69 @@ var app = (function () {
     		block,
     		id: create_if_block_23.name,
     		type: "if",
-    		source: "(110:6) {#if $chordMode}",
+    		source: "(317:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (118:6) {#if $chordMode}
+    // (320:10) {#each Object.keys(chords) as item}
+    function create_each_block_11(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 320, 12, 9088);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_11.name,
+    		type: "each",
+    		source: "(320:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (339:27) 
     function create_if_block_22(ctx) {
     	let span;
+    	let raw_value = /*$chordNotes*/ ctx[2][13] + "";
     	let span_transition;
     	let current;
 
     	const block = {
     		c: function create() {
     			span = element("span");
-    			span.textContent = "Am";
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 118, 8, 2475);
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 339, 8, 9742);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
+    			span.innerHTML = raw_value;
     			current = true;
     		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][13] + "")) span.innerHTML = raw_value;		},
     		i: function intro(local) {
     			if (current) return;
 
@@ -5898,48 +8660,107 @@ var app = (function () {
     		block,
     		id: create_if_block_22.name,
     		type: "if",
-    		source: "(118:6) {#if $chordMode}",
+    		source: "(339:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (126:6) {#if $chordMode}
+    // (332:6) {#if $editMode}
     function create_if_block_21(ctx) {
-    	let span;
-    	let span_transition;
+    	let select;
+    	let option;
+    	let select_transition;
     	let current;
+    	let dispose;
+    	let each_value_10 = Object.keys(chords);
+    	validate_each_argument(each_value_10);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_10.length; i += 1) {
+    		each_blocks[i] = create_each_block_10(get_each_context_10(ctx, each_value_10, i));
+    	}
 
     	const block = {
     		c: function create() {
-    			span = element("span");
-    			span.textContent = "Hm";
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 126, 8, 2687);
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 333, 10, 9520);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][13] === void 0) add_render_callback(() => /*select_change_handler_13*/ ctx[17].call(select));
+    			add_location(select, file$5, 332, 8, 9455);
     		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, span, anchor);
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][13]);
     			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_13*/ ctx[17]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_10 = Object.keys(chords);
+    				validate_each_argument(each_value_10);
+    				let i;
+
+    				for (i = 0; i < each_value_10.length; i += 1) {
+    					const child_ctx = get_each_context_10(ctx, each_value_10, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_10(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_10.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][13]);
+    			}
     		},
     		i: function intro(local) {
     			if (current) return;
 
     			add_render_callback(() => {
-    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
-    				span_transition.run(1);
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
     			});
 
     			current = true;
     		},
     		o: function outro(local) {
-    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
-    			span_transition.run(0);
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(span);
-    			if (detaching && span_transition) span_transition.end();
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
     		}
     	};
 
@@ -5947,30 +8768,69 @@ var app = (function () {
     		block,
     		id: create_if_block_21.name,
     		type: "if",
-    		source: "(126:6) {#if $chordMode}",
+    		source: "(332:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (134:6) {#if $chordMode}
+    // (335:10) {#each Object.keys(chords) as item}
+    function create_each_block_10(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 335, 12, 9608);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_10.name,
+    		type: "each",
+    		source: "(335:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (357:27) 
     function create_if_block_20(ctx) {
     	let span;
+    	let raw_value = /*$chordNotes*/ ctx[2][81] + "";
     	let span_transition;
     	let current;
 
     	const block = {
     		c: function create() {
     			span = element("span");
-    			span.textContent = "C";
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 134, 8, 2899);
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 357, 8, 10301);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
+    			span.innerHTML = raw_value;
     			current = true;
     		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][81] + "")) span.innerHTML = raw_value;		},
     		i: function intro(local) {
     			if (current) return;
 
@@ -5996,48 +8856,107 @@ var app = (function () {
     		block,
     		id: create_if_block_20.name,
     		type: "if",
-    		source: "(134:6) {#if $chordMode}",
+    		source: "(357:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (140:6) {#if $chordMode}
+    // (350:6) {#if $editMode}
     function create_if_block_19(ctx) {
-    	let span;
-    	let span_transition;
+    	let select;
+    	let option;
+    	let select_transition;
     	let current;
+    	let dispose;
+    	let each_value_9 = Object.keys(chords);
+    	validate_each_argument(each_value_9);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_9.length; i += 1) {
+    		each_blocks[i] = create_each_block_9(get_each_context_9(ctx, each_value_9, i));
+    	}
 
     	const block = {
     		c: function create() {
-    			span = element("span");
-    			span.textContent = "D";
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 140, 8, 3088);
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 351, 10, 10079);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][81] === void 0) add_render_callback(() => /*select_change_handler_14*/ ctx[18].call(select));
+    			add_location(select, file$5, 350, 8, 10014);
     		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, span, anchor);
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][81]);
     			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_14*/ ctx[18]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_9 = Object.keys(chords);
+    				validate_each_argument(each_value_9);
+    				let i;
+
+    				for (i = 0; i < each_value_9.length; i += 1) {
+    					const child_ctx = get_each_context_9(ctx, each_value_9, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_9(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_9.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][81]);
+    			}
     		},
     		i: function intro(local) {
     			if (current) return;
 
     			add_render_callback(() => {
-    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
-    				span_transition.run(1);
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
     			});
 
     			current = true;
     		},
     		o: function outro(local) {
-    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
-    			span_transition.run(0);
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(span);
-    			if (detaching && span_transition) span_transition.end();
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
     		}
     	};
 
@@ -6045,30 +8964,69 @@ var app = (function () {
     		block,
     		id: create_if_block_19.name,
     		type: "if",
-    		source: "(140:6) {#if $chordMode}",
+    		source: "(350:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (146:6) {#if $chordMode}
+    // (353:10) {#each Object.keys(chords) as item}
+    function create_each_block_9(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 353, 12, 10167);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_9.name,
+    		type: "each",
+    		source: "(353:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (372:27) 
     function create_if_block_18(ctx) {
     	let span;
+    	let raw_value = /*$chordNotes*/ ctx[2][87] + "";
     	let span_transition;
     	let current;
 
     	const block = {
     		c: function create() {
     			span = element("span");
-    			span.textContent = "E";
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 146, 8, 3277);
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 372, 8, 10820);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
+    			span.innerHTML = raw_value;
     			current = true;
     		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][87] + "")) span.innerHTML = raw_value;		},
     		i: function intro(local) {
     			if (current) return;
 
@@ -6094,48 +9052,107 @@ var app = (function () {
     		block,
     		id: create_if_block_18.name,
     		type: "if",
-    		source: "(146:6) {#if $chordMode}",
+    		source: "(372:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (152:6) {#if $chordMode}
+    // (365:6) {#if $editMode}
     function create_if_block_17(ctx) {
-    	let span;
-    	let span_transition;
+    	let select;
+    	let option;
+    	let select_transition;
     	let current;
+    	let dispose;
+    	let each_value_8 = Object.keys(chords);
+    	validate_each_argument(each_value_8);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_8.length; i += 1) {
+    		each_blocks[i] = create_each_block_8(get_each_context_8(ctx, each_value_8, i));
+    	}
 
     	const block = {
     		c: function create() {
-    			span = element("span");
-    			span.textContent = "F";
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 152, 8, 3466);
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 366, 10, 10598);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][87] === void 0) add_render_callback(() => /*select_change_handler_15*/ ctx[19].call(select));
+    			add_location(select, file$5, 365, 8, 10533);
     		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, span, anchor);
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][87]);
     			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_15*/ ctx[19]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_8 = Object.keys(chords);
+    				validate_each_argument(each_value_8);
+    				let i;
+
+    				for (i = 0; i < each_value_8.length; i += 1) {
+    					const child_ctx = get_each_context_8(ctx, each_value_8, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_8(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_8.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][87]);
+    			}
     		},
     		i: function intro(local) {
     			if (current) return;
 
     			add_render_callback(() => {
-    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
-    				span_transition.run(1);
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
     			});
 
     			current = true;
     		},
     		o: function outro(local) {
-    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
-    			span_transition.run(0);
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(span);
-    			if (detaching && span_transition) span_transition.end();
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
     		}
     	};
 
@@ -6143,30 +9160,69 @@ var app = (function () {
     		block,
     		id: create_if_block_17.name,
     		type: "if",
-    		source: "(152:6) {#if $chordMode}",
+    		source: "(365:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (158:6) {#if $chordMode}
+    // (368:10) {#each Object.keys(chords) as item}
+    function create_each_block_8(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 368, 12, 10686);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_8.name,
+    		type: "each",
+    		source: "(368:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (387:27) 
     function create_if_block_16(ctx) {
     	let span;
+    	let raw_value = /*$chordNotes*/ ctx[2][69] + "";
     	let span_transition;
     	let current;
 
     	const block = {
     		c: function create() {
     			span = element("span");
-    			span.textContent = "G";
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 158, 8, 3655);
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 387, 8, 11339);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
+    			span.innerHTML = raw_value;
     			current = true;
     		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][69] + "")) span.innerHTML = raw_value;		},
     		i: function intro(local) {
     			if (current) return;
 
@@ -6192,48 +9248,107 @@ var app = (function () {
     		block,
     		id: create_if_block_16.name,
     		type: "if",
-    		source: "(158:6) {#if $chordMode}",
+    		source: "(387:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (164:6) {#if $chordMode}
+    // (380:6) {#if $editMode}
     function create_if_block_15(ctx) {
-    	let span;
-    	let span_transition;
+    	let select;
+    	let option;
+    	let select_transition;
     	let current;
+    	let dispose;
+    	let each_value_7 = Object.keys(chords);
+    	validate_each_argument(each_value_7);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_7.length; i += 1) {
+    		each_blocks[i] = create_each_block_7(get_each_context_7(ctx, each_value_7, i));
+    	}
 
     	const block = {
     		c: function create() {
-    			span = element("span");
-    			span.textContent = "A";
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 164, 8, 3844);
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 381, 10, 11117);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][69] === void 0) add_render_callback(() => /*select_change_handler_16*/ ctx[20].call(select));
+    			add_location(select, file$5, 380, 8, 11052);
     		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, span, anchor);
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][69]);
     			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_16*/ ctx[20]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_7 = Object.keys(chords);
+    				validate_each_argument(each_value_7);
+    				let i;
+
+    				for (i = 0; i < each_value_7.length; i += 1) {
+    					const child_ctx = get_each_context_7(ctx, each_value_7, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_7(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_7.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][69]);
+    			}
     		},
     		i: function intro(local) {
     			if (current) return;
 
     			add_render_callback(() => {
-    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
-    				span_transition.run(1);
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
     			});
 
     			current = true;
     		},
     		o: function outro(local) {
-    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
-    			span_transition.run(0);
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(span);
-    			if (detaching && span_transition) span_transition.end();
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
     		}
     	};
 
@@ -6241,30 +9356,69 @@ var app = (function () {
     		block,
     		id: create_if_block_15.name,
     		type: "if",
-    		source: "(164:6) {#if $chordMode}",
+    		source: "(380:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (170:6) {#if $chordMode}
+    // (383:10) {#each Object.keys(chords) as item}
+    function create_each_block_7(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 383, 12, 11205);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_7.name,
+    		type: "each",
+    		source: "(383:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (403:27) 
     function create_if_block_14(ctx) {
     	let span;
+    	let raw_value = /*$chordNotes*/ ctx[2][84] + "";
     	let span_transition;
     	let current;
 
     	const block = {
     		c: function create() {
     			span = element("span");
-    			span.textContent = "H";
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 170, 8, 4033);
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 403, 8, 11895);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
+    			span.innerHTML = raw_value;
     			current = true;
     		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][84] + "")) span.innerHTML = raw_value;		},
     		i: function intro(local) {
     			if (current) return;
 
@@ -6290,48 +9444,107 @@ var app = (function () {
     		block,
     		id: create_if_block_14.name,
     		type: "if",
-    		source: "(170:6) {#if $chordMode}",
+    		source: "(403:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (176:6) {#if $chordMode}
+    // (396:6) {#if $editMode}
     function create_if_block_13(ctx) {
-    	let span;
-    	let span_transition;
+    	let select;
+    	let option;
+    	let select_transition;
     	let current;
+    	let dispose;
+    	let each_value_6 = Object.keys(chords);
+    	validate_each_argument(each_value_6);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_6.length; i += 1) {
+    		each_blocks[i] = create_each_block_6(get_each_context_6(ctx, each_value_6, i));
+    	}
 
     	const block = {
     		c: function create() {
-    			span = element("span");
-    			span.textContent = "Cm";
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 176, 8, 4222);
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 397, 10, 11673);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][84] === void 0) add_render_callback(() => /*select_change_handler_17*/ ctx[21].call(select));
+    			add_location(select, file$5, 396, 8, 11608);
     		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, span, anchor);
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][84]);
     			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_17*/ ctx[21]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_6 = Object.keys(chords);
+    				validate_each_argument(each_value_6);
+    				let i;
+
+    				for (i = 0; i < each_value_6.length; i += 1) {
+    					const child_ctx = get_each_context_6(ctx, each_value_6, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_6(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_6.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][84]);
+    			}
     		},
     		i: function intro(local) {
     			if (current) return;
 
     			add_render_callback(() => {
-    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
-    				span_transition.run(1);
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
     			});
 
     			current = true;
     		},
     		o: function outro(local) {
-    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
-    			span_transition.run(0);
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(span);
-    			if (detaching && span_transition) span_transition.end();
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
     		}
     	};
 
@@ -6339,30 +9552,69 @@ var app = (function () {
     		block,
     		id: create_if_block_13.name,
     		type: "if",
-    		source: "(176:6) {#if $chordMode}",
+    		source: "(396:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (184:6) {#if $chordMode}
+    // (399:10) {#each Object.keys(chords) as item}
+    function create_each_block_6(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 399, 12, 11761);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_6.name,
+    		type: "each",
+    		source: "(399:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (418:27) 
     function create_if_block_12(ctx) {
     	let span;
+    	let raw_value = /*$chordNotes*/ ctx[2][90] + "";
     	let span_transition;
     	let current;
 
     	const block = {
     		c: function create() {
     			span = element("span");
-    			span.textContent = "Dm";
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 184, 8, 4434);
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 418, 8, 12414);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
+    			span.innerHTML = raw_value;
     			current = true;
     		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][90] + "")) span.innerHTML = raw_value;		},
     		i: function intro(local) {
     			if (current) return;
 
@@ -6388,48 +9640,107 @@ var app = (function () {
     		block,
     		id: create_if_block_12.name,
     		type: "if",
-    		source: "(184:6) {#if $chordMode}",
+    		source: "(418:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (192:6) {#if $chordMode}
+    // (411:6) {#if $editMode}
     function create_if_block_11(ctx) {
-    	let span;
-    	let span_transition;
+    	let select;
+    	let option;
+    	let select_transition;
     	let current;
+    	let dispose;
+    	let each_value_5 = Object.keys(chords);
+    	validate_each_argument(each_value_5);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_5.length; i += 1) {
+    		each_blocks[i] = create_each_block_5(get_each_context_5(ctx, each_value_5, i));
+    	}
 
     	const block = {
     		c: function create() {
-    			span = element("span");
-    			span.textContent = "Em";
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 192, 8, 4646);
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 412, 10, 12192);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][90] === void 0) add_render_callback(() => /*select_change_handler_18*/ ctx[22].call(select));
+    			add_location(select, file$5, 411, 8, 12127);
     		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, span, anchor);
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][90]);
     			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_18*/ ctx[22]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_5 = Object.keys(chords);
+    				validate_each_argument(each_value_5);
+    				let i;
+
+    				for (i = 0; i < each_value_5.length; i += 1) {
+    					const child_ctx = get_each_context_5(ctx, each_value_5, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_5(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_5.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][90]);
+    			}
     		},
     		i: function intro(local) {
     			if (current) return;
 
     			add_render_callback(() => {
-    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
-    				span_transition.run(1);
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
     			});
 
     			current = true;
     		},
     		o: function outro(local) {
-    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
-    			span_transition.run(0);
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(span);
-    			if (detaching && span_transition) span_transition.end();
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
     		}
     	};
 
@@ -6437,39 +9748,69 @@ var app = (function () {
     		block,
     		id: create_if_block_11.name,
     		type: "if",
-    		source: "(192:6) {#if $chordMode}",
+    		source: "(411:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (203:6) {#if $chordMode}
+    // (414:10) {#each Object.keys(chords) as item}
+    function create_each_block_5(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 414, 12, 12280);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_5.name,
+    		type: "each",
+    		source: "(414:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (434:27) 
     function create_if_block_10(ctx) {
     	let span;
-    	let t0;
-    	let br;
-    	let t1;
+    	let raw_value = /*$chordNotes*/ ctx[2][73] + "";
     	let span_transition;
     	let current;
 
     	const block = {
     		c: function create() {
     			span = element("span");
-    			t0 = text("F#m\r\n          ");
-    			br = element("br");
-    			t1 = text("\r\n          Gbm");
-    			add_location(br, file$5, 205, 10, 4989);
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 203, 8, 4898);
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 434, 8, 12970);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
-    			append_dev(span, t0);
-    			append_dev(span, br);
-    			append_dev(span, t1);
+    			span.innerHTML = raw_value;
     			current = true;
     		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][73] + "")) span.innerHTML = raw_value;		},
     		i: function intro(local) {
     			if (current) return;
 
@@ -6495,57 +9836,107 @@ var app = (function () {
     		block,
     		id: create_if_block_10.name,
     		type: "if",
-    		source: "(203:6) {#if $chordMode}",
+    		source: "(434:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (213:6) {#if $chordMode}
+    // (427:6) {#if $editMode}
     function create_if_block_9(ctx) {
-    	let span;
-    	let t0;
-    	let br;
-    	let t1;
-    	let span_transition;
+    	let select;
+    	let option;
+    	let select_transition;
     	let current;
+    	let dispose;
+    	let each_value_4 = Object.keys(chords);
+    	validate_each_argument(each_value_4);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_4.length; i += 1) {
+    		each_blocks[i] = create_each_block_4(get_each_context_4(ctx, each_value_4, i));
+    	}
 
     	const block = {
     		c: function create() {
-    			span = element("span");
-    			t0 = text("G#m\r\n          ");
-    			br = element("br");
-    			t1 = text("\r\n          Abm");
-    			add_location(br, file$5, 215, 10, 5235);
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 213, 8, 5144);
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 428, 10, 12748);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][73] === void 0) add_render_callback(() => /*select_change_handler_19*/ ctx[23].call(select));
+    			add_location(select, file$5, 427, 8, 12683);
     		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, span, anchor);
-    			append_dev(span, t0);
-    			append_dev(span, br);
-    			append_dev(span, t1);
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][73]);
     			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_19*/ ctx[23]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_4 = Object.keys(chords);
+    				validate_each_argument(each_value_4);
+    				let i;
+
+    				for (i = 0; i < each_value_4.length; i += 1) {
+    					const child_ctx = get_each_context_4(ctx, each_value_4, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_4(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_4.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][73]);
+    			}
     		},
     		i: function intro(local) {
     			if (current) return;
 
     			add_render_callback(() => {
-    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
-    				span_transition.run(1);
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
     			});
 
     			current = true;
     		},
     		o: function outro(local) {
-    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
-    			span_transition.run(0);
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(span);
-    			if (detaching && span_transition) span_transition.end();
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
     		}
     	};
 
@@ -6553,30 +9944,69 @@ var app = (function () {
     		block,
     		id: create_if_block_9.name,
     		type: "if",
-    		source: "(213:6) {#if $chordMode}",
+    		source: "(427:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (223:6) {#if $chordMode}
+    // (430:10) {#each Object.keys(chords) as item}
+    function create_each_block_4(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 430, 12, 12836);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_4.name,
+    		type: "each",
+    		source: "(430:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (449:27) 
     function create_if_block_8(ctx) {
     	let span;
+    	let raw_value = /*$chordNotes*/ ctx[2][79] + "";
     	let span_transition;
     	let current;
 
     	const block = {
     		c: function create() {
     			span = element("span");
-    			span.textContent = "Bm";
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 223, 8, 5390);
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 449, 8, 13489);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
+    			span.innerHTML = raw_value;
     			current = true;
     		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][79] + "")) span.innerHTML = raw_value;		},
     		i: function intro(local) {
     			if (current) return;
 
@@ -6602,48 +10032,107 @@ var app = (function () {
     		block,
     		id: create_if_block_8.name,
     		type: "if",
-    		source: "(223:6) {#if $chordMode}",
+    		source: "(449:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (232:6) {#if $chordMode}
+    // (442:6) {#if $editMode}
     function create_if_block_7(ctx) {
-    	let span;
-    	let span_transition;
+    	let select;
+    	let option;
+    	let select_transition;
     	let current;
+    	let dispose;
+    	let each_value_3 = Object.keys(chords);
+    	validate_each_argument(each_value_3);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_3.length; i += 1) {
+    		each_blocks[i] = create_each_block_3(get_each_context_3(ctx, each_value_3, i));
+    	}
 
     	const block = {
     		c: function create() {
-    			span = element("span");
-    			span.textContent = "C#";
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 232, 8, 5639);
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 443, 10, 13267);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][79] === void 0) add_render_callback(() => /*select_change_handler_20*/ ctx[24].call(select));
+    			add_location(select, file$5, 442, 8, 13202);
     		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, span, anchor);
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][79]);
     			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_20*/ ctx[24]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_3 = Object.keys(chords);
+    				validate_each_argument(each_value_3);
+    				let i;
+
+    				for (i = 0; i < each_value_3.length; i += 1) {
+    					const child_ctx = get_each_context_3(ctx, each_value_3, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_3(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_3.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][79]);
+    			}
     		},
     		i: function intro(local) {
     			if (current) return;
 
     			add_render_callback(() => {
-    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
-    				span_transition.run(1);
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
     			});
 
     			current = true;
     		},
     		o: function outro(local) {
-    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
-    			span_transition.run(0);
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(span);
-    			if (detaching && span_transition) span_transition.end();
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
     		}
     	};
 
@@ -6651,39 +10140,69 @@ var app = (function () {
     		block,
     		id: create_if_block_7.name,
     		type: "if",
-    		source: "(232:6) {#if $chordMode}",
+    		source: "(442:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (240:6) {#if $chordMode}
+    // (445:10) {#each Object.keys(chords) as item}
+    function create_each_block_3(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 445, 12, 13355);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_3.name,
+    		type: "each",
+    		source: "(445:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (464:27) 
     function create_if_block_6(ctx) {
     	let span;
-    	let t0;
-    	let br;
-    	let t1;
+    	let raw_value = /*$chordNotes*/ ctx[2][80] + "";
     	let span_transition;
     	let current;
 
     	const block = {
     		c: function create() {
     			span = element("span");
-    			t0 = text("D#\r\n          ");
-    			br = element("br");
-    			t1 = text("\r\n          Eb");
-    			add_location(br, file$5, 242, 10, 5941);
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 240, 8, 5851);
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 464, 8, 14008);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
-    			append_dev(span, t0);
-    			append_dev(span, br);
-    			append_dev(span, t1);
+    			span.innerHTML = raw_value;
     			current = true;
     		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][80] + "")) span.innerHTML = raw_value;		},
     		i: function intro(local) {
     			if (current) return;
 
@@ -6709,57 +10228,107 @@ var app = (function () {
     		block,
     		id: create_if_block_6.name,
     		type: "if",
-    		source: "(240:6) {#if $chordMode}",
+    		source: "(464:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (251:6) {#if $chordMode}
+    // (457:6) {#if $editMode}
     function create_if_block_5(ctx) {
-    	let span;
-    	let t0;
-    	let br;
-    	let t1;
-    	let span_transition;
+    	let select;
+    	let option;
+    	let select_transition;
     	let current;
+    	let dispose;
+    	let each_value_2 = Object.keys(chords);
+    	validate_each_argument(each_value_2);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_2.length; i += 1) {
+    		each_blocks[i] = create_each_block_2(get_each_context_2(ctx, each_value_2, i));
+    	}
 
     	const block = {
     		c: function create() {
-    			span = element("span");
-    			t0 = text("F#\r\n          ");
-    			br = element("br");
-    			t1 = text("\r\n          Gb");
-    			add_location(br, file$5, 253, 10, 6222);
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 251, 8, 6132);
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 458, 10, 13786);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][80] === void 0) add_render_callback(() => /*select_change_handler_21*/ ctx[25].call(select));
+    			add_location(select, file$5, 457, 8, 13721);
     		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, span, anchor);
-    			append_dev(span, t0);
-    			append_dev(span, br);
-    			append_dev(span, t1);
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][80]);
     			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_21*/ ctx[25]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_2 = Object.keys(chords);
+    				validate_each_argument(each_value_2);
+    				let i;
+
+    				for (i = 0; i < each_value_2.length; i += 1) {
+    					const child_ctx = get_each_context_2(ctx, each_value_2, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_2(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_2.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][80]);
+    			}
     		},
     		i: function intro(local) {
     			if (current) return;
 
     			add_render_callback(() => {
-    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
-    				span_transition.run(1);
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
     			});
 
     			current = true;
     		},
     		o: function outro(local) {
-    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
-    			span_transition.run(0);
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(span);
-    			if (detaching && span_transition) span_transition.end();
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
     		}
     	};
 
@@ -6767,39 +10336,69 @@ var app = (function () {
     		block,
     		id: create_if_block_5.name,
     		type: "if",
-    		source: "(251:6) {#if $chordMode}",
+    		source: "(457:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (261:6) {#if $chordMode}
+    // (460:10) {#each Object.keys(chords) as item}
+    function create_each_block_2(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 460, 12, 13874);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_2.name,
+    		type: "each",
+    		source: "(460:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (480:27) 
     function create_if_block_4(ctx) {
     	let span;
-    	let t0;
-    	let br;
-    	let t1;
+    	let raw_value = /*$chordNotes*/ ctx[2][221] + "";
     	let span_transition;
     	let current;
 
     	const block = {
     		c: function create() {
     			span = element("span");
-    			t0 = text("G#\r\n          ");
-    			br = element("br");
-    			t1 = text("\r\n          Ab");
-    			add_location(br, file$5, 263, 10, 6466);
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 261, 8, 6376);
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 480, 8, 14565);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
-    			append_dev(span, t0);
-    			append_dev(span, br);
-    			append_dev(span, t1);
+    			span.innerHTML = raw_value;
     			current = true;
     		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][221] + "")) span.innerHTML = raw_value;		},
     		i: function intro(local) {
     			if (current) return;
 
@@ -6825,48 +10424,107 @@ var app = (function () {
     		block,
     		id: create_if_block_4.name,
     		type: "if",
-    		source: "(261:6) {#if $chordMode}",
+    		source: "(480:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (271:6) {#if $chordMode}
+    // (473:6) {#if $editMode}
     function create_if_block_3(ctx) {
-    	let span;
-    	let span_transition;
+    	let select;
+    	let option;
+    	let select_transition;
     	let current;
+    	let dispose;
+    	let each_value_1 = Object.keys(chords);
+    	validate_each_argument(each_value_1);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_1.length; i += 1) {
+    		each_blocks[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
+    	}
 
     	const block = {
     		c: function create() {
-    			span = element("span");
-    			span.textContent = "B";
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 271, 8, 6620);
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 474, 10, 14343);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][221] === void 0) add_render_callback(() => /*select_change_handler_22*/ ctx[26].call(select));
+    			add_location(select, file$5, 473, 8, 14277);
     		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, span, anchor);
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][221]);
     			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_22*/ ctx[26]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value_1 = Object.keys(chords);
+    				validate_each_argument(each_value_1);
+    				let i;
+
+    				for (i = 0; i < each_value_1.length; i += 1) {
+    					const child_ctx = get_each_context_1(ctx, each_value_1, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_1(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_1.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][221]);
+    			}
     		},
     		i: function intro(local) {
     			if (current) return;
 
     			add_render_callback(() => {
-    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
-    				span_transition.run(1);
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
     			});
 
     			current = true;
     		},
     		o: function outro(local) {
-    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
-    			span_transition.run(0);
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(span);
-    			if (detaching && span_transition) span_transition.end();
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
     		}
     	};
 
@@ -6874,39 +10532,69 @@ var app = (function () {
     		block,
     		id: create_if_block_3.name,
     		type: "if",
-    		source: "(271:6) {#if $chordMode}",
+    		source: "(473:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (278:6) {#if $chordMode}
+    // (476:10) {#each Object.keys(chords) as item}
+    function create_each_block_1(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 476, 12, 14431);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_1.name,
+    		type: "each",
+    		source: "(476:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (495:27) 
     function create_if_block_2(ctx) {
     	let span;
-    	let t0;
-    	let br;
-    	let t1;
+    	let raw_value = /*$chordNotes*/ ctx[2][8] + "";
     	let span_transition;
     	let current;
 
     	const block = {
     		c: function create() {
     			span = element("span");
-    			t0 = text("C#m\r\n          ");
-    			br = element("br");
-    			t1 = text("\r\n          Dbm");
-    			add_location(br, file$5, 280, 10, 6937);
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 278, 8, 6846);
+    			attr_dev(span, "class", "chord svelte-142rg1j");
+    			add_location(span, file$5, 495, 8, 15084);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
-    			append_dev(span, t0);
-    			append_dev(span, br);
-    			append_dev(span, t1);
+    			span.innerHTML = raw_value;
     			current = true;
     		},
+    		p: function update(ctx, dirty) {
+    			if ((!current || dirty[0] & /*$chordNotes*/ 4) && raw_value !== (raw_value = /*$chordNotes*/ ctx[2][8] + "")) span.innerHTML = raw_value;		},
     		i: function intro(local) {
     			if (current) return;
 
@@ -6932,57 +10620,107 @@ var app = (function () {
     		block,
     		id: create_if_block_2.name,
     		type: "if",
-    		source: "(278:6) {#if $chordMode}",
+    		source: "(495:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (288:6) {#if $chordMode}
+    // (488:6) {#if $editMode}
     function create_if_block_1(ctx) {
-    	let span;
-    	let t0;
-    	let br;
-    	let t1;
-    	let span_transition;
+    	let select;
+    	let option;
+    	let select_transition;
     	let current;
+    	let dispose;
+    	let each_value = Object.keys(chords);
+    	validate_each_argument(each_value);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block$1(get_each_context$1(ctx, each_value, i));
+    	}
 
     	const block = {
     		c: function create() {
-    			span = element("span");
-    			t0 = text("D#m\r\n          ");
-    			br = element("br");
-    			t1 = text("\r\n          Ebm");
-    			add_location(br, file$5, 290, 10, 7183);
-    			attr_dev(span, "class", "chord svelte-tcji3m");
-    			add_location(span, file$5, 288, 8, 7092);
+    			select = element("select");
+    			option = element("option");
+    			option.textContent = "-";
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = "";
+    			option.value = option.__value;
+    			add_location(option, file$5, 489, 10, 14862);
+    			attr_dev(select, "class", "svelte-142rg1j");
+    			if (/*$chordNotes*/ ctx[2][8] === void 0) add_render_callback(() => /*select_change_handler_23*/ ctx[27].call(select));
+    			add_location(select, file$5, 488, 8, 14798);
     		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, span, anchor);
-    			append_dev(span, t0);
-    			append_dev(span, br);
-    			append_dev(span, t1);
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*$chordNotes*/ ctx[2][8]);
     			current = true;
+    			if (remount) dispose();
+    			dispose = listen_dev(select, "change", /*select_change_handler_23*/ ctx[27]);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*Object, chords*/ 0) {
+    				each_value = Object.keys(chords);
+    				validate_each_argument(each_value);
+    				let i;
+
+    				for (i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context$1(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block$1(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value.length;
+    			}
+
+    			if (dirty[0] & /*$chordNotes*/ 4) {
+    				select_option(select, /*$chordNotes*/ ctx[2][8]);
+    			}
     		},
     		i: function intro(local) {
     			if (current) return;
 
     			add_render_callback(() => {
-    				if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, true);
-    				span_transition.run(1);
+    				if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, true);
+    				select_transition.run(1);
     			});
 
     			current = true;
     		},
     		o: function outro(local) {
-    			if (!span_transition) span_transition = create_bidirectional_transition(span, slide, { y: 80, duration: 300 }, false);
-    			span_transition.run(0);
+    			if (!select_transition) select_transition = create_bidirectional_transition(select, fade, {}, false);
+    			select_transition.run(0);
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(span);
-    			if (detaching && span_transition) span_transition.end();
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && select_transition) select_transition.end();
+    			dispose();
     		}
     	};
 
@@ -6990,14 +10728,50 @@ var app = (function () {
     		block,
     		id: create_if_block_1.name,
     		type: "if",
-    		source: "(288:6) {#if $chordMode}",
+    		source: "(488:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (299:2) {#if $editMode}
+    // (491:10) {#each Object.keys(chords) as item}
+    function create_each_block$1(ctx) {
+    	let option;
+    	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.value = option.__value;
+    			add_location(option, file$5, 491, 12, 14950);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block$1.name,
+    		type: "each",
+    		source: "(491:10) {#each Object.keys(chords) as item}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (504:2) {#if $editMode}
     function create_if_block$2(ctx) {
     	let p;
     	let p_transition;
@@ -7007,8 +10781,8 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Edit mode";
-    			attr_dev(p, "class", "edit-mode-warn svelte-tcji3m");
-    			add_location(p, file$5, 299, 4, 7305);
+    			attr_dev(p, "class", "edit-mode-warn svelte-142rg1j");
+    			add_location(p, file$5, 504, 4, 15283);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -7039,7 +10813,7 @@ var app = (function () {
     		block,
     		id: create_if_block$2.name,
     		type: "if",
-    		source: "(299:2) {#if $editMode}",
+    		source: "(504:2) {#if $editMode}",
     		ctx
     	});
 
@@ -7050,134 +10824,470 @@ var app = (function () {
     	let div29;
     	let div14;
     	let div0;
+    	let current_block_type_index;
+    	let if_block0;
     	let t0;
     	let span0;
     	let t2;
     	let div1;
+    	let current_block_type_index_1;
+    	let if_block1;
     	let t3;
     	let span1;
     	let t5;
     	let div2;
+    	let current_block_type_index_2;
+    	let if_block2;
     	let t6;
     	let span2;
     	let t8;
     	let div3;
+    	let current_block_type_index_3;
+    	let if_block3;
     	let t9;
     	let span3;
     	let t11;
     	let div4;
+    	let current_block_type_index_4;
+    	let if_block4;
     	let t12;
     	let span4;
     	let t14;
     	let div5;
+    	let current_block_type_index_5;
+    	let if_block5;
     	let t15;
     	let span5;
     	let t17;
     	let div6;
+    	let current_block_type_index_6;
+    	let if_block6;
     	let t18;
     	let span6;
     	let t20;
     	let div7;
+    	let current_block_type_index_7;
+    	let if_block7;
     	let t21;
     	let span7;
     	let t23;
     	let div8;
+    	let current_block_type_index_8;
+    	let if_block8;
     	let t24;
     	let span8;
     	let t26;
     	let div9;
+    	let current_block_type_index_9;
+    	let if_block9;
     	let t27;
     	let span9;
     	let t29;
     	let div10;
+    	let current_block_type_index_10;
+    	let if_block10;
     	let t30;
     	let span10;
     	let t32;
     	let div11;
+    	let current_block_type_index_11;
+    	let if_block11;
     	let t33;
     	let span11;
     	let t35;
     	let div12;
+    	let current_block_type_index_12;
+    	let if_block12;
     	let t36;
     	let span12;
     	let t38;
     	let div13;
+    	let current_block_type_index_13;
+    	let if_block13;
     	let t39;
     	let span13;
     	let t41;
     	let div28;
     	let div15;
+    	let current_block_type_index_14;
+    	let if_block14;
     	let t42;
     	let span14;
     	let t44;
     	let div16;
+    	let current_block_type_index_15;
+    	let if_block15;
     	let t45;
     	let span15;
     	let t47;
     	let div17;
+    	let current_block_type_index_16;
+    	let if_block16;
     	let t48;
     	let span16;
     	let t50;
     	let div18;
     	let t51;
     	let div19;
+    	let current_block_type_index_17;
+    	let if_block17;
     	let t52;
     	let span17;
     	let t54;
     	let div20;
+    	let current_block_type_index_18;
+    	let if_block18;
     	let t55;
     	let span18;
     	let t57;
     	let div21;
     	let t58;
     	let div22;
+    	let current_block_type_index_19;
+    	let if_block19;
     	let t59;
     	let span19;
     	let t61;
     	let div23;
+    	let current_block_type_index_20;
+    	let if_block20;
     	let t62;
     	let span20;
     	let t64;
     	let div24;
+    	let current_block_type_index_21;
+    	let if_block21;
     	let t65;
     	let span21;
     	let t67;
     	let div25;
     	let t68;
     	let div26;
+    	let current_block_type_index_22;
+    	let if_block22;
     	let t69;
     	let span22;
     	let t71;
     	let div27;
+    	let current_block_type_index_23;
+    	let if_block23;
     	let t72;
     	let span23;
     	let t74;
     	let div29_class_value;
     	let current;
-    	let if_block0 = /*$chordMode*/ ctx[2] && create_if_block_24(ctx);
-    	let if_block1 = /*$chordMode*/ ctx[2] && create_if_block_23(ctx);
-    	let if_block2 = /*$chordMode*/ ctx[2] && create_if_block_22(ctx);
-    	let if_block3 = /*$chordMode*/ ctx[2] && create_if_block_21(ctx);
-    	let if_block4 = /*$chordMode*/ ctx[2] && create_if_block_20(ctx);
-    	let if_block5 = /*$chordMode*/ ctx[2] && create_if_block_19(ctx);
-    	let if_block6 = /*$chordMode*/ ctx[2] && create_if_block_18(ctx);
-    	let if_block7 = /*$chordMode*/ ctx[2] && create_if_block_17(ctx);
-    	let if_block8 = /*$chordMode*/ ctx[2] && create_if_block_16(ctx);
-    	let if_block9 = /*$chordMode*/ ctx[2] && create_if_block_15(ctx);
-    	let if_block10 = /*$chordMode*/ ctx[2] && create_if_block_14(ctx);
-    	let if_block11 = /*$chordMode*/ ctx[2] && create_if_block_13(ctx);
-    	let if_block12 = /*$chordMode*/ ctx[2] && create_if_block_12(ctx);
-    	let if_block13 = /*$chordMode*/ ctx[2] && create_if_block_11(ctx);
-    	let if_block14 = /*$chordMode*/ ctx[2] && create_if_block_10(ctx);
-    	let if_block15 = /*$chordMode*/ ctx[2] && create_if_block_9(ctx);
-    	let if_block16 = /*$chordMode*/ ctx[2] && create_if_block_8(ctx);
-    	let if_block17 = /*$chordMode*/ ctx[2] && create_if_block_7(ctx);
-    	let if_block18 = /*$chordMode*/ ctx[2] && create_if_block_6(ctx);
-    	let if_block19 = /*$chordMode*/ ctx[2] && create_if_block_5(ctx);
-    	let if_block20 = /*$chordMode*/ ctx[2] && create_if_block_4(ctx);
-    	let if_block21 = /*$chordMode*/ ctx[2] && create_if_block_3(ctx);
-    	let if_block22 = /*$chordMode*/ ctx[2] && create_if_block_2(ctx);
-    	let if_block23 = /*$chordMode*/ ctx[2] && create_if_block_1(ctx);
+    	const if_block_creators = [create_if_block_47, create_if_block_48];
+    	const if_blocks = [];
+
+    	function select_block_type(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index = select_block_type(ctx))) {
+    		if_block0 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+    	}
+
+    	const if_block_creators_1 = [create_if_block_45, create_if_block_46];
+    	const if_blocks_1 = [];
+
+    	function select_block_type_1(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_1 = select_block_type_1(ctx))) {
+    		if_block1 = if_blocks_1[current_block_type_index_1] = if_block_creators_1[current_block_type_index_1](ctx);
+    	}
+
+    	const if_block_creators_2 = [create_if_block_43, create_if_block_44];
+    	const if_blocks_2 = [];
+
+    	function select_block_type_2(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_2 = select_block_type_2(ctx))) {
+    		if_block2 = if_blocks_2[current_block_type_index_2] = if_block_creators_2[current_block_type_index_2](ctx);
+    	}
+
+    	const if_block_creators_3 = [create_if_block_41, create_if_block_42];
+    	const if_blocks_3 = [];
+
+    	function select_block_type_3(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_3 = select_block_type_3(ctx))) {
+    		if_block3 = if_blocks_3[current_block_type_index_3] = if_block_creators_3[current_block_type_index_3](ctx);
+    	}
+
+    	const if_block_creators_4 = [create_if_block_39, create_if_block_40];
+    	const if_blocks_4 = [];
+
+    	function select_block_type_4(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_4 = select_block_type_4(ctx))) {
+    		if_block4 = if_blocks_4[current_block_type_index_4] = if_block_creators_4[current_block_type_index_4](ctx);
+    	}
+
+    	const if_block_creators_5 = [create_if_block_37, create_if_block_38];
+    	const if_blocks_5 = [];
+
+    	function select_block_type_5(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_5 = select_block_type_5(ctx))) {
+    		if_block5 = if_blocks_5[current_block_type_index_5] = if_block_creators_5[current_block_type_index_5](ctx);
+    	}
+
+    	const if_block_creators_6 = [create_if_block_35, create_if_block_36];
+    	const if_blocks_6 = [];
+
+    	function select_block_type_6(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_6 = select_block_type_6(ctx))) {
+    		if_block6 = if_blocks_6[current_block_type_index_6] = if_block_creators_6[current_block_type_index_6](ctx);
+    	}
+
+    	const if_block_creators_7 = [create_if_block_33, create_if_block_34];
+    	const if_blocks_7 = [];
+
+    	function select_block_type_7(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_7 = select_block_type_7(ctx))) {
+    		if_block7 = if_blocks_7[current_block_type_index_7] = if_block_creators_7[current_block_type_index_7](ctx);
+    	}
+
+    	const if_block_creators_8 = [create_if_block_31, create_if_block_32];
+    	const if_blocks_8 = [];
+
+    	function select_block_type_8(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_8 = select_block_type_8(ctx))) {
+    		if_block8 = if_blocks_8[current_block_type_index_8] = if_block_creators_8[current_block_type_index_8](ctx);
+    	}
+
+    	const if_block_creators_9 = [create_if_block_29, create_if_block_30];
+    	const if_blocks_9 = [];
+
+    	function select_block_type_9(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_9 = select_block_type_9(ctx))) {
+    		if_block9 = if_blocks_9[current_block_type_index_9] = if_block_creators_9[current_block_type_index_9](ctx);
+    	}
+
+    	const if_block_creators_10 = [create_if_block_27, create_if_block_28];
+    	const if_blocks_10 = [];
+
+    	function select_block_type_10(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_10 = select_block_type_10(ctx))) {
+    		if_block10 = if_blocks_10[current_block_type_index_10] = if_block_creators_10[current_block_type_index_10](ctx);
+    	}
+
+    	const if_block_creators_11 = [create_if_block_25, create_if_block_26];
+    	const if_blocks_11 = [];
+
+    	function select_block_type_11(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_11 = select_block_type_11(ctx))) {
+    		if_block11 = if_blocks_11[current_block_type_index_11] = if_block_creators_11[current_block_type_index_11](ctx);
+    	}
+
+    	const if_block_creators_12 = [create_if_block_23, create_if_block_24];
+    	const if_blocks_12 = [];
+
+    	function select_block_type_12(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_12 = select_block_type_12(ctx))) {
+    		if_block12 = if_blocks_12[current_block_type_index_12] = if_block_creators_12[current_block_type_index_12](ctx);
+    	}
+
+    	const if_block_creators_13 = [create_if_block_21, create_if_block_22];
+    	const if_blocks_13 = [];
+
+    	function select_block_type_13(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_13 = select_block_type_13(ctx))) {
+    		if_block13 = if_blocks_13[current_block_type_index_13] = if_block_creators_13[current_block_type_index_13](ctx);
+    	}
+
+    	const if_block_creators_14 = [create_if_block_19, create_if_block_20];
+    	const if_blocks_14 = [];
+
+    	function select_block_type_14(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_14 = select_block_type_14(ctx))) {
+    		if_block14 = if_blocks_14[current_block_type_index_14] = if_block_creators_14[current_block_type_index_14](ctx);
+    	}
+
+    	const if_block_creators_15 = [create_if_block_17, create_if_block_18];
+    	const if_blocks_15 = [];
+
+    	function select_block_type_15(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_15 = select_block_type_15(ctx))) {
+    		if_block15 = if_blocks_15[current_block_type_index_15] = if_block_creators_15[current_block_type_index_15](ctx);
+    	}
+
+    	const if_block_creators_16 = [create_if_block_15, create_if_block_16];
+    	const if_blocks_16 = [];
+
+    	function select_block_type_16(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_16 = select_block_type_16(ctx))) {
+    		if_block16 = if_blocks_16[current_block_type_index_16] = if_block_creators_16[current_block_type_index_16](ctx);
+    	}
+
+    	const if_block_creators_17 = [create_if_block_13, create_if_block_14];
+    	const if_blocks_17 = [];
+
+    	function select_block_type_17(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_17 = select_block_type_17(ctx))) {
+    		if_block17 = if_blocks_17[current_block_type_index_17] = if_block_creators_17[current_block_type_index_17](ctx);
+    	}
+
+    	const if_block_creators_18 = [create_if_block_11, create_if_block_12];
+    	const if_blocks_18 = [];
+
+    	function select_block_type_18(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_18 = select_block_type_18(ctx))) {
+    		if_block18 = if_blocks_18[current_block_type_index_18] = if_block_creators_18[current_block_type_index_18](ctx);
+    	}
+
+    	const if_block_creators_19 = [create_if_block_9, create_if_block_10];
+    	const if_blocks_19 = [];
+
+    	function select_block_type_19(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_19 = select_block_type_19(ctx))) {
+    		if_block19 = if_blocks_19[current_block_type_index_19] = if_block_creators_19[current_block_type_index_19](ctx);
+    	}
+
+    	const if_block_creators_20 = [create_if_block_7, create_if_block_8];
+    	const if_blocks_20 = [];
+
+    	function select_block_type_20(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_20 = select_block_type_20(ctx))) {
+    		if_block20 = if_blocks_20[current_block_type_index_20] = if_block_creators_20[current_block_type_index_20](ctx);
+    	}
+
+    	const if_block_creators_21 = [create_if_block_5, create_if_block_6];
+    	const if_blocks_21 = [];
+
+    	function select_block_type_21(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_21 = select_block_type_21(ctx))) {
+    		if_block21 = if_blocks_21[current_block_type_index_21] = if_block_creators_21[current_block_type_index_21](ctx);
+    	}
+
+    	const if_block_creators_22 = [create_if_block_3, create_if_block_4];
+    	const if_blocks_22 = [];
+
+    	function select_block_type_22(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_22 = select_block_type_22(ctx))) {
+    		if_block22 = if_blocks_22[current_block_type_index_22] = if_block_creators_22[current_block_type_index_22](ctx);
+    	}
+
+    	const if_block_creators_23 = [create_if_block_1, create_if_block_2];
+    	const if_blocks_23 = [];
+
+    	function select_block_type_23(ctx, dirty) {
+    		if (/*$editMode*/ ctx[1]) return 0;
+    		if (/*$chordMode*/ ctx[3]) return 1;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_23 = select_block_type_23(ctx))) {
+    		if_block23 = if_blocks_23[current_block_type_index_23] = if_block_creators_23[current_block_type_index_23](ctx);
+    	}
+
     	let if_block24 = /*$editMode*/ ctx[1] && create_if_block$2(ctx);
 
     	const block = {
@@ -7336,118 +11446,118 @@ var app = (function () {
     			span23.textContent = "⌫";
     			t74 = space();
     			if (if_block24) if_block24.c();
-    			add_location(span0, file$5, 106, 6, 2167);
+    			add_location(span0, file$5, 148, 6, 3126);
     			attr_dev(div0, "id", "⇪");
-    			attr_dev(div0, "class", "white-key svelte-tcji3m");
-    			add_location(div0, file$5, 100, 4, 1987);
-    			add_location(span1, file$5, 114, 6, 2379);
+    			attr_dev(div0, "class", "white-key svelte-142rg1j");
+    			add_location(div0, file$5, 135, 4, 2639);
+    			add_location(span1, file$5, 163, 6, 3645);
     			attr_dev(div1, "id", "A");
-    			attr_dev(div1, "class", "white-key svelte-tcji3m");
-    			add_location(div1, file$5, 108, 4, 2199);
-    			add_location(span2, file$5, 122, 6, 2591);
+    			attr_dev(div1, "class", "white-key svelte-142rg1j");
+    			add_location(div1, file$5, 150, 4, 3158);
+    			add_location(span2, file$5, 178, 6, 4164);
     			attr_dev(div2, "id", "S");
-    			attr_dev(div2, "class", "white-key svelte-tcji3m");
-    			add_location(div2, file$5, 116, 4, 2411);
-    			add_location(span3, file$5, 130, 6, 2803);
+    			attr_dev(div2, "class", "white-key svelte-142rg1j");
+    			add_location(div2, file$5, 165, 4, 3677);
+    			add_location(span3, file$5, 193, 6, 4683);
     			attr_dev(div3, "id", "D");
-    			attr_dev(div3, "class", "white-key svelte-tcji3m");
-    			add_location(div3, file$5, 124, 4, 2623);
-    			add_location(span4, file$5, 136, 6, 2992);
+    			attr_dev(div3, "class", "white-key svelte-142rg1j");
+    			add_location(div3, file$5, 180, 4, 4196);
+    			add_location(span4, file$5, 208, 6, 5202);
     			attr_dev(div4, "id", "F");
-    			attr_dev(div4, "class", "white-key svelte-tcji3m");
-    			add_location(div4, file$5, 132, 4, 2835);
-    			add_location(span5, file$5, 142, 6, 3181);
+    			attr_dev(div4, "class", "white-key svelte-142rg1j");
+    			add_location(div4, file$5, 195, 4, 4715);
+    			add_location(span5, file$5, 223, 6, 5721);
     			attr_dev(div5, "id", "G");
-    			attr_dev(div5, "class", "white-key svelte-tcji3m");
-    			add_location(div5, file$5, 138, 4, 3024);
-    			add_location(span6, file$5, 148, 6, 3370);
+    			attr_dev(div5, "class", "white-key svelte-142rg1j");
+    			add_location(div5, file$5, 210, 4, 5234);
+    			add_location(span6, file$5, 238, 6, 6240);
     			attr_dev(div6, "id", "H");
-    			attr_dev(div6, "class", "white-key svelte-tcji3m");
-    			add_location(div6, file$5, 144, 4, 3213);
-    			add_location(span7, file$5, 154, 6, 3559);
+    			attr_dev(div6, "class", "white-key svelte-142rg1j");
+    			add_location(div6, file$5, 225, 4, 5753);
+    			add_location(span7, file$5, 253, 6, 6759);
     			attr_dev(div7, "id", "J");
-    			attr_dev(div7, "class", "white-key svelte-tcji3m");
-    			add_location(div7, file$5, 150, 4, 3402);
-    			add_location(span8, file$5, 160, 6, 3748);
+    			attr_dev(div7, "class", "white-key svelte-142rg1j");
+    			add_location(div7, file$5, 240, 4, 6272);
+    			add_location(span8, file$5, 268, 6, 7278);
     			attr_dev(div8, "id", "K");
-    			attr_dev(div8, "class", "white-key svelte-tcji3m");
-    			add_location(div8, file$5, 156, 4, 3591);
-    			add_location(span9, file$5, 166, 6, 3937);
+    			attr_dev(div8, "class", "white-key svelte-142rg1j");
+    			add_location(div8, file$5, 255, 4, 6791);
+    			add_location(span9, file$5, 283, 6, 7797);
     			attr_dev(div9, "id", "L");
-    			attr_dev(div9, "class", "white-key svelte-tcji3m");
-    			add_location(div9, file$5, 162, 4, 3780);
-    			add_location(span10, file$5, 172, 6, 4126);
+    			attr_dev(div9, "class", "white-key svelte-142rg1j");
+    			add_location(div9, file$5, 270, 4, 7310);
+    			add_location(span10, file$5, 298, 6, 8318);
     			attr_dev(div10, "id", "Č");
-    			attr_dev(div10, "class", "white-key svelte-tcji3m");
-    			add_location(div10, file$5, 168, 4, 3969);
-    			add_location(span11, file$5, 180, 6, 4338);
+    			attr_dev(div10, "class", "white-key svelte-142rg1j");
+    			add_location(div10, file$5, 285, 4, 7829);
+    			add_location(span11, file$5, 313, 6, 8839);
     			attr_dev(div11, "id", "Ć");
-    			attr_dev(div11, "class", "white-key svelte-tcji3m");
-    			add_location(div11, file$5, 174, 4, 4158);
-    			add_location(span12, file$5, 188, 6, 4550);
+    			attr_dev(div11, "class", "white-key svelte-142rg1j");
+    			add_location(div11, file$5, 300, 4, 8350);
+    			add_location(span12, file$5, 328, 6, 9360);
     			attr_dev(div12, "id", "Ž");
-    			attr_dev(div12, "class", "white-key svelte-tcji3m");
-    			add_location(div12, file$5, 182, 4, 4370);
-    			add_location(span13, file$5, 196, 6, 4762);
+    			attr_dev(div12, "class", "white-key svelte-142rg1j");
+    			add_location(div12, file$5, 315, 4, 8871);
+    			add_location(span13, file$5, 343, 6, 9879);
     			attr_dev(div13, "id", "↵");
-    			attr_dev(div13, "class", "white-key svelte-tcji3m");
-    			add_location(div13, file$5, 190, 4, 4582);
-    			attr_dev(div14, "class", "piano-grid svelte-tcji3m");
-    			add_location(div14, file$5, 99, 2, 1957);
-    			add_location(span14, file$5, 209, 6, 5048);
+    			attr_dev(div13, "class", "white-key svelte-142rg1j");
+    			add_location(div13, file$5, 330, 4, 9392);
+    			attr_dev(div14, "class", "piano-grid svelte-142rg1j");
+    			add_location(div14, file$5, 134, 2, 2609);
+    			add_location(span14, file$5, 361, 6, 10438);
     			attr_dev(div15, "id", "Q");
-    			attr_dev(div15, "class", "black-key svelte-tcji3m");
-    			add_location(div15, file$5, 201, 4, 4834);
-    			add_location(span15, file$5, 219, 6, 5294);
+    			attr_dev(div15, "class", "black-key svelte-142rg1j");
+    			add_location(div15, file$5, 348, 4, 9951);
+    			add_location(span15, file$5, 376, 6, 10957);
     			attr_dev(div16, "id", "W");
-    			attr_dev(div16, "class", "black-key svelte-tcji3m");
-    			add_location(div16, file$5, 211, 4, 5080);
-    			add_location(span16, file$5, 227, 6, 5506);
+    			attr_dev(div16, "class", "black-key svelte-142rg1j");
+    			add_location(div16, file$5, 363, 4, 10470);
+    			add_location(span16, file$5, 391, 6, 11476);
     			attr_dev(div17, "id", "E");
-    			attr_dev(div17, "class", "black-key svelte-tcji3m");
-    			add_location(div17, file$5, 221, 4, 5326);
-    			attr_dev(div18, "class", "blank-black-key svelte-tcji3m");
-    			add_location(div18, file$5, 229, 4, 5538);
-    			add_location(span17, file$5, 236, 6, 5755);
+    			attr_dev(div17, "class", "black-key svelte-142rg1j");
+    			add_location(div17, file$5, 378, 4, 10989);
+    			attr_dev(div18, "class", "blank-black-key svelte-142rg1j");
+    			add_location(div18, file$5, 393, 4, 11508);
+    			add_location(span17, file$5, 407, 6, 12032);
     			attr_dev(div19, "id", "T");
-    			attr_dev(div19, "class", "black-key svelte-tcji3m");
-    			add_location(div19, file$5, 230, 4, 5575);
-    			add_location(span18, file$5, 246, 6, 5999);
+    			attr_dev(div19, "class", "black-key svelte-142rg1j");
+    			add_location(div19, file$5, 394, 4, 11545);
+    			add_location(span18, file$5, 422, 6, 12551);
     			attr_dev(div20, "id", "Z");
-    			attr_dev(div20, "class", "black-key svelte-tcji3m");
-    			add_location(div20, file$5, 238, 4, 5787);
-    			attr_dev(div21, "class", "blank-black-key svelte-tcji3m");
-    			add_location(div21, file$5, 248, 4, 6031);
-    			add_location(span19, file$5, 257, 6, 6280);
+    			attr_dev(div20, "class", "black-key svelte-142rg1j");
+    			add_location(div20, file$5, 409, 4, 12064);
+    			attr_dev(div21, "class", "blank-black-key svelte-142rg1j");
+    			add_location(div21, file$5, 424, 4, 12583);
+    			add_location(span19, file$5, 438, 6, 13107);
     			attr_dev(div22, "id", "I");
-    			attr_dev(div22, "class", "black-key svelte-tcji3m");
-    			add_location(div22, file$5, 249, 4, 6068);
-    			add_location(span20, file$5, 267, 6, 6524);
+    			attr_dev(div22, "class", "black-key svelte-142rg1j");
+    			add_location(div22, file$5, 425, 4, 12620);
+    			add_location(span20, file$5, 453, 6, 13626);
     			attr_dev(div23, "id", "O");
-    			attr_dev(div23, "class", "black-key svelte-tcji3m");
-    			add_location(div23, file$5, 259, 4, 6312);
-    			add_location(span21, file$5, 273, 6, 6713);
+    			attr_dev(div23, "class", "black-key svelte-142rg1j");
+    			add_location(div23, file$5, 440, 4, 13139);
+    			add_location(span21, file$5, 468, 6, 14145);
     			attr_dev(div24, "id", "P");
-    			attr_dev(div24, "class", "black-key svelte-tcji3m");
-    			add_location(div24, file$5, 269, 4, 6556);
-    			attr_dev(div25, "class", "blank-black-key svelte-tcji3m");
-    			add_location(div25, file$5, 275, 4, 6745);
-    			add_location(span22, file$5, 284, 6, 6996);
+    			attr_dev(div24, "class", "black-key svelte-142rg1j");
+    			add_location(div24, file$5, 455, 4, 13658);
+    			attr_dev(div25, "class", "blank-black-key svelte-142rg1j");
+    			add_location(div25, file$5, 470, 4, 14177);
+    			add_location(span22, file$5, 484, 6, 14703);
     			attr_dev(div26, "id", "Đ");
-    			attr_dev(div26, "class", "black-key svelte-tcji3m");
-    			add_location(div26, file$5, 276, 4, 6782);
-    			add_location(span23, file$5, 294, 6, 7242);
+    			attr_dev(div26, "class", "black-key svelte-142rg1j");
+    			add_location(div26, file$5, 471, 4, 14214);
+    			add_location(span23, file$5, 499, 6, 15220);
     			attr_dev(div27, "id", "⌫");
-    			attr_dev(div27, "class", "black-key svelte-tcji3m");
-    			add_location(div27, file$5, 286, 4, 7028);
-    			attr_dev(div28, "class", "piano-grid svelte-tcji3m");
-    			add_location(div28, file$5, 200, 2, 4804);
+    			attr_dev(div27, "class", "black-key svelte-142rg1j");
+    			add_location(div27, file$5, 486, 4, 14735);
+    			attr_dev(div28, "class", "piano-grid svelte-142rg1j");
+    			add_location(div28, file$5, 347, 2, 9921);
 
     			attr_dev(div29, "class", div29_class_value = "piano-grid-container " + (/*$isFocused*/ ctx[0] || /*$editMode*/ ctx[1]
     			? "transparent"
-    			: "") + " svelte-tcji3m");
+    			: "") + " svelte-142rg1j");
 
-    			add_location(div29, file$5, 97, 0, 1869);
+    			add_location(div29, file$5, 132, 0, 2521);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -7456,590 +11566,1022 @@ var app = (function () {
     			insert_dev(target, div29, anchor);
     			append_dev(div29, div14);
     			append_dev(div14, div0);
-    			if (if_block0) if_block0.m(div0, null);
+
+    			if (~current_block_type_index) {
+    				if_blocks[current_block_type_index].m(div0, null);
+    			}
+
     			append_dev(div0, t0);
     			append_dev(div0, span0);
     			append_dev(div14, t2);
     			append_dev(div14, div1);
-    			if (if_block1) if_block1.m(div1, null);
+
+    			if (~current_block_type_index_1) {
+    				if_blocks_1[current_block_type_index_1].m(div1, null);
+    			}
+
     			append_dev(div1, t3);
     			append_dev(div1, span1);
     			append_dev(div14, t5);
     			append_dev(div14, div2);
-    			if (if_block2) if_block2.m(div2, null);
+
+    			if (~current_block_type_index_2) {
+    				if_blocks_2[current_block_type_index_2].m(div2, null);
+    			}
+
     			append_dev(div2, t6);
     			append_dev(div2, span2);
     			append_dev(div14, t8);
     			append_dev(div14, div3);
-    			if (if_block3) if_block3.m(div3, null);
+
+    			if (~current_block_type_index_3) {
+    				if_blocks_3[current_block_type_index_3].m(div3, null);
+    			}
+
     			append_dev(div3, t9);
     			append_dev(div3, span3);
     			append_dev(div14, t11);
     			append_dev(div14, div4);
-    			if (if_block4) if_block4.m(div4, null);
+
+    			if (~current_block_type_index_4) {
+    				if_blocks_4[current_block_type_index_4].m(div4, null);
+    			}
+
     			append_dev(div4, t12);
     			append_dev(div4, span4);
     			append_dev(div14, t14);
     			append_dev(div14, div5);
-    			if (if_block5) if_block5.m(div5, null);
+
+    			if (~current_block_type_index_5) {
+    				if_blocks_5[current_block_type_index_5].m(div5, null);
+    			}
+
     			append_dev(div5, t15);
     			append_dev(div5, span5);
     			append_dev(div14, t17);
     			append_dev(div14, div6);
-    			if (if_block6) if_block6.m(div6, null);
+
+    			if (~current_block_type_index_6) {
+    				if_blocks_6[current_block_type_index_6].m(div6, null);
+    			}
+
     			append_dev(div6, t18);
     			append_dev(div6, span6);
     			append_dev(div14, t20);
     			append_dev(div14, div7);
-    			if (if_block7) if_block7.m(div7, null);
+
+    			if (~current_block_type_index_7) {
+    				if_blocks_7[current_block_type_index_7].m(div7, null);
+    			}
+
     			append_dev(div7, t21);
     			append_dev(div7, span7);
     			append_dev(div14, t23);
     			append_dev(div14, div8);
-    			if (if_block8) if_block8.m(div8, null);
+
+    			if (~current_block_type_index_8) {
+    				if_blocks_8[current_block_type_index_8].m(div8, null);
+    			}
+
     			append_dev(div8, t24);
     			append_dev(div8, span8);
     			append_dev(div14, t26);
     			append_dev(div14, div9);
-    			if (if_block9) if_block9.m(div9, null);
+
+    			if (~current_block_type_index_9) {
+    				if_blocks_9[current_block_type_index_9].m(div9, null);
+    			}
+
     			append_dev(div9, t27);
     			append_dev(div9, span9);
     			append_dev(div14, t29);
     			append_dev(div14, div10);
-    			if (if_block10) if_block10.m(div10, null);
+
+    			if (~current_block_type_index_10) {
+    				if_blocks_10[current_block_type_index_10].m(div10, null);
+    			}
+
     			append_dev(div10, t30);
     			append_dev(div10, span10);
     			append_dev(div14, t32);
     			append_dev(div14, div11);
-    			if (if_block11) if_block11.m(div11, null);
+
+    			if (~current_block_type_index_11) {
+    				if_blocks_11[current_block_type_index_11].m(div11, null);
+    			}
+
     			append_dev(div11, t33);
     			append_dev(div11, span11);
     			append_dev(div14, t35);
     			append_dev(div14, div12);
-    			if (if_block12) if_block12.m(div12, null);
+
+    			if (~current_block_type_index_12) {
+    				if_blocks_12[current_block_type_index_12].m(div12, null);
+    			}
+
     			append_dev(div12, t36);
     			append_dev(div12, span12);
     			append_dev(div14, t38);
     			append_dev(div14, div13);
-    			if (if_block13) if_block13.m(div13, null);
+
+    			if (~current_block_type_index_13) {
+    				if_blocks_13[current_block_type_index_13].m(div13, null);
+    			}
+
     			append_dev(div13, t39);
     			append_dev(div13, span13);
     			append_dev(div29, t41);
     			append_dev(div29, div28);
     			append_dev(div28, div15);
-    			if (if_block14) if_block14.m(div15, null);
+
+    			if (~current_block_type_index_14) {
+    				if_blocks_14[current_block_type_index_14].m(div15, null);
+    			}
+
     			append_dev(div15, t42);
     			append_dev(div15, span14);
     			append_dev(div28, t44);
     			append_dev(div28, div16);
-    			if (if_block15) if_block15.m(div16, null);
+
+    			if (~current_block_type_index_15) {
+    				if_blocks_15[current_block_type_index_15].m(div16, null);
+    			}
+
     			append_dev(div16, t45);
     			append_dev(div16, span15);
     			append_dev(div28, t47);
     			append_dev(div28, div17);
-    			if (if_block16) if_block16.m(div17, null);
+
+    			if (~current_block_type_index_16) {
+    				if_blocks_16[current_block_type_index_16].m(div17, null);
+    			}
+
     			append_dev(div17, t48);
     			append_dev(div17, span16);
     			append_dev(div28, t50);
     			append_dev(div28, div18);
     			append_dev(div28, t51);
     			append_dev(div28, div19);
-    			if (if_block17) if_block17.m(div19, null);
+
+    			if (~current_block_type_index_17) {
+    				if_blocks_17[current_block_type_index_17].m(div19, null);
+    			}
+
     			append_dev(div19, t52);
     			append_dev(div19, span17);
     			append_dev(div28, t54);
     			append_dev(div28, div20);
-    			if (if_block18) if_block18.m(div20, null);
+
+    			if (~current_block_type_index_18) {
+    				if_blocks_18[current_block_type_index_18].m(div20, null);
+    			}
+
     			append_dev(div20, t55);
     			append_dev(div20, span18);
     			append_dev(div28, t57);
     			append_dev(div28, div21);
     			append_dev(div28, t58);
     			append_dev(div28, div22);
-    			if (if_block19) if_block19.m(div22, null);
+
+    			if (~current_block_type_index_19) {
+    				if_blocks_19[current_block_type_index_19].m(div22, null);
+    			}
+
     			append_dev(div22, t59);
     			append_dev(div22, span19);
     			append_dev(div28, t61);
     			append_dev(div28, div23);
-    			if (if_block20) if_block20.m(div23, null);
+
+    			if (~current_block_type_index_20) {
+    				if_blocks_20[current_block_type_index_20].m(div23, null);
+    			}
+
     			append_dev(div23, t62);
     			append_dev(div23, span20);
     			append_dev(div28, t64);
     			append_dev(div28, div24);
-    			if (if_block21) if_block21.m(div24, null);
+
+    			if (~current_block_type_index_21) {
+    				if_blocks_21[current_block_type_index_21].m(div24, null);
+    			}
+
     			append_dev(div24, t65);
     			append_dev(div24, span21);
     			append_dev(div28, t67);
     			append_dev(div28, div25);
     			append_dev(div28, t68);
     			append_dev(div28, div26);
-    			if (if_block22) if_block22.m(div26, null);
+
+    			if (~current_block_type_index_22) {
+    				if_blocks_22[current_block_type_index_22].m(div26, null);
+    			}
+
     			append_dev(div26, t69);
     			append_dev(div26, span22);
     			append_dev(div28, t71);
     			append_dev(div28, div27);
-    			if (if_block23) if_block23.m(div27, null);
+
+    			if (~current_block_type_index_23) {
+    				if_blocks_23[current_block_type_index_23].m(div27, null);
+    			}
+
     			append_dev(div27, t72);
     			append_dev(div27, span23);
     			append_dev(div29, t74);
     			if (if_block24) if_block24.m(div29, null);
     			current = true;
     		},
-    		p: function update(ctx, [dirty]) {
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block0) {
-    					if_block0 = create_if_block_24(ctx);
-    					if_block0.c();
+    		p: function update(ctx, dirty) {
+    			let previous_block_index = current_block_type_index;
+    			current_block_type_index = select_block_type(ctx);
+
+    			if (current_block_type_index === previous_block_index) {
+    				if (~current_block_type_index) {
+    					if_blocks[current_block_type_index].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block0) {
+    					group_outros();
+
+    					transition_out(if_blocks[previous_block_index], 1, 1, () => {
+    						if_blocks[previous_block_index] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index) {
+    					if_block0 = if_blocks[current_block_type_index];
+
+    					if (!if_block0) {
+    						if_block0 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+    						if_block0.c();
+    					}
+
     					transition_in(if_block0, 1);
     					if_block0.m(div0, t0);
     				} else {
-    					transition_in(if_block0, 1);
-    				}
-    			} else if (if_block0) {
-    				group_outros();
-
-    				transition_out(if_block0, 1, 1, () => {
     					if_block0 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block1) {
-    					if_block1 = create_if_block_23(ctx);
-    					if_block1.c();
+    			let previous_block_index_1 = current_block_type_index_1;
+    			current_block_type_index_1 = select_block_type_1(ctx);
+
+    			if (current_block_type_index_1 === previous_block_index_1) {
+    				if (~current_block_type_index_1) {
+    					if_blocks_1[current_block_type_index_1].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block1) {
+    					group_outros();
+
+    					transition_out(if_blocks_1[previous_block_index_1], 1, 1, () => {
+    						if_blocks_1[previous_block_index_1] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_1) {
+    					if_block1 = if_blocks_1[current_block_type_index_1];
+
+    					if (!if_block1) {
+    						if_block1 = if_blocks_1[current_block_type_index_1] = if_block_creators_1[current_block_type_index_1](ctx);
+    						if_block1.c();
+    					}
+
     					transition_in(if_block1, 1);
     					if_block1.m(div1, t3);
     				} else {
-    					transition_in(if_block1, 1);
-    				}
-    			} else if (if_block1) {
-    				group_outros();
-
-    				transition_out(if_block1, 1, 1, () => {
     					if_block1 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block2) {
-    					if_block2 = create_if_block_22(ctx);
-    					if_block2.c();
+    			let previous_block_index_2 = current_block_type_index_2;
+    			current_block_type_index_2 = select_block_type_2(ctx);
+
+    			if (current_block_type_index_2 === previous_block_index_2) {
+    				if (~current_block_type_index_2) {
+    					if_blocks_2[current_block_type_index_2].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block2) {
+    					group_outros();
+
+    					transition_out(if_blocks_2[previous_block_index_2], 1, 1, () => {
+    						if_blocks_2[previous_block_index_2] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_2) {
+    					if_block2 = if_blocks_2[current_block_type_index_2];
+
+    					if (!if_block2) {
+    						if_block2 = if_blocks_2[current_block_type_index_2] = if_block_creators_2[current_block_type_index_2](ctx);
+    						if_block2.c();
+    					}
+
     					transition_in(if_block2, 1);
     					if_block2.m(div2, t6);
     				} else {
-    					transition_in(if_block2, 1);
-    				}
-    			} else if (if_block2) {
-    				group_outros();
-
-    				transition_out(if_block2, 1, 1, () => {
     					if_block2 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block3) {
-    					if_block3 = create_if_block_21(ctx);
-    					if_block3.c();
+    			let previous_block_index_3 = current_block_type_index_3;
+    			current_block_type_index_3 = select_block_type_3(ctx);
+
+    			if (current_block_type_index_3 === previous_block_index_3) {
+    				if (~current_block_type_index_3) {
+    					if_blocks_3[current_block_type_index_3].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block3) {
+    					group_outros();
+
+    					transition_out(if_blocks_3[previous_block_index_3], 1, 1, () => {
+    						if_blocks_3[previous_block_index_3] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_3) {
+    					if_block3 = if_blocks_3[current_block_type_index_3];
+
+    					if (!if_block3) {
+    						if_block3 = if_blocks_3[current_block_type_index_3] = if_block_creators_3[current_block_type_index_3](ctx);
+    						if_block3.c();
+    					}
+
     					transition_in(if_block3, 1);
     					if_block3.m(div3, t9);
     				} else {
-    					transition_in(if_block3, 1);
-    				}
-    			} else if (if_block3) {
-    				group_outros();
-
-    				transition_out(if_block3, 1, 1, () => {
     					if_block3 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block4) {
-    					if_block4 = create_if_block_20(ctx);
-    					if_block4.c();
+    			let previous_block_index_4 = current_block_type_index_4;
+    			current_block_type_index_4 = select_block_type_4(ctx);
+
+    			if (current_block_type_index_4 === previous_block_index_4) {
+    				if (~current_block_type_index_4) {
+    					if_blocks_4[current_block_type_index_4].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block4) {
+    					group_outros();
+
+    					transition_out(if_blocks_4[previous_block_index_4], 1, 1, () => {
+    						if_blocks_4[previous_block_index_4] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_4) {
+    					if_block4 = if_blocks_4[current_block_type_index_4];
+
+    					if (!if_block4) {
+    						if_block4 = if_blocks_4[current_block_type_index_4] = if_block_creators_4[current_block_type_index_4](ctx);
+    						if_block4.c();
+    					}
+
     					transition_in(if_block4, 1);
     					if_block4.m(div4, t12);
     				} else {
-    					transition_in(if_block4, 1);
-    				}
-    			} else if (if_block4) {
-    				group_outros();
-
-    				transition_out(if_block4, 1, 1, () => {
     					if_block4 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block5) {
-    					if_block5 = create_if_block_19(ctx);
-    					if_block5.c();
+    			let previous_block_index_5 = current_block_type_index_5;
+    			current_block_type_index_5 = select_block_type_5(ctx);
+
+    			if (current_block_type_index_5 === previous_block_index_5) {
+    				if (~current_block_type_index_5) {
+    					if_blocks_5[current_block_type_index_5].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block5) {
+    					group_outros();
+
+    					transition_out(if_blocks_5[previous_block_index_5], 1, 1, () => {
+    						if_blocks_5[previous_block_index_5] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_5) {
+    					if_block5 = if_blocks_5[current_block_type_index_5];
+
+    					if (!if_block5) {
+    						if_block5 = if_blocks_5[current_block_type_index_5] = if_block_creators_5[current_block_type_index_5](ctx);
+    						if_block5.c();
+    					}
+
     					transition_in(if_block5, 1);
     					if_block5.m(div5, t15);
     				} else {
-    					transition_in(if_block5, 1);
-    				}
-    			} else if (if_block5) {
-    				group_outros();
-
-    				transition_out(if_block5, 1, 1, () => {
     					if_block5 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block6) {
-    					if_block6 = create_if_block_18(ctx);
-    					if_block6.c();
+    			let previous_block_index_6 = current_block_type_index_6;
+    			current_block_type_index_6 = select_block_type_6(ctx);
+
+    			if (current_block_type_index_6 === previous_block_index_6) {
+    				if (~current_block_type_index_6) {
+    					if_blocks_6[current_block_type_index_6].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block6) {
+    					group_outros();
+
+    					transition_out(if_blocks_6[previous_block_index_6], 1, 1, () => {
+    						if_blocks_6[previous_block_index_6] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_6) {
+    					if_block6 = if_blocks_6[current_block_type_index_6];
+
+    					if (!if_block6) {
+    						if_block6 = if_blocks_6[current_block_type_index_6] = if_block_creators_6[current_block_type_index_6](ctx);
+    						if_block6.c();
+    					}
+
     					transition_in(if_block6, 1);
     					if_block6.m(div6, t18);
     				} else {
-    					transition_in(if_block6, 1);
-    				}
-    			} else if (if_block6) {
-    				group_outros();
-
-    				transition_out(if_block6, 1, 1, () => {
     					if_block6 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block7) {
-    					if_block7 = create_if_block_17(ctx);
-    					if_block7.c();
+    			let previous_block_index_7 = current_block_type_index_7;
+    			current_block_type_index_7 = select_block_type_7(ctx);
+
+    			if (current_block_type_index_7 === previous_block_index_7) {
+    				if (~current_block_type_index_7) {
+    					if_blocks_7[current_block_type_index_7].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block7) {
+    					group_outros();
+
+    					transition_out(if_blocks_7[previous_block_index_7], 1, 1, () => {
+    						if_blocks_7[previous_block_index_7] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_7) {
+    					if_block7 = if_blocks_7[current_block_type_index_7];
+
+    					if (!if_block7) {
+    						if_block7 = if_blocks_7[current_block_type_index_7] = if_block_creators_7[current_block_type_index_7](ctx);
+    						if_block7.c();
+    					}
+
     					transition_in(if_block7, 1);
     					if_block7.m(div7, t21);
     				} else {
-    					transition_in(if_block7, 1);
-    				}
-    			} else if (if_block7) {
-    				group_outros();
-
-    				transition_out(if_block7, 1, 1, () => {
     					if_block7 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block8) {
-    					if_block8 = create_if_block_16(ctx);
-    					if_block8.c();
+    			let previous_block_index_8 = current_block_type_index_8;
+    			current_block_type_index_8 = select_block_type_8(ctx);
+
+    			if (current_block_type_index_8 === previous_block_index_8) {
+    				if (~current_block_type_index_8) {
+    					if_blocks_8[current_block_type_index_8].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block8) {
+    					group_outros();
+
+    					transition_out(if_blocks_8[previous_block_index_8], 1, 1, () => {
+    						if_blocks_8[previous_block_index_8] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_8) {
+    					if_block8 = if_blocks_8[current_block_type_index_8];
+
+    					if (!if_block8) {
+    						if_block8 = if_blocks_8[current_block_type_index_8] = if_block_creators_8[current_block_type_index_8](ctx);
+    						if_block8.c();
+    					}
+
     					transition_in(if_block8, 1);
     					if_block8.m(div8, t24);
     				} else {
-    					transition_in(if_block8, 1);
-    				}
-    			} else if (if_block8) {
-    				group_outros();
-
-    				transition_out(if_block8, 1, 1, () => {
     					if_block8 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block9) {
-    					if_block9 = create_if_block_15(ctx);
-    					if_block9.c();
+    			let previous_block_index_9 = current_block_type_index_9;
+    			current_block_type_index_9 = select_block_type_9(ctx);
+
+    			if (current_block_type_index_9 === previous_block_index_9) {
+    				if (~current_block_type_index_9) {
+    					if_blocks_9[current_block_type_index_9].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block9) {
+    					group_outros();
+
+    					transition_out(if_blocks_9[previous_block_index_9], 1, 1, () => {
+    						if_blocks_9[previous_block_index_9] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_9) {
+    					if_block9 = if_blocks_9[current_block_type_index_9];
+
+    					if (!if_block9) {
+    						if_block9 = if_blocks_9[current_block_type_index_9] = if_block_creators_9[current_block_type_index_9](ctx);
+    						if_block9.c();
+    					}
+
     					transition_in(if_block9, 1);
     					if_block9.m(div9, t27);
     				} else {
-    					transition_in(if_block9, 1);
-    				}
-    			} else if (if_block9) {
-    				group_outros();
-
-    				transition_out(if_block9, 1, 1, () => {
     					if_block9 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block10) {
-    					if_block10 = create_if_block_14(ctx);
-    					if_block10.c();
+    			let previous_block_index_10 = current_block_type_index_10;
+    			current_block_type_index_10 = select_block_type_10(ctx);
+
+    			if (current_block_type_index_10 === previous_block_index_10) {
+    				if (~current_block_type_index_10) {
+    					if_blocks_10[current_block_type_index_10].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block10) {
+    					group_outros();
+
+    					transition_out(if_blocks_10[previous_block_index_10], 1, 1, () => {
+    						if_blocks_10[previous_block_index_10] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_10) {
+    					if_block10 = if_blocks_10[current_block_type_index_10];
+
+    					if (!if_block10) {
+    						if_block10 = if_blocks_10[current_block_type_index_10] = if_block_creators_10[current_block_type_index_10](ctx);
+    						if_block10.c();
+    					}
+
     					transition_in(if_block10, 1);
     					if_block10.m(div10, t30);
     				} else {
-    					transition_in(if_block10, 1);
-    				}
-    			} else if (if_block10) {
-    				group_outros();
-
-    				transition_out(if_block10, 1, 1, () => {
     					if_block10 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block11) {
-    					if_block11 = create_if_block_13(ctx);
-    					if_block11.c();
+    			let previous_block_index_11 = current_block_type_index_11;
+    			current_block_type_index_11 = select_block_type_11(ctx);
+
+    			if (current_block_type_index_11 === previous_block_index_11) {
+    				if (~current_block_type_index_11) {
+    					if_blocks_11[current_block_type_index_11].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block11) {
+    					group_outros();
+
+    					transition_out(if_blocks_11[previous_block_index_11], 1, 1, () => {
+    						if_blocks_11[previous_block_index_11] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_11) {
+    					if_block11 = if_blocks_11[current_block_type_index_11];
+
+    					if (!if_block11) {
+    						if_block11 = if_blocks_11[current_block_type_index_11] = if_block_creators_11[current_block_type_index_11](ctx);
+    						if_block11.c();
+    					}
+
     					transition_in(if_block11, 1);
     					if_block11.m(div11, t33);
     				} else {
-    					transition_in(if_block11, 1);
-    				}
-    			} else if (if_block11) {
-    				group_outros();
-
-    				transition_out(if_block11, 1, 1, () => {
     					if_block11 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block12) {
-    					if_block12 = create_if_block_12(ctx);
-    					if_block12.c();
+    			let previous_block_index_12 = current_block_type_index_12;
+    			current_block_type_index_12 = select_block_type_12(ctx);
+
+    			if (current_block_type_index_12 === previous_block_index_12) {
+    				if (~current_block_type_index_12) {
+    					if_blocks_12[current_block_type_index_12].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block12) {
+    					group_outros();
+
+    					transition_out(if_blocks_12[previous_block_index_12], 1, 1, () => {
+    						if_blocks_12[previous_block_index_12] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_12) {
+    					if_block12 = if_blocks_12[current_block_type_index_12];
+
+    					if (!if_block12) {
+    						if_block12 = if_blocks_12[current_block_type_index_12] = if_block_creators_12[current_block_type_index_12](ctx);
+    						if_block12.c();
+    					}
+
     					transition_in(if_block12, 1);
     					if_block12.m(div12, t36);
     				} else {
-    					transition_in(if_block12, 1);
-    				}
-    			} else if (if_block12) {
-    				group_outros();
-
-    				transition_out(if_block12, 1, 1, () => {
     					if_block12 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block13) {
-    					if_block13 = create_if_block_11(ctx);
-    					if_block13.c();
+    			let previous_block_index_13 = current_block_type_index_13;
+    			current_block_type_index_13 = select_block_type_13(ctx);
+
+    			if (current_block_type_index_13 === previous_block_index_13) {
+    				if (~current_block_type_index_13) {
+    					if_blocks_13[current_block_type_index_13].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block13) {
+    					group_outros();
+
+    					transition_out(if_blocks_13[previous_block_index_13], 1, 1, () => {
+    						if_blocks_13[previous_block_index_13] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_13) {
+    					if_block13 = if_blocks_13[current_block_type_index_13];
+
+    					if (!if_block13) {
+    						if_block13 = if_blocks_13[current_block_type_index_13] = if_block_creators_13[current_block_type_index_13](ctx);
+    						if_block13.c();
+    					}
+
     					transition_in(if_block13, 1);
     					if_block13.m(div13, t39);
     				} else {
-    					transition_in(if_block13, 1);
-    				}
-    			} else if (if_block13) {
-    				group_outros();
-
-    				transition_out(if_block13, 1, 1, () => {
     					if_block13 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block14) {
-    					if_block14 = create_if_block_10(ctx);
-    					if_block14.c();
+    			let previous_block_index_14 = current_block_type_index_14;
+    			current_block_type_index_14 = select_block_type_14(ctx);
+
+    			if (current_block_type_index_14 === previous_block_index_14) {
+    				if (~current_block_type_index_14) {
+    					if_blocks_14[current_block_type_index_14].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block14) {
+    					group_outros();
+
+    					transition_out(if_blocks_14[previous_block_index_14], 1, 1, () => {
+    						if_blocks_14[previous_block_index_14] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_14) {
+    					if_block14 = if_blocks_14[current_block_type_index_14];
+
+    					if (!if_block14) {
+    						if_block14 = if_blocks_14[current_block_type_index_14] = if_block_creators_14[current_block_type_index_14](ctx);
+    						if_block14.c();
+    					}
+
     					transition_in(if_block14, 1);
     					if_block14.m(div15, t42);
     				} else {
-    					transition_in(if_block14, 1);
-    				}
-    			} else if (if_block14) {
-    				group_outros();
-
-    				transition_out(if_block14, 1, 1, () => {
     					if_block14 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block15) {
-    					if_block15 = create_if_block_9(ctx);
-    					if_block15.c();
+    			let previous_block_index_15 = current_block_type_index_15;
+    			current_block_type_index_15 = select_block_type_15(ctx);
+
+    			if (current_block_type_index_15 === previous_block_index_15) {
+    				if (~current_block_type_index_15) {
+    					if_blocks_15[current_block_type_index_15].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block15) {
+    					group_outros();
+
+    					transition_out(if_blocks_15[previous_block_index_15], 1, 1, () => {
+    						if_blocks_15[previous_block_index_15] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_15) {
+    					if_block15 = if_blocks_15[current_block_type_index_15];
+
+    					if (!if_block15) {
+    						if_block15 = if_blocks_15[current_block_type_index_15] = if_block_creators_15[current_block_type_index_15](ctx);
+    						if_block15.c();
+    					}
+
     					transition_in(if_block15, 1);
     					if_block15.m(div16, t45);
     				} else {
-    					transition_in(if_block15, 1);
-    				}
-    			} else if (if_block15) {
-    				group_outros();
-
-    				transition_out(if_block15, 1, 1, () => {
     					if_block15 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block16) {
-    					if_block16 = create_if_block_8(ctx);
-    					if_block16.c();
+    			let previous_block_index_16 = current_block_type_index_16;
+    			current_block_type_index_16 = select_block_type_16(ctx);
+
+    			if (current_block_type_index_16 === previous_block_index_16) {
+    				if (~current_block_type_index_16) {
+    					if_blocks_16[current_block_type_index_16].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block16) {
+    					group_outros();
+
+    					transition_out(if_blocks_16[previous_block_index_16], 1, 1, () => {
+    						if_blocks_16[previous_block_index_16] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_16) {
+    					if_block16 = if_blocks_16[current_block_type_index_16];
+
+    					if (!if_block16) {
+    						if_block16 = if_blocks_16[current_block_type_index_16] = if_block_creators_16[current_block_type_index_16](ctx);
+    						if_block16.c();
+    					}
+
     					transition_in(if_block16, 1);
     					if_block16.m(div17, t48);
     				} else {
-    					transition_in(if_block16, 1);
-    				}
-    			} else if (if_block16) {
-    				group_outros();
-
-    				transition_out(if_block16, 1, 1, () => {
     					if_block16 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block17) {
-    					if_block17 = create_if_block_7(ctx);
-    					if_block17.c();
+    			let previous_block_index_17 = current_block_type_index_17;
+    			current_block_type_index_17 = select_block_type_17(ctx);
+
+    			if (current_block_type_index_17 === previous_block_index_17) {
+    				if (~current_block_type_index_17) {
+    					if_blocks_17[current_block_type_index_17].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block17) {
+    					group_outros();
+
+    					transition_out(if_blocks_17[previous_block_index_17], 1, 1, () => {
+    						if_blocks_17[previous_block_index_17] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_17) {
+    					if_block17 = if_blocks_17[current_block_type_index_17];
+
+    					if (!if_block17) {
+    						if_block17 = if_blocks_17[current_block_type_index_17] = if_block_creators_17[current_block_type_index_17](ctx);
+    						if_block17.c();
+    					}
+
     					transition_in(if_block17, 1);
     					if_block17.m(div19, t52);
     				} else {
-    					transition_in(if_block17, 1);
-    				}
-    			} else if (if_block17) {
-    				group_outros();
-
-    				transition_out(if_block17, 1, 1, () => {
     					if_block17 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block18) {
-    					if_block18 = create_if_block_6(ctx);
-    					if_block18.c();
+    			let previous_block_index_18 = current_block_type_index_18;
+    			current_block_type_index_18 = select_block_type_18(ctx);
+
+    			if (current_block_type_index_18 === previous_block_index_18) {
+    				if (~current_block_type_index_18) {
+    					if_blocks_18[current_block_type_index_18].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block18) {
+    					group_outros();
+
+    					transition_out(if_blocks_18[previous_block_index_18], 1, 1, () => {
+    						if_blocks_18[previous_block_index_18] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_18) {
+    					if_block18 = if_blocks_18[current_block_type_index_18];
+
+    					if (!if_block18) {
+    						if_block18 = if_blocks_18[current_block_type_index_18] = if_block_creators_18[current_block_type_index_18](ctx);
+    						if_block18.c();
+    					}
+
     					transition_in(if_block18, 1);
     					if_block18.m(div20, t55);
     				} else {
-    					transition_in(if_block18, 1);
-    				}
-    			} else if (if_block18) {
-    				group_outros();
-
-    				transition_out(if_block18, 1, 1, () => {
     					if_block18 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block19) {
-    					if_block19 = create_if_block_5(ctx);
-    					if_block19.c();
+    			let previous_block_index_19 = current_block_type_index_19;
+    			current_block_type_index_19 = select_block_type_19(ctx);
+
+    			if (current_block_type_index_19 === previous_block_index_19) {
+    				if (~current_block_type_index_19) {
+    					if_blocks_19[current_block_type_index_19].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block19) {
+    					group_outros();
+
+    					transition_out(if_blocks_19[previous_block_index_19], 1, 1, () => {
+    						if_blocks_19[previous_block_index_19] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_19) {
+    					if_block19 = if_blocks_19[current_block_type_index_19];
+
+    					if (!if_block19) {
+    						if_block19 = if_blocks_19[current_block_type_index_19] = if_block_creators_19[current_block_type_index_19](ctx);
+    						if_block19.c();
+    					}
+
     					transition_in(if_block19, 1);
     					if_block19.m(div22, t59);
     				} else {
-    					transition_in(if_block19, 1);
-    				}
-    			} else if (if_block19) {
-    				group_outros();
-
-    				transition_out(if_block19, 1, 1, () => {
     					if_block19 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block20) {
-    					if_block20 = create_if_block_4(ctx);
-    					if_block20.c();
+    			let previous_block_index_20 = current_block_type_index_20;
+    			current_block_type_index_20 = select_block_type_20(ctx);
+
+    			if (current_block_type_index_20 === previous_block_index_20) {
+    				if (~current_block_type_index_20) {
+    					if_blocks_20[current_block_type_index_20].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block20) {
+    					group_outros();
+
+    					transition_out(if_blocks_20[previous_block_index_20], 1, 1, () => {
+    						if_blocks_20[previous_block_index_20] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_20) {
+    					if_block20 = if_blocks_20[current_block_type_index_20];
+
+    					if (!if_block20) {
+    						if_block20 = if_blocks_20[current_block_type_index_20] = if_block_creators_20[current_block_type_index_20](ctx);
+    						if_block20.c();
+    					}
+
     					transition_in(if_block20, 1);
     					if_block20.m(div23, t62);
     				} else {
-    					transition_in(if_block20, 1);
-    				}
-    			} else if (if_block20) {
-    				group_outros();
-
-    				transition_out(if_block20, 1, 1, () => {
     					if_block20 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block21) {
-    					if_block21 = create_if_block_3(ctx);
-    					if_block21.c();
+    			let previous_block_index_21 = current_block_type_index_21;
+    			current_block_type_index_21 = select_block_type_21(ctx);
+
+    			if (current_block_type_index_21 === previous_block_index_21) {
+    				if (~current_block_type_index_21) {
+    					if_blocks_21[current_block_type_index_21].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block21) {
+    					group_outros();
+
+    					transition_out(if_blocks_21[previous_block_index_21], 1, 1, () => {
+    						if_blocks_21[previous_block_index_21] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_21) {
+    					if_block21 = if_blocks_21[current_block_type_index_21];
+
+    					if (!if_block21) {
+    						if_block21 = if_blocks_21[current_block_type_index_21] = if_block_creators_21[current_block_type_index_21](ctx);
+    						if_block21.c();
+    					}
+
     					transition_in(if_block21, 1);
     					if_block21.m(div24, t65);
     				} else {
-    					transition_in(if_block21, 1);
-    				}
-    			} else if (if_block21) {
-    				group_outros();
-
-    				transition_out(if_block21, 1, 1, () => {
     					if_block21 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block22) {
-    					if_block22 = create_if_block_2(ctx);
-    					if_block22.c();
+    			let previous_block_index_22 = current_block_type_index_22;
+    			current_block_type_index_22 = select_block_type_22(ctx);
+
+    			if (current_block_type_index_22 === previous_block_index_22) {
+    				if (~current_block_type_index_22) {
+    					if_blocks_22[current_block_type_index_22].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block22) {
+    					group_outros();
+
+    					transition_out(if_blocks_22[previous_block_index_22], 1, 1, () => {
+    						if_blocks_22[previous_block_index_22] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_22) {
+    					if_block22 = if_blocks_22[current_block_type_index_22];
+
+    					if (!if_block22) {
+    						if_block22 = if_blocks_22[current_block_type_index_22] = if_block_creators_22[current_block_type_index_22](ctx);
+    						if_block22.c();
+    					}
+
     					transition_in(if_block22, 1);
     					if_block22.m(div26, t69);
     				} else {
-    					transition_in(if_block22, 1);
-    				}
-    			} else if (if_block22) {
-    				group_outros();
-
-    				transition_out(if_block22, 1, 1, () => {
     					if_block22 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
-    			if (/*$chordMode*/ ctx[2]) {
-    				if (!if_block23) {
-    					if_block23 = create_if_block_1(ctx);
-    					if_block23.c();
+    			let previous_block_index_23 = current_block_type_index_23;
+    			current_block_type_index_23 = select_block_type_23(ctx);
+
+    			if (current_block_type_index_23 === previous_block_index_23) {
+    				if (~current_block_type_index_23) {
+    					if_blocks_23[current_block_type_index_23].p(ctx, dirty);
+    				}
+    			} else {
+    				if (if_block23) {
+    					group_outros();
+
+    					transition_out(if_blocks_23[previous_block_index_23], 1, 1, () => {
+    						if_blocks_23[previous_block_index_23] = null;
+    					});
+
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_23) {
+    					if_block23 = if_blocks_23[current_block_type_index_23];
+
+    					if (!if_block23) {
+    						if_block23 = if_blocks_23[current_block_type_index_23] = if_block_creators_23[current_block_type_index_23](ctx);
+    						if_block23.c();
+    					}
+
     					transition_in(if_block23, 1);
     					if_block23.m(div27, t72);
     				} else {
-    					transition_in(if_block23, 1);
-    				}
-    			} else if (if_block23) {
-    				group_outros();
-
-    				transition_out(if_block23, 1, 1, () => {
     					if_block23 = null;
-    				});
-
-    				check_outros();
+    				}
     			}
 
     			if (/*$editMode*/ ctx[1]) {
@@ -8061,9 +12603,9 @@ var app = (function () {
     				check_outros();
     			}
 
-    			if (!current || dirty & /*$isFocused, $editMode*/ 3 && div29_class_value !== (div29_class_value = "piano-grid-container " + (/*$isFocused*/ ctx[0] || /*$editMode*/ ctx[1]
+    			if (!current || dirty[0] & /*$isFocused, $editMode*/ 3 && div29_class_value !== (div29_class_value = "piano-grid-container " + (/*$isFocused*/ ctx[0] || /*$editMode*/ ctx[1]
     			? "transparent"
-    			: "") + " svelte-tcji3m")) {
+    			: "") + " svelte-142rg1j")) {
     				attr_dev(div29, "class", div29_class_value);
     			}
     		},
@@ -8126,30 +12668,103 @@ var app = (function () {
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div29);
-    			if (if_block0) if_block0.d();
-    			if (if_block1) if_block1.d();
-    			if (if_block2) if_block2.d();
-    			if (if_block3) if_block3.d();
-    			if (if_block4) if_block4.d();
-    			if (if_block5) if_block5.d();
-    			if (if_block6) if_block6.d();
-    			if (if_block7) if_block7.d();
-    			if (if_block8) if_block8.d();
-    			if (if_block9) if_block9.d();
-    			if (if_block10) if_block10.d();
-    			if (if_block11) if_block11.d();
-    			if (if_block12) if_block12.d();
-    			if (if_block13) if_block13.d();
-    			if (if_block14) if_block14.d();
-    			if (if_block15) if_block15.d();
-    			if (if_block16) if_block16.d();
-    			if (if_block17) if_block17.d();
-    			if (if_block18) if_block18.d();
-    			if (if_block19) if_block19.d();
-    			if (if_block20) if_block20.d();
-    			if (if_block21) if_block21.d();
-    			if (if_block22) if_block22.d();
-    			if (if_block23) if_block23.d();
+
+    			if (~current_block_type_index) {
+    				if_blocks[current_block_type_index].d();
+    			}
+
+    			if (~current_block_type_index_1) {
+    				if_blocks_1[current_block_type_index_1].d();
+    			}
+
+    			if (~current_block_type_index_2) {
+    				if_blocks_2[current_block_type_index_2].d();
+    			}
+
+    			if (~current_block_type_index_3) {
+    				if_blocks_3[current_block_type_index_3].d();
+    			}
+
+    			if (~current_block_type_index_4) {
+    				if_blocks_4[current_block_type_index_4].d();
+    			}
+
+    			if (~current_block_type_index_5) {
+    				if_blocks_5[current_block_type_index_5].d();
+    			}
+
+    			if (~current_block_type_index_6) {
+    				if_blocks_6[current_block_type_index_6].d();
+    			}
+
+    			if (~current_block_type_index_7) {
+    				if_blocks_7[current_block_type_index_7].d();
+    			}
+
+    			if (~current_block_type_index_8) {
+    				if_blocks_8[current_block_type_index_8].d();
+    			}
+
+    			if (~current_block_type_index_9) {
+    				if_blocks_9[current_block_type_index_9].d();
+    			}
+
+    			if (~current_block_type_index_10) {
+    				if_blocks_10[current_block_type_index_10].d();
+    			}
+
+    			if (~current_block_type_index_11) {
+    				if_blocks_11[current_block_type_index_11].d();
+    			}
+
+    			if (~current_block_type_index_12) {
+    				if_blocks_12[current_block_type_index_12].d();
+    			}
+
+    			if (~current_block_type_index_13) {
+    				if_blocks_13[current_block_type_index_13].d();
+    			}
+
+    			if (~current_block_type_index_14) {
+    				if_blocks_14[current_block_type_index_14].d();
+    			}
+
+    			if (~current_block_type_index_15) {
+    				if_blocks_15[current_block_type_index_15].d();
+    			}
+
+    			if (~current_block_type_index_16) {
+    				if_blocks_16[current_block_type_index_16].d();
+    			}
+
+    			if (~current_block_type_index_17) {
+    				if_blocks_17[current_block_type_index_17].d();
+    			}
+
+    			if (~current_block_type_index_18) {
+    				if_blocks_18[current_block_type_index_18].d();
+    			}
+
+    			if (~current_block_type_index_19) {
+    				if_blocks_19[current_block_type_index_19].d();
+    			}
+
+    			if (~current_block_type_index_20) {
+    				if_blocks_20[current_block_type_index_20].d();
+    			}
+
+    			if (~current_block_type_index_21) {
+    				if_blocks_21[current_block_type_index_21].d();
+    			}
+
+    			if (~current_block_type_index_22) {
+    				if_blocks_22[current_block_type_index_22].d();
+    			}
+
+    			if (~current_block_type_index_23) {
+    				if_blocks_23[current_block_type_index_23].d();
+    			}
+
     			if (if_block24) if_block24.d();
     		}
     	};
@@ -8168,40 +12783,196 @@ var app = (function () {
     function instance$5($$self, $$props, $$invalidate) {
     	let $isFocused;
     	let $editMode;
+    	let $chordNotes;
     	let $chordMode;
     	validate_store(isFocused, "isFocused");
     	component_subscribe($$self, isFocused, $$value => $$invalidate(0, $isFocused = $$value));
     	validate_store(editMode, "editMode");
     	component_subscribe($$self, editMode, $$value => $$invalidate(1, $editMode = $$value));
+    	validate_store(chordNotes, "chordNotes");
+    	component_subscribe($$self, chordNotes, $$value => $$invalidate(2, $chordNotes = $$value));
     	validate_store(chordMode, "chordMode");
-    	component_subscribe($$self, chordMode, $$value => $$invalidate(2, $chordMode = $$value));
+    	component_subscribe($$self, chordMode, $$value => $$invalidate(3, $chordMode = $$value));
     	const writable_props = [];
 
-    	Object.keys($$props).forEach(key => {
+    	Object_1.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<PianoGrid> was created with unknown prop '${key}'`);
     	});
 
     	let { $$slots = {}, $$scope } = $$props;
     	validate_slots("PianoGrid", $$slots, []);
 
+    	function select_change_handler() {
+    		$chordNotes[20] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_1() {
+    		$chordNotes[65] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_2() {
+    		$chordNotes[83] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_3() {
+    		$chordNotes[68] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_4() {
+    		$chordNotes[70] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_5() {
+    		$chordNotes[71] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_6() {
+    		$chordNotes[72] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_7() {
+    		$chordNotes[74] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_8() {
+    		$chordNotes[75] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_9() {
+    		$chordNotes[76] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_10() {
+    		$chordNotes[186] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_11() {
+    		$chordNotes[222] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_12() {
+    		$chordNotes[220] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_13() {
+    		$chordNotes[13] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_14() {
+    		$chordNotes[81] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_15() {
+    		$chordNotes[87] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_16() {
+    		$chordNotes[69] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_17() {
+    		$chordNotes[84] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_18() {
+    		$chordNotes[90] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_19() {
+    		$chordNotes[73] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_20() {
+    		$chordNotes[79] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_21() {
+    		$chordNotes[80] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_22() {
+    		$chordNotes[221] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
+    	function select_change_handler_23() {
+    		$chordNotes[8] = select_value(this);
+    		chordNotes.set($chordNotes);
+    	}
+
     	$$self.$capture_state = () => ({
     		isFocused,
     		editMode,
     		chordMode,
+    		chords,
+    		chordNotes,
     		fade,
     		slide,
+    		Button,
     		$isFocused,
     		$editMode,
+    		$chordNotes,
     		$chordMode
     	});
 
-    	return [$isFocused, $editMode, $chordMode];
+    	return [
+    		$isFocused,
+    		$editMode,
+    		$chordNotes,
+    		$chordMode,
+    		select_change_handler,
+    		select_change_handler_1,
+    		select_change_handler_2,
+    		select_change_handler_3,
+    		select_change_handler_4,
+    		select_change_handler_5,
+    		select_change_handler_6,
+    		select_change_handler_7,
+    		select_change_handler_8,
+    		select_change_handler_9,
+    		select_change_handler_10,
+    		select_change_handler_11,
+    		select_change_handler_12,
+    		select_change_handler_13,
+    		select_change_handler_14,
+    		select_change_handler_15,
+    		select_change_handler_16,
+    		select_change_handler_17,
+    		select_change_handler_18,
+    		select_change_handler_19,
+    		select_change_handler_20,
+    		select_change_handler_21,
+    		select_change_handler_22,
+    		select_change_handler_23
+    	];
     }
 
     class PianoGrid extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$5, create_fragment$5, safe_not_equal, {});
+    		init(this, options, instance$5, create_fragment$5, safe_not_equal, {}, [-1, -1, -1]);
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
@@ -9957,7 +14728,7 @@ var app = (function () {
     	index: /*index*/ ctx[17]
     });
 
-    function get_each_context$1(ctx, list, i) {
+    function get_each_context$2(ctx, list, i) {
     	const child_ctx = ctx.slice();
     	child_ctx[15] = list[i];
     	child_ctx[17] = i;
@@ -10014,7 +14785,7 @@ var app = (function () {
     }
 
     // (64:2) {#each list as item, index (item.id)}
-    function create_each_block$1(key_2, ctx) {
+    function create_each_block$2(key_2, ctx) {
     	let li;
     	let t;
     	let li_data_index_value;
@@ -10111,7 +14882,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_each_block$1.name,
+    		id: create_each_block$2.name,
     		type: "each",
     		source: "(64:2) {#each list as item, index (item.id)}",
     		ctx
@@ -10128,12 +14899,12 @@ var app = (function () {
     	let each_value = /*list*/ ctx[0];
     	validate_each_argument(each_value);
     	const get_key = ctx => /*item*/ ctx[15].id;
-    	validate_each_keys(ctx, each_value, get_each_context$1, get_key);
+    	validate_each_keys(ctx, each_value, get_each_context$2, get_key);
 
     	for (let i = 0; i < each_value.length; i += 1) {
-    		let child_ctx = get_each_context$1(ctx, each_value, i);
+    		let child_ctx = get_each_context$2(ctx, each_value, i);
     		let key = get_key(child_ctx);
-    		each_1_lookup.set(key, each_blocks[i] = create_each_block$1(key, child_ctx));
+    		each_1_lookup.set(key, each_blocks[i] = create_each_block$2(key, child_ctx));
     	}
 
     	let each_1_else = null;
@@ -10179,8 +14950,8 @@ var app = (function () {
     				validate_each_argument(each_value);
     				group_outros();
     				for (let i = 0; i < each_blocks.length; i += 1) each_blocks[i].r();
-    				validate_each_keys(ctx, each_value, get_each_context$1, get_key);
-    				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, ul, fix_and_outro_and_destroy_block, create_each_block$1, null, get_each_context$1);
+    				validate_each_keys(ctx, each_value, get_each_context$2, get_key);
+    				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, ul, fix_and_outro_and_destroy_block, create_each_block$2, null, get_each_context$2);
     				for (let i = 0; i < each_blocks.length; i += 1) each_blocks[i].a();
     				check_outros();
 
@@ -10398,14 +15169,14 @@ var app = (function () {
     /* src\components\Toast.svelte generated by Svelte v3.20.1 */
     const file$9 = "src\\components\\Toast.svelte";
 
-    function get_each_context$2(ctx, list, i) {
+    function get_each_context$3(ctx, list, i) {
     	const child_ctx = ctx.slice();
     	child_ctx[6] = list[i];
     	return child_ctx;
     }
 
     // (85:2) {#each toasts as toast (toast._id)}
-    function create_each_block$2(key_1, ctx) {
+    function create_each_block$3(key_1, ctx) {
     	let div;
     	let html_tag;
     	let raw_value = /*toast*/ ctx[6].msg + "";
@@ -10497,7 +15268,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_each_block$2.name,
+    		id: create_each_block$3.name,
     		type: "each",
     		source: "(85:2) {#each toasts as toast (toast._id)}",
     		ctx
@@ -10514,12 +15285,12 @@ var app = (function () {
     	let each_value = /*toasts*/ ctx[0];
     	validate_each_argument(each_value);
     	const get_key = ctx => /*toast*/ ctx[6]._id;
-    	validate_each_keys(ctx, each_value, get_each_context$2, get_key);
+    	validate_each_keys(ctx, each_value, get_each_context$3, get_key);
 
     	for (let i = 0; i < each_value.length; i += 1) {
-    		let child_ctx = get_each_context$2(ctx, each_value, i);
+    		let child_ctx = get_each_context$3(ctx, each_value, i);
     		let key = get_key(child_ctx);
-    		each_1_lookup.set(key, each_blocks[i] = create_each_block$2(key, child_ctx));
+    		each_1_lookup.set(key, each_blocks[i] = create_each_block$3(key, child_ctx));
     	}
 
     	const block = {
@@ -10550,8 +15321,8 @@ var app = (function () {
     				const each_value = /*toasts*/ ctx[0];
     				validate_each_argument(each_value);
     				group_outros();
-    				validate_each_keys(ctx, each_value, get_each_context$2, get_key);
-    				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, div, outro_and_destroy_block, create_each_block$2, null, get_each_context$2);
+    				validate_each_keys(ctx, each_value, get_each_context$3, get_key);
+    				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, div, outro_and_destroy_block, create_each_block$3, null, get_each_context$3);
     				check_outros();
     			}
     		},
@@ -10759,7 +15530,7 @@ var app = (function () {
 
     	const block = {
     		c: function create() {
-    			t = text("Reroder");
+    			t = text("Reorder");
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, t, anchor);
@@ -11087,7 +15858,7 @@ var app = (function () {
     const { console: console_1 } = globals;
     const file$b = "src\\components\\SetList.svelte";
 
-    function get_each_context$3(ctx, list, i) {
+    function get_each_context$4(ctx, list, i) {
     	const child_ctx = ctx.slice();
     	child_ctx[14] = list[i];
     	return child_ctx;
@@ -11192,7 +15963,7 @@ var app = (function () {
     }
 
     // (266:10) {#each set.instruments as i (i.id)}
-    function create_each_block$3(key_1, ctx) {
+    function create_each_block$4(key_1, ctx) {
     	let span;
     	let t0_value = normalizedName$1(/*i*/ ctx[14].name) + "";
     	let t0;
@@ -11257,7 +16028,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_each_block$3.name,
+    		id: create_each_block$4.name,
     		type: "each",
     		source: "(266:10) {#each set.instruments as i (i.id)}",
     		ctx
@@ -11469,12 +16240,12 @@ var app = (function () {
     	let each_value = /*set*/ ctx[13].instruments;
     	validate_each_argument(each_value);
     	const get_key = ctx => /*i*/ ctx[14].id;
-    	validate_each_keys(ctx, each_value, get_each_context$3, get_key);
+    	validate_each_keys(ctx, each_value, get_each_context$4, get_key);
 
     	for (let i = 0; i < each_value.length; i += 1) {
-    		let child_ctx = get_each_context$3(ctx, each_value, i);
+    		let child_ctx = get_each_context$4(ctx, each_value, i);
     		let key = get_key(child_ctx);
-    		each_1_lookup.set(key, each_blocks[i] = create_each_block$3(key, child_ctx));
+    		each_1_lookup.set(key, each_blocks[i] = create_each_block$4(key, child_ctx));
     	}
 
     	const if_block_creators = [create_if_block_1$2, create_if_block_2$2];
@@ -11567,8 +16338,8 @@ var app = (function () {
     				validate_each_argument(each_value);
     				group_outros();
     				for (let i = 0; i < each_blocks.length; i += 1) each_blocks[i].r();
-    				validate_each_keys(ctx, each_value, get_each_context$3, get_key);
-    				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, div0, fix_and_outro_and_destroy_block, create_each_block$3, null, get_each_context$3);
+    				validate_each_keys(ctx, each_value, get_each_context$4, get_key);
+    				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, div0, fix_and_outro_and_destroy_block, create_each_block$4, null, get_each_context$4);
     				for (let i = 0; i < each_blocks.length; i += 1) each_blocks[i].a();
     				check_outros();
     			}
@@ -12272,273 +17043,14 @@ var app = (function () {
     /* src\components\InstrumentList.svelte generated by Svelte v3.20.1 */
     const file$c = "src\\components\\InstrumentList.svelte";
 
-    function get_each_context$4(ctx, list, i) {
+    function get_each_context$5(ctx, list, i) {
     	const child_ctx = ctx.slice();
     	child_ctx[16] = list[i];
     	return child_ctx;
     }
 
-    // (254:6) {:else}
-    function create_else_block$2(ctx) {
-    	let p;
-    	let t0;
-    	let br;
-    	let t1;
-    	let span;
-    	let t2;
-    	let p_transition;
-    	let current;
-
-    	const block = {
-    		c: function create() {
-    			p = element("p");
-    			t0 = text("No instruments match\r\n          ");
-    			br = element("br");
-    			t1 = space();
-    			span = element("span");
-    			t2 = text(/*filterString*/ ctx[0]);
-    			add_location(br, file$c, 256, 10, 5494);
-    			attr_dev(span, "class", "svelte-23g65n");
-    			add_location(span, file$c, 257, 10, 5512);
-    			attr_dev(p, "class", "info-msg svelte-23g65n");
-    			add_location(p, file$c, 254, 8, 5393);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, p, anchor);
-    			append_dev(p, t0);
-    			append_dev(p, br);
-    			append_dev(p, t1);
-    			append_dev(p, span);
-    			append_dev(span, t2);
-    			current = true;
-    		},
-    		p: function update(ctx, dirty) {
-    			if (!current || dirty & /*filterString*/ 1) set_data_dev(t2, /*filterString*/ ctx[0]);
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-
-    			add_render_callback(() => {
-    				if (!p_transition) p_transition = create_bidirectional_transition(p, slide, { duration: 200 }, true);
-    				p_transition.run(1);
-    			});
-
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			if (!p_transition) p_transition = create_bidirectional_transition(p, slide, { duration: 200 }, false);
-    			p_transition.run(0);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(p);
-    			if (detaching && p_transition) p_transition.end();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_else_block$2.name,
-    		type: "else",
-    		source: "(254:6) {:else}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (246:6) {#if filteredList.length > 0}
+    // (233:0) {#if $editMode}
     function create_if_block$7(ctx) {
-    	let ul;
-    	let each_blocks = [];
-    	let each_1_lookup = new Map();
-    	let ul_transition;
-    	let current;
-    	let each_value = /*filteredList*/ ctx[1];
-    	validate_each_argument(each_value);
-    	const get_key = ctx => /*item*/ ctx[16];
-    	validate_each_keys(ctx, each_value, get_each_context$4, get_key);
-
-    	for (let i = 0; i < each_value.length; i += 1) {
-    		let child_ctx = get_each_context$4(ctx, each_value, i);
-    		let key = get_key(child_ctx);
-    		each_1_lookup.set(key, each_blocks[i] = create_each_block$4(key, child_ctx));
-    	}
-
-    	const block = {
-    		c: function create() {
-    			ul = element("ul");
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
-
-    			attr_dev(ul, "class", "svelte-23g65n");
-    			add_location(ul, file$c, 246, 8, 5120);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, ul, anchor);
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(ul, null);
-    			}
-
-    			current = true;
-    		},
-    		p: function update(ctx, dirty) {
-    			if (dirty & /*addPickedInstrument, filteredList, normalizeInstrumentName*/ 34) {
-    				const each_value = /*filteredList*/ ctx[1];
-    				validate_each_argument(each_value);
-    				validate_each_keys(ctx, each_value, get_each_context$4, get_key);
-    				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, ul, destroy_block, create_each_block$4, null, get_each_context$4);
-    			}
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-
-    			add_render_callback(() => {
-    				if (!ul_transition) ul_transition = create_bidirectional_transition(ul, slide, { duration: 200 }, true);
-    				ul_transition.run(1);
-    			});
-
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			if (!ul_transition) ul_transition = create_bidirectional_transition(ul, slide, { duration: 200 }, false);
-    			ul_transition.run(0);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(ul);
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].d();
-    			}
-
-    			if (detaching && ul_transition) ul_transition.end();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block$7.name,
-    		type: "if",
-    		source: "(246:6) {#if filteredList.length > 0}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (248:10) {#each filteredList as item (item)}
-    function create_each_block$4(key_1, ctx) {
-    	let li;
-    	let t0_value = normalizeInstrumentName(/*item*/ ctx[16]) + "";
-    	let t0;
-    	let t1;
-    	let dispose;
-
-    	function click_handler(...args) {
-    		return /*click_handler*/ ctx[15](/*item*/ ctx[16], ...args);
-    	}
-
-    	const block = {
-    		key: key_1,
-    		first: null,
-    		c: function create() {
-    			li = element("li");
-    			t0 = text(t0_value);
-    			t1 = space();
-    			attr_dev(li, "class", "svelte-23g65n");
-    			add_location(li, file$c, 248, 12, 5222);
-    			this.first = li;
-    		},
-    		m: function mount(target, anchor, remount) {
-    			insert_dev(target, li, anchor);
-    			append_dev(li, t0);
-    			append_dev(li, t1);
-    			if (remount) dispose();
-    			dispose = listen_dev(li, "click", click_handler, false, false, false);
-    		},
-    		p: function update(new_ctx, dirty) {
-    			ctx = new_ctx;
-    			if (dirty & /*filteredList*/ 2 && t0_value !== (t0_value = normalizeInstrumentName(/*item*/ ctx[16]) + "")) set_data_dev(t0, t0_value);
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(li);
-    			dispose();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_each_block$4.name,
-    		type: "each",
-    		source: "(248:10) {#each filteredList as item (item)}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (268:6) <Button on:click={switchSf}>
-    function create_default_slot_1$3(ctx) {
-    	let t;
-
-    	const block = {
-    		c: function create() {
-    			t = text(/*$currentSoundFont*/ ctx[2]);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, t, anchor);
-    		},
-    		p: function update(ctx, dirty) {
-    			if (dirty & /*$currentSoundFont*/ 4) set_data_dev(t, /*$currentSoundFont*/ ctx[2]);
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(t);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_default_slot_1$3.name,
-    		type: "slot",
-    		source: "(268:6) <Button on:click={switchSf}>",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (273:6) <Button on:click={switchAdsrOpt} toggled={$showAdsr} style="width: 100%">
-    function create_default_slot$3(ctx) {
-    	let t;
-
-    	const block = {
-    		c: function create() {
-    			t = text("Show ADSR controls");
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, t, anchor);
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(t);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_default_slot$3.name,
-    		type: "slot",
-    		source: "(273:6) <Button on:click={switchAdsrOpt} toggled={$showAdsr} style=\\\"width: 100%\\\">",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    function create_fragment$c(ctx) {
     	let div5;
     	let h4;
     	let t1;
@@ -12555,10 +17067,9 @@ var app = (function () {
     	let t5;
     	let t6;
     	let div3;
-    	let t7;
     	let current;
     	let dispose;
-    	const if_block_creators = [create_if_block$7, create_else_block$2];
+    	const if_block_creators = [create_if_block_1$3, create_else_block$2];
     	const if_blocks = [];
 
     	function select_block_type(ctx, dirty) {
@@ -12590,7 +17101,6 @@ var app = (function () {
     		});
 
     	button1.$on("click", /*switchAdsrOpt*/ ctx[7]);
-    	const toast = new Toast({ $$inline: true });
 
     	const block = {
     		c: function create() {
@@ -12613,33 +17123,27 @@ var app = (function () {
     			t6 = space();
     			div3 = element("div");
     			create_component(button1.$$.fragment);
-    			t7 = space();
-    			create_component(toast.$$.fragment);
     			attr_dev(h4, "class", "svelte-23g65n");
-    			add_location(h4, file$c, 232, 2, 4806);
+    			add_location(h4, file$c, 234, 4, 4820);
     			attr_dev(input, "class", "search-box svelte-23g65n");
     			attr_dev(input, "placeholder", "Search...");
     			attr_dev(input, "type", "search");
-    			add_location(input, file$c, 236, 4, 4862);
+    			add_location(input, file$c, 238, 6, 4880);
     			attr_dev(div0, "class", "scrollList svelte-23g65n");
-    			add_location(div0, file$c, 244, 4, 5049);
+    			add_location(div0, file$c, 246, 6, 5081);
     			attr_dev(div1, "class", "selector");
-    			add_location(div1, file$c, 234, 2, 4832);
+    			add_location(div1, file$c, 236, 4, 4848);
     			attr_dev(span, "class", "svelte-23g65n");
-    			add_location(span, file$c, 266, 6, 5652);
+    			add_location(span, file$c, 268, 8, 5726);
     			attr_dev(div2, "class", "row svelte-23g65n");
-    			add_location(div2, file$c, 265, 4, 5627);
+    			add_location(div2, file$c, 267, 6, 5699);
     			attr_dev(div3, "class", "row svelte-23g65n");
     			set_style(div3, "align-items", "flex-end");
-    			add_location(div3, file$c, 270, 4, 5759);
+    			add_location(div3, file$c, 272, 6, 5839);
     			attr_dev(div4, "class", "mini-column svelte-23g65n");
-    			add_location(div4, file$c, 264, 2, 5596);
+    			add_location(div4, file$c, 266, 4, 5666);
     			attr_dev(div5, "class", "column svelte-23g65n");
-    			toggle_class(div5, "transparent", !/*$editMode*/ ctx[4]);
-    			add_location(div5, file$c, 231, 0, 4751);
-    		},
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    			add_location(div5, file$c, 233, 2, 4794);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, div5, anchor);
@@ -12660,8 +17164,6 @@ var app = (function () {
     			append_dev(div4, t6);
     			append_dev(div4, div3);
     			mount_component(button1, div3, null);
-    			insert_dev(target, t7, anchor);
-    			mount_component(toast, target, anchor);
     			current = true;
     			if (remount) run_all(dispose);
 
@@ -12671,7 +17173,7 @@ var app = (function () {
     				listen_dev(input, "input", /*input_input_handler*/ ctx[14])
     			];
     		},
-    		p: function update(ctx, [dirty]) {
+    		p: function update(ctx, dirty) {
     			if (dirty & /*filterString*/ 1) {
     				set_input_value(input, /*filterString*/ ctx[0]);
     			}
@@ -12715,24 +17217,18 @@ var app = (function () {
     			}
 
     			button1.$set(button1_changes);
-
-    			if (dirty & /*$editMode*/ 16) {
-    				toggle_class(div5, "transparent", !/*$editMode*/ ctx[4]);
-    			}
     		},
     		i: function intro(local) {
     			if (current) return;
     			transition_in(if_block);
     			transition_in(button0.$$.fragment, local);
     			transition_in(button1.$$.fragment, local);
-    			transition_in(toast.$$.fragment, local);
     			current = true;
     		},
     		o: function outro(local) {
     			transition_out(if_block);
     			transition_out(button0.$$.fragment, local);
     			transition_out(button1.$$.fragment, local);
-    			transition_out(toast.$$.fragment, local);
     			current = false;
     		},
     		d: function destroy(detaching) {
@@ -12740,9 +17236,338 @@ var app = (function () {
     			if_blocks[current_block_type_index].d();
     			destroy_component(button0);
     			destroy_component(button1);
-    			if (detaching) detach_dev(t7);
-    			destroy_component(toast, detaching);
     			run_all(dispose);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block$7.name,
+    		type: "if",
+    		source: "(233:0) {#if $editMode}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (256:8) {:else}
+    function create_else_block$2(ctx) {
+    	let p;
+    	let t0;
+    	let br;
+    	let t1;
+    	let span;
+    	let t2;
+    	let p_transition;
+    	let current;
+
+    	const block = {
+    		c: function create() {
+    			p = element("p");
+    			t0 = text("No instruments match\r\n            ");
+    			br = element("br");
+    			t1 = space();
+    			span = element("span");
+    			t2 = text(/*filterString*/ ctx[0]);
+    			add_location(br, file$c, 258, 12, 5552);
+    			attr_dev(span, "class", "svelte-23g65n");
+    			add_location(span, file$c, 259, 12, 5572);
+    			attr_dev(p, "class", "info-msg svelte-23g65n");
+    			add_location(p, file$c, 256, 10, 5447);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, p, anchor);
+    			append_dev(p, t0);
+    			append_dev(p, br);
+    			append_dev(p, t1);
+    			append_dev(p, span);
+    			append_dev(span, t2);
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if (!current || dirty & /*filterString*/ 1) set_data_dev(t2, /*filterString*/ ctx[0]);
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!p_transition) p_transition = create_bidirectional_transition(p, slide, { duration: 200 }, true);
+    				p_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!p_transition) p_transition = create_bidirectional_transition(p, slide, { duration: 200 }, false);
+    			p_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(p);
+    			if (detaching && p_transition) p_transition.end();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_else_block$2.name,
+    		type: "else",
+    		source: "(256:8) {:else}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (248:8) {#if filteredList.length > 0}
+    function create_if_block_1$3(ctx) {
+    	let ul;
+    	let each_blocks = [];
+    	let each_1_lookup = new Map();
+    	let ul_transition;
+    	let current;
+    	let each_value = /*filteredList*/ ctx[1];
+    	validate_each_argument(each_value);
+    	const get_key = ctx => /*item*/ ctx[16];
+    	validate_each_keys(ctx, each_value, get_each_context$5, get_key);
+
+    	for (let i = 0; i < each_value.length; i += 1) {
+    		let child_ctx = get_each_context$5(ctx, each_value, i);
+    		let key = get_key(child_ctx);
+    		each_1_lookup.set(key, each_blocks[i] = create_each_block$5(key, child_ctx));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			ul = element("ul");
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			attr_dev(ul, "class", "svelte-23g65n");
+    			add_location(ul, file$c, 248, 10, 5156);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, ul, anchor);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(ul, null);
+    			}
+
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*addPickedInstrument, filteredList, normalizeInstrumentName*/ 34) {
+    				const each_value = /*filteredList*/ ctx[1];
+    				validate_each_argument(each_value);
+    				validate_each_keys(ctx, each_value, get_each_context$5, get_key);
+    				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, ul, destroy_block, create_each_block$5, null, get_each_context$5);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!ul_transition) ul_transition = create_bidirectional_transition(ul, slide, { duration: 200 }, true);
+    				ul_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!ul_transition) ul_transition = create_bidirectional_transition(ul, slide, { duration: 200 }, false);
+    			ul_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(ul);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].d();
+    			}
+
+    			if (detaching && ul_transition) ul_transition.end();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_1$3.name,
+    		type: "if",
+    		source: "(248:8) {#if filteredList.length > 0}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (250:12) {#each filteredList as item (item)}
+    function create_each_block$5(key_1, ctx) {
+    	let li;
+    	let t0_value = normalizeInstrumentName(/*item*/ ctx[16]) + "";
+    	let t0;
+    	let t1;
+    	let dispose;
+
+    	function click_handler(...args) {
+    		return /*click_handler*/ ctx[15](/*item*/ ctx[16], ...args);
+    	}
+
+    	const block = {
+    		key: key_1,
+    		first: null,
+    		c: function create() {
+    			li = element("li");
+    			t0 = text(t0_value);
+    			t1 = space();
+    			attr_dev(li, "class", "svelte-23g65n");
+    			add_location(li, file$c, 250, 14, 5262);
+    			this.first = li;
+    		},
+    		m: function mount(target, anchor, remount) {
+    			insert_dev(target, li, anchor);
+    			append_dev(li, t0);
+    			append_dev(li, t1);
+    			if (remount) dispose();
+    			dispose = listen_dev(li, "click", click_handler, false, false, false);
+    		},
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
+    			if (dirty & /*filteredList*/ 2 && t0_value !== (t0_value = normalizeInstrumentName(/*item*/ ctx[16]) + "")) set_data_dev(t0, t0_value);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(li);
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block$5.name,
+    		type: "each",
+    		source: "(250:12) {#each filteredList as item (item)}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (270:8) <Button on:click={switchSf}>
+    function create_default_slot_1$3(ctx) {
+    	let t;
+
+    	const block = {
+    		c: function create() {
+    			t = text(/*$currentSoundFont*/ ctx[2]);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, t, anchor);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*$currentSoundFont*/ 4) set_data_dev(t, /*$currentSoundFont*/ ctx[2]);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(t);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot_1$3.name,
+    		type: "slot",
+    		source: "(270:8) <Button on:click={switchSf}>",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (275:8) <Button            on:click={switchAdsrOpt}            toggled={$showAdsr}            style="width: 100%">
+    function create_default_slot$3(ctx) {
+    	let t;
+
+    	const block = {
+    		c: function create() {
+    			t = text("Show ADSR controls");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, t, anchor);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(t);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot$3.name,
+    		type: "slot",
+    		source: "(275:8) <Button            on:click={switchAdsrOpt}            toggled={$showAdsr}            style=\\\"width: 100%\\\">",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function create_fragment$c(ctx) {
+    	let t;
+    	let current;
+    	let if_block = /*$editMode*/ ctx[4] && create_if_block$7(ctx);
+    	const toast = new Toast({ $$inline: true });
+
+    	const block = {
+    		c: function create() {
+    			if (if_block) if_block.c();
+    			t = space();
+    			create_component(toast.$$.fragment);
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor) {
+    			if (if_block) if_block.m(target, anchor);
+    			insert_dev(target, t, anchor);
+    			mount_component(toast, target, anchor);
+    			current = true;
+    		},
+    		p: function update(ctx, [dirty]) {
+    			if (/*$editMode*/ ctx[4]) {
+    				if (if_block) {
+    					if_block.p(ctx, dirty);
+    					transition_in(if_block, 1);
+    				} else {
+    					if_block = create_if_block$7(ctx);
+    					if_block.c();
+    					transition_in(if_block, 1);
+    					if_block.m(t.parentNode, t);
+    				}
+    			} else if (if_block) {
+    				group_outros();
+
+    				transition_out(if_block, 1, 1, () => {
+    					if_block = null;
+    				});
+
+    				check_outros();
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(if_block);
+    			transition_in(toast.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(if_block);
+    			transition_out(toast.$$.fragment, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (if_block) if_block.d(detaching);
+    			if (detaching) detach_dev(t);
+    			destroy_component(toast, detaching);
     		}
     	};
 
@@ -12863,6 +17688,7 @@ var app = (function () {
 
     	$$self.$capture_state = () => ({
     		slide,
+    		fade,
     		soundFont,
     		currentSoundFont,
     		instrumentSets,
@@ -14583,10 +19409,10 @@ var app = (function () {
 
     /* src\App.svelte generated by Svelte v3.20.1 */
 
-    const { console: console_1$1, window: window_1 } = globals;
+    const { Object: Object_1$1, console: console_1$1, window: window_1 } = globals;
     const file$e = "src\\App.svelte";
 
-    // (322:4) <h3 slot="left">
+    // (334:4) <h3 slot="left">
     function create_left_slot(ctx) {
     	let h3;
 
@@ -14595,8 +19421,8 @@ var app = (function () {
     			h3 = element("h3");
     			h3.textContent = "Piano";
     			attr_dev(h3, "slot", "left");
-    			attr_dev(h3, "class", "svelte-198fumr");
-    			add_location(h3, file$e, 321, 4, 8470);
+    			attr_dev(h3, "class", "svelte-1fbu7kd");
+    			add_location(h3, file$e, 333, 4, 8692);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, h3, anchor);
@@ -14610,15 +19436,15 @@ var app = (function () {
     		block,
     		id: create_left_slot.name,
     		type: "slot",
-    		source: "(322:4) <h3 slot=\\\"left\\\">",
+    		source: "(334:4) <h3 slot=\\\"left\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (324:4) <Button on:click={stopAllSounds}>
-    function create_default_slot_3$2(ctx) {
+    // (336:4) <Button on:click={stopAllSounds}>
+    function create_default_slot_5$1(ctx) {
     	let t;
 
     	const block = {
@@ -14635,17 +19461,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot_3$2.name,
+    		id: create_default_slot_5$1.name,
     		type: "slot",
-    		source: "(324:4) <Button on:click={stopAllSounds}>",
+    		source: "(336:4) <Button on:click={stopAllSounds}>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (325:4) <Button spaced toggled={$editMode} on:click={toggleEditMode}>
-    function create_default_slot_2$2(ctx) {
+    // (337:4) <Button spaced toggled={$editMode} on:click={toggleEditMode}>
+    function create_default_slot_4$2(ctx) {
     	let t;
 
     	const block = {
@@ -14662,17 +19488,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot_2$2.name,
+    		id: create_default_slot_4$2.name,
     		type: "slot",
-    		source: "(325:4) <Button spaced toggled={$editMode} on:click={toggleEditMode}>",
+    		source: "(337:4) <Button spaced toggled={$editMode} on:click={toggleEditMode}>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (328:4) <Button spaced toggled={$chordMode} on:click={toggleChordMode}>
-    function create_default_slot_1$4(ctx) {
+    // (340:4) <Button spaced toggled={$chordMode} on:click={toggleChordMode}>
+    function create_default_slot_3$2(ctx) {
     	let div;
     	let t0;
     	let span;
@@ -14686,12 +19512,12 @@ var app = (function () {
     			set_style(span, "opacity", "0.6");
     			set_style(span, "margin-left", "5px");
     			set_style(span, "font-family", "'Inter',\r\n          sans-serif");
-    			set_style(span, "border", "1px solid black");
+    			set_style(span, "border", "1px solid var(--body-text)");
     			set_style(span, "border-radius", "2px");
-    			set_style(span, "padding", "0\r\n          4px");
-    			add_location(span, file$e, 330, 8, 8794);
+    			set_style(span, "padding", "0 4px");
+    			add_location(span, file$e, 342, 8, 9016);
     			set_style(div, "display", "flex");
-    			add_location(div, file$e, 328, 6, 8737);
+    			add_location(div, file$e, 340, 6, 8959);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -14705,17 +19531,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot_1$4.name,
+    		id: create_default_slot_3$2.name,
     		type: "slot",
-    		source: "(328:4) <Button spaced toggled={$chordMode} on:click={toggleChordMode}>",
+    		source: "(340:4) <Button spaced toggled={$chordMode} on:click={toggleChordMode}>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (321:2) <TitleBar>
-    function create_default_slot$5(ctx) {
+    // (333:2) <TitleBar>
+    function create_default_slot_2$2(ctx) {
     	let t0;
     	let t1;
     	let t2;
@@ -14724,37 +19550,37 @@ var app = (function () {
 
     	const button0 = new Button({
     			props: {
+    				$$slots: { default: [create_default_slot_5$1] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
+
+    	button0.$on("click", /*stopAllSounds*/ ctx[3]);
+
+    	const button1 = new Button({
+    			props: {
+    				spaced: true,
+    				toggled: /*$editMode*/ ctx[0],
+    				$$slots: { default: [create_default_slot_4$2] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
+
+    	button1.$on("click", /*toggleEditMode*/ ctx[4]);
+
+    	const button2 = new Button({
+    			props: {
+    				spaced: true,
+    				toggled: /*$chordMode*/ ctx[1],
     				$$slots: { default: [create_default_slot_3$2] },
     				$$scope: { ctx }
     			},
     			$$inline: true
     		});
 
-    	button0.$on("click", /*stopAllSounds*/ ctx[2]);
-
-    	const button1 = new Button({
-    			props: {
-    				spaced: true,
-    				toggled: /*$editMode*/ ctx[0],
-    				$$slots: { default: [create_default_slot_2$2] },
-    				$$scope: { ctx }
-    			},
-    			$$inline: true
-    		});
-
-    	button1.$on("click", /*toggleEditMode*/ ctx[3]);
-
-    	const button2 = new Button({
-    			props: {
-    				spaced: true,
-    				toggled: /*$chordMode*/ ctx[1],
-    				$$slots: { default: [create_default_slot_1$4] },
-    				$$scope: { ctx }
-    			},
-    			$$inline: true
-    		});
-
-    	button2.$on("click", /*toggleChordMode*/ ctx[4]);
+    	button2.$on("click", /*toggleChordMode*/ ctx[5]);
     	const themeswitcher = new ThemeSwitcher({ $$inline: true });
 
     	const block = {
@@ -14782,7 +19608,7 @@ var app = (function () {
     		p: function update(ctx, dirty) {
     			const button0_changes = {};
 
-    			if (dirty & /*$$scope*/ 131072) {
+    			if (dirty & /*$$scope*/ 1048576) {
     				button0_changes.$$scope = { dirty, ctx };
     			}
 
@@ -14790,7 +19616,7 @@ var app = (function () {
     			const button1_changes = {};
     			if (dirty & /*$editMode*/ 1) button1_changes.toggled = /*$editMode*/ ctx[0];
 
-    			if (dirty & /*$$scope*/ 131072) {
+    			if (dirty & /*$$scope*/ 1048576) {
     				button1_changes.$$scope = { dirty, ctx };
     			}
 
@@ -14798,7 +19624,7 @@ var app = (function () {
     			const button2_changes = {};
     			if (dirty & /*$chordMode*/ 2) button2_changes.toggled = /*$chordMode*/ ctx[1];
 
-    			if (dirty & /*$$scope*/ 131072) {
+    			if (dirty & /*$$scope*/ 1048576) {
     				button2_changes.$$scope = { dirty, ctx };
     			}
 
@@ -14833,9 +19659,152 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
+    		id: create_default_slot_2$2.name,
+    		type: "slot",
+    		source: "(333:2) <TitleBar>",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (356:2) {#if $editMode}
+    function create_if_block$9(ctx) {
+    	let div;
+    	let t;
+    	let current;
+
+    	const button0 = new Button({
+    			props: {
+    				spaced: true,
+    				$$slots: { default: [create_default_slot_1$4] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
+
+    	button0.$on("click", /*click_handler*/ ctx[18]);
+
+    	const button1 = new Button({
+    			props: {
+    				spaced: true,
+    				$$slots: { default: [create_default_slot$5] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
+
+    	button1.$on("click", /*click_handler_1*/ ctx[19]);
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			create_component(button0.$$.fragment);
+    			t = space();
+    			create_component(button1.$$.fragment);
+    			attr_dev(div, "class", "chord-controls svelte-1fbu7kd");
+    			add_location(div, file$e, 356, 4, 9343);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    			mount_component(button0, div, null);
+    			append_dev(div, t);
+    			mount_component(button1, div, null);
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			const button0_changes = {};
+
+    			if (dirty & /*$$scope*/ 1048576) {
+    				button0_changes.$$scope = { dirty, ctx };
+    			}
+
+    			button0.$set(button0_changes);
+    			const button1_changes = {};
+
+    			if (dirty & /*$$scope*/ 1048576) {
+    				button1_changes.$$scope = { dirty, ctx };
+    			}
+
+    			button1.$set(button1_changes);
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(button0.$$.fragment, local);
+    			transition_in(button1.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(button0.$$.fragment, local);
+    			transition_out(button1.$$.fragment, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    			destroy_component(button0);
+    			destroy_component(button1);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block$9.name,
+    		type: "if",
+    		source: "(356:2) {#if $editMode}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (358:6) <Button          spaced          on:click={() => {            let temp = $chordNotes;            for (let keyboardKey of Object.keys(defaultChords)) {              temp[keyboardKey] = '';            }            chordNotes.set(temp);            for (let sel of document.querySelectorAll('.piano-grid select')) {              sel.value = null;            }          }}>
+    function create_default_slot_1$4(ctx) {
+    	let t;
+
+    	const block = {
+    		c: function create() {
+    			t = text("Clear all chords");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, t, anchor);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(t);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot_1$4.name,
+    		type: "slot",
+    		source: "(358:6) <Button          spaced          on:click={() => {            let temp = $chordNotes;            for (let keyboardKey of Object.keys(defaultChords)) {              temp[keyboardKey] = '';            }            chordNotes.set(temp);            for (let sel of document.querySelectorAll('.piano-grid select')) {              sel.value = null;            }          }}>",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (372:6) <Button          spaced          on:click={() => {            chordNotes.set(defaultChords);          }}>
+    function create_default_slot$5(ctx) {
+    	let t;
+
+    	const block = {
+    		c: function create() {
+    			t = text("Reset to default");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, t, anchor);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(t);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
     		id: create_default_slot$5.name,
     		type: "slot",
-    		source: "(321:2) <TitleBar>",
+    		source: "(372:6) <Button          spaced          on:click={() => {            chordNotes.set(defaultChords);          }}>",
     		ctx
     	});
 
@@ -14847,17 +19816,18 @@ var app = (function () {
     	let t0;
     	let t1;
     	let t2;
-    	let div0;
     	let t3;
+    	let div0;
     	let t4;
     	let t5;
+    	let t6;
     	let current;
     	let dispose;
 
     	const titlebar = new TitleBar({
     			props: {
     				$$slots: {
-    					default: [create_default_slot$5],
+    					default: [create_default_slot_2$2],
     					left: [create_left_slot]
     				},
     				$$scope: { ctx }
@@ -14866,6 +19836,7 @@ var app = (function () {
     		});
 
     	const controls = new Controls({ $$inline: true });
+    	let if_block = /*$editMode*/ ctx[0] && create_if_block$9(ctx);
     	const pianogrid = new PianoGrid({ $$inline: true });
     	const instrumentlist = new InstrumentList({ $$inline: true });
     	const seteditor = new SetEditor({ $$inline: true });
@@ -14879,20 +19850,22 @@ var app = (function () {
     			t0 = space();
     			create_component(controls.$$.fragment);
     			t1 = space();
-    			create_component(pianogrid.$$.fragment);
+    			if (if_block) if_block.c();
     			t2 = space();
+    			create_component(pianogrid.$$.fragment);
+    			t3 = space();
     			div0 = element("div");
     			create_component(instrumentlist.$$.fragment);
-    			t3 = space();
-    			create_component(seteditor.$$.fragment);
     			t4 = space();
-    			create_component(setlist.$$.fragment);
+    			create_component(seteditor.$$.fragment);
     			t5 = space();
+    			create_component(setlist.$$.fragment);
+    			t6 = space();
     			create_component(toast.$$.fragment);
-    			attr_dev(div0, "class", "split svelte-198fumr");
-    			add_location(div0, file$e, 345, 2, 9108);
+    			attr_dev(div0, "class", "split svelte-1fbu7kd");
+    			add_location(div0, file$e, 383, 2, 9992);
     			attr_dev(div1, "class", "container");
-    			add_location(div1, file$e, 318, 0, 8425);
+    			add_location(div1, file$e, 330, 0, 8647);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -14903,37 +19876,60 @@ var app = (function () {
     			append_dev(div1, t0);
     			mount_component(controls, div1, null);
     			append_dev(div1, t1);
-    			mount_component(pianogrid, div1, null);
+    			if (if_block) if_block.m(div1, null);
     			append_dev(div1, t2);
+    			mount_component(pianogrid, div1, null);
+    			append_dev(div1, t3);
     			append_dev(div1, div0);
     			mount_component(instrumentlist, div0, null);
-    			append_dev(div0, t3);
-    			mount_component(seteditor, div0, null);
     			append_dev(div0, t4);
+    			mount_component(seteditor, div0, null);
+    			append_dev(div0, t5);
     			mount_component(setlist, div0, null);
-    			insert_dev(target, t5, anchor);
+    			insert_dev(target, t6, anchor);
     			mount_component(toast, target, anchor);
     			current = true;
     			if (remount) run_all(dispose);
 
     			dispose = [
-    				listen_dev(window_1, "keydown", /*handleKeyDown*/ ctx[5], false, false, false),
-    				listen_dev(window_1, "keyup", /*handleKeyUp*/ ctx[6], false, false, false)
+    				listen_dev(window_1, "keydown", /*handleKeyDown*/ ctx[6], false, false, false),
+    				listen_dev(window_1, "keyup", /*handleKeyUp*/ ctx[7], false, false, false)
     			];
     		},
     		p: function update(ctx, [dirty]) {
     			const titlebar_changes = {};
 
-    			if (dirty & /*$$scope, $chordMode, $editMode*/ 131075) {
+    			if (dirty & /*$$scope, $chordMode, $editMode*/ 1048579) {
     				titlebar_changes.$$scope = { dirty, ctx };
     			}
 
     			titlebar.$set(titlebar_changes);
+
+    			if (/*$editMode*/ ctx[0]) {
+    				if (if_block) {
+    					if_block.p(ctx, dirty);
+    					transition_in(if_block, 1);
+    				} else {
+    					if_block = create_if_block$9(ctx);
+    					if_block.c();
+    					transition_in(if_block, 1);
+    					if_block.m(div1, t2);
+    				}
+    			} else if (if_block) {
+    				group_outros();
+
+    				transition_out(if_block, 1, 1, () => {
+    					if_block = null;
+    				});
+
+    				check_outros();
+    			}
     		},
     		i: function intro(local) {
     			if (current) return;
     			transition_in(titlebar.$$.fragment, local);
     			transition_in(controls.$$.fragment, local);
+    			transition_in(if_block);
     			transition_in(pianogrid.$$.fragment, local);
     			transition_in(instrumentlist.$$.fragment, local);
     			transition_in(seteditor.$$.fragment, local);
@@ -14944,6 +19940,7 @@ var app = (function () {
     		o: function outro(local) {
     			transition_out(titlebar.$$.fragment, local);
     			transition_out(controls.$$.fragment, local);
+    			transition_out(if_block);
     			transition_out(pianogrid.$$.fragment, local);
     			transition_out(instrumentlist.$$.fragment, local);
     			transition_out(seteditor.$$.fragment, local);
@@ -14955,11 +19952,12 @@ var app = (function () {
     			if (detaching) detach_dev(div1);
     			destroy_component(titlebar);
     			destroy_component(controls);
+    			if (if_block) if_block.d();
     			destroy_component(pianogrid);
     			destroy_component(instrumentlist);
     			destroy_component(seteditor);
     			destroy_component(setlist);
-    			if (detaching) detach_dev(t5);
+    			if (detaching) detach_dev(t6);
     			destroy_component(toast, detaching);
     			run_all(dispose);
     		}
@@ -14997,26 +19995,29 @@ var app = (function () {
     	let $keysDown;
     	let $volume;
     	let $octaveShift;
+    	let $chordNotes;
     	validate_store(theme, "theme");
-    	component_subscribe($$self, theme, $$value => $$invalidate(8, $theme = $$value));
+    	component_subscribe($$self, theme, $$value => $$invalidate(9, $theme = $$value));
     	validate_store(instrumentSets, "instrumentSets");
-    	component_subscribe($$self, instrumentSets, $$value => $$invalidate(9, $instrumentSets = $$value));
+    	component_subscribe($$self, instrumentSets, $$value => $$invalidate(10, $instrumentSets = $$value));
     	validate_store(activeSet, "activeSet");
-    	component_subscribe($$self, activeSet, $$value => $$invalidate(10, $activeSet = $$value));
+    	component_subscribe($$self, activeSet, $$value => $$invalidate(11, $activeSet = $$value));
     	validate_store(editMode, "editMode");
     	component_subscribe($$self, editMode, $$value => $$invalidate(0, $editMode = $$value));
     	validate_store(chordMode, "chordMode");
     	component_subscribe($$self, chordMode, $$value => $$invalidate(1, $chordMode = $$value));
     	validate_store(isFocused, "isFocused");
-    	component_subscribe($$self, isFocused, $$value => $$invalidate(11, $isFocused = $$value));
+    	component_subscribe($$self, isFocused, $$value => $$invalidate(12, $isFocused = $$value));
     	validate_store(keysPressed, "keysPressed");
-    	component_subscribe($$self, keysPressed, $$value => $$invalidate(12, $keysPressed = $$value));
+    	component_subscribe($$self, keysPressed, $$value => $$invalidate(13, $keysPressed = $$value));
     	validate_store(keysDown, "keysDown");
-    	component_subscribe($$self, keysDown, $$value => $$invalidate(13, $keysDown = $$value));
+    	component_subscribe($$self, keysDown, $$value => $$invalidate(14, $keysDown = $$value));
     	validate_store(volume, "volume");
-    	component_subscribe($$self, volume, $$value => $$invalidate(14, $volume = $$value));
+    	component_subscribe($$self, volume, $$value => $$invalidate(15, $volume = $$value));
     	validate_store(octaveShift, "octaveShift");
-    	component_subscribe($$self, octaveShift, $$value => $$invalidate(15, $octaveShift = $$value));
+    	component_subscribe($$self, octaveShift, $$value => $$invalidate(16, $octaveShift = $$value));
+    	validate_store(chordNotes, "chordNotes");
+    	component_subscribe($$self, chordNotes, $$value => $$invalidate(2, $chordNotes = $$value));
     	instrumentSets.useLocalStorage();
     	showAdsr.useLocalStorage();
     	currentSoundFont.useLocalStorage();
@@ -15027,6 +20028,7 @@ var app = (function () {
     	theme.useLocalStorage();
     	isReordering.useLocalStorage();
     	chordMode.useLocalStorage();
+    	chordNotes.useLocalStorage();
 
     	function stopAllSounds() {
     		try {
@@ -15109,7 +20111,12 @@ var app = (function () {
     				if (newAdsr[1] < 0) newAdsr[1] = defaultAdsr[1];
     				if (newAdsr[2] < 0) newAdsr[2] = defaultAdsr[2];
     				if (newAdsr[3] < 0) newAdsr[3] = defaultAdsr[3];
-    				let noteCollection = $chordMode ? chordNotes[kCode] : keyNotes[kCode];
+
+    				let noteCollection = $chordMode
+    				? chords[$chordNotes[kCode]]
+    				: keyNotes[kCode];
+
+    				if (noteCollection == null) return;
 
     				for (let noteCode of noteCollection) {
     					let note = (parseInt($chordMode ? keyNotes[noteCode] : noteCode) + 12 * adjustedOctShift).toString();
@@ -15249,12 +20256,30 @@ var app = (function () {
 
     	const writable_props = [];
 
-    	Object.keys($$props).forEach(key => {
+    	Object_1$1.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1$1.warn(`<App> was created with unknown prop '${key}'`);
     	});
 
     	let { $$slots = {}, $$scope } = $$props;
     	validate_slots("App", $$slots, []);
+
+    	const click_handler = () => {
+    		let temp = $chordNotes;
+
+    		for (let keyboardKey of Object.keys(defaultChords)) {
+    			temp[keyboardKey] = "";
+    		}
+
+    		chordNotes.set(temp);
+
+    		for (let sel of document.querySelectorAll(".piano-grid select")) {
+    			sel.value = null;
+    		}
+    	};
+
+    	const click_handler_1 = () => {
+    		chordNotes.set(defaultChords);
+    	};
 
     	$$self.$capture_state = () => ({
     		onMount,
@@ -15288,6 +20313,8 @@ var app = (function () {
     		isReordering,
     		chordMode,
     		chordNotes,
+    		chords,
+    		defaultChords,
     		Soundfont: lib$2,
     		clamp: clamp$1,
     		stopAllSounds,
@@ -15307,7 +20334,8 @@ var app = (function () {
     		$keysPressed,
     		$keysDown,
     		$volume,
-    		$octaveShift
+    		$octaveShift,
+    		$chordNotes
     	});
 
     	$$self.$inject_state = $$props => {
@@ -15321,7 +20349,7 @@ var app = (function () {
     	}
 
     	$$self.$$.update = () => {
-    		if ($$self.$$.dirty & /*$theme*/ 256) {
+    		if ($$self.$$.dirty & /*$theme*/ 512) {
     			 themeName = $theme === 0 ? "Auto" : $theme === 1 ? "Light" : "Dark";
     		}
     	};
@@ -15329,11 +20357,24 @@ var app = (function () {
     	return [
     		$editMode,
     		$chordMode,
+    		$chordNotes,
     		stopAllSounds,
     		toggleEditMode,
     		toggleChordMode,
     		handleKeyDown,
-    		handleKeyUp
+    		handleKeyUp,
+    		themeName,
+    		$theme,
+    		$instrumentSets,
+    		$activeSet,
+    		$isFocused,
+    		$keysPressed,
+    		$keysDown,
+    		$volume,
+    		$octaveShift,
+    		applyTheme,
+    		click_handler,
+    		click_handler_1
     	];
     }
 

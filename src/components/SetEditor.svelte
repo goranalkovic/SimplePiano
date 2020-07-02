@@ -53,7 +53,7 @@
     {#if $editMode}
       <div transition:slide>
         <Button on:click={toggleReorder} toggled={$isReordering}>
-          Reroder
+          Reorder
         </Button>
       </div>
     {/if}

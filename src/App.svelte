@@ -32,6 +32,8 @@
     isReordering,
     chordMode,
     chordNotes,
+    chords,
+    defaultChords,
   } from "./stores.js";
 
   import Soundfont from "soundfont-player";
@@ -46,6 +48,7 @@
   theme.useLocalStorage();
   isReordering.useLocalStorage();
   chordMode.useLocalStorage();
+  chordNotes.useLocalStorage();
 
   $: themeName = $theme === 0 ? "Auto" : $theme === 1 ? "Light" : "Dark";
 
@@ -147,7 +150,11 @@
         if (newAdsr[2] < 0) newAdsr[2] = defaultAdsr[2];
         if (newAdsr[3] < 0) newAdsr[3] = defaultAdsr[3];
 
-        let noteCollection = $chordMode ? chordNotes[kCode] : keyNotes[kCode];
+        let noteCollection = $chordMode
+          ? chords[$chordNotes[kCode]]
+          : keyNotes[kCode];
+
+        if (noteCollection == null) return;
 
         for (let noteCode of noteCollection) {
           let note = (
@@ -314,6 +321,11 @@
   h3 {
     font-weight: 400;
   }
+
+  .chord-controls {
+    display: flex;
+    justify-content: center;
+  }
 </style>
 
 <div class="container">
@@ -340,6 +352,32 @@
   </TitleBar>
 
   <Controls />
+
+  {#if $editMode}
+    <div class="chord-controls">
+      <Button
+        spaced
+        on:click={() => {
+          let temp = $chordNotes;
+          for (let keyboardKey of Object.keys(defaultChords)) {
+            temp[keyboardKey] = '';
+          }
+          chordNotes.set(temp);
+          for (let sel of document.querySelectorAll('.piano-grid select')) {
+            sel.value = null;
+          }
+        }}>
+        Clear all chords
+      </Button>
+      <Button
+        spaced
+        on:click={() => {
+          chordNotes.set(defaultChords);
+        }}>
+        Reset to default
+      </Button>
+    </div>
+  {/if}
 
   <PianoGrid />
 

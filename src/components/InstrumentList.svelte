@@ -1,5 +1,5 @@
 <script>
-  import { slide } from "svelte/transition";
+  import { slide, fade } from "svelte/transition";
   import {
     soundFont,
     currentSoundFont,
@@ -9,7 +9,7 @@
     isFocused,
     activeSet,
     editMode,
-    isReordering
+    isReordering,
   } from "../stores";
 
   import Button from "./Button.svelte";
@@ -24,7 +24,8 @@
     filterString.trim() === ""
       ? availInstruments
       : availInstruments.filter(
-          item => item.toLowerCase().indexOf(filterString.toLowerCase()) !== -1
+          (item) =>
+            item.toLowerCase().indexOf(filterString.toLowerCase()) !== -1
         );
 
   async function getInstruments() {
@@ -65,7 +66,7 @@
     if (selectedInstrument == null) return;
 
     let instrumentData = Soundfont.instrument(ac, selectedInstrument, {
-      soundfont: $currentSoundFont
+      soundfont: $currentSoundFont,
     });
 
     let newInstr = {
@@ -76,7 +77,7 @@
       absoluteVolume: true,
       data: instrumentData,
       soundfont: $currentSoundFont,
-      adsr: [-0.01, -0.01, -0.01, -0.01]
+      adsr: [-0.01, -0.01, -0.01, -0.01],
     };
 
     let currentSets = $instrumentSets;
@@ -229,52 +230,56 @@
   }
 </style>
 
-<div class="column" class:transparent={!$editMode}>
-  <h4>Instruments</h4>
+{#if $editMode}
+  <div class="column">
+    <h4>Instruments</h4>
 
-  <div class="selector">
+    <div class="selector">
 
-    <input
-      on:focus={setFocused}
-      on:blur={setUnfocused}
-      class="search-box"
-      placeholder="Search..."
-      type="search"
-      bind:value={filterString} />
+      <input
+        on:focus={setFocused}
+        on:blur={setUnfocused}
+        class="search-box"
+        placeholder="Search..."
+        type="search"
+        bind:value={filterString} />
 
-    <div class="scrollList">
-      {#if filteredList.length > 0}
-        <ul transition:slide={{ duration: 200 }}>
-          {#each filteredList as item (item)}
-            <li on:click={e => addPickedInstrument(item)}>
-              {normalizeInstrumentName(item)}
-            </li>
-          {/each}
-        </ul>
-      {:else}
-        <p class="info-msg" transition:slide={{ duration: 200 }}>
-          No instruments match
-          <br />
-          <span>{filterString}</span>
-        </p>
-      {/if}
+      <div class="scrollList">
+        {#if filteredList.length > 0}
+          <ul transition:slide={{ duration: 200 }}>
+            {#each filteredList as item (item)}
+              <li on:click={(e) => addPickedInstrument(item)}>
+                {normalizeInstrumentName(item)}
+              </li>
+            {/each}
+          </ul>
+        {:else}
+          <p class="info-msg" transition:slide={{ duration: 200 }}>
+            No instruments match
+            <br />
+            <span>{filterString}</span>
+          </p>
+        {/if}
+      </div>
+
     </div>
 
+    <div class="mini-column">
+      <div class="row">
+        <span>Sound font</span>
+        <Button on:click={switchSf}>{$currentSoundFont}</Button>
+      </div>
+
+      <div class="row" style="align-items: flex-end;">
+        <!-- <span style="margin-top: 0.8rem"></span> -->
+        <Button
+          on:click={switchAdsrOpt}
+          toggled={$showAdsr}
+          style="width: 100%">
+          Show ADSR controls
+        </Button>
+      </div>
+    </div>
   </div>
-
-  <div class="mini-column">
-    <div class="row">
-      <span>Sound font</span>
-      <Button on:click={switchSf}>{$currentSoundFont}</Button>
-    </div>
-
-    <div class="row" style="align-items: flex-end;">
-      <!-- <span style="margin-top: 0.8rem"></span> -->
-      <Button on:click={switchAdsrOpt} toggled={$showAdsr} style="width: 100%">
-        Show ADSR controls
-      </Button>
-    </div>
-  </div>
-</div>
-
+{/if}
 <Toast />
