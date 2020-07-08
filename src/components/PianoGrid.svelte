@@ -88,27 +88,10 @@
     width: 4rem;
   }
 
-  .edit-mode-warn {
-    position: absolute;
-
-    left: 40%;
-    top: -15%;
-
-    font-weight: 500;
-    z-index: 2000;
-    opacity: 1;
-    letter-spacing: -0.2px;
-    color: var(--bg-color);
-    background: var(--body-text);
-    border-radius: 2px;
-    text-align: center;
-    padding: 4px 6px;
-  }
-
   .chord {
     opacity: 0.6;
-    font-size: 85%;
-    margin-bottom: 0.2rem;
+    font-size: 80%;
+    margin-bottom: 0.3rem;
     text-align: center;
   }
 
@@ -123,10 +106,12 @@
 
   .white-key select {
     background: var(--black-key-color);
+    color: var(--black-key-text);
   }
 
   .black-key select {
     background: var(--white-key-color);
+    color: var(--white-key-text);
   }
 </style>
 
@@ -501,9 +486,4 @@
     </div>
   </div>
 
-  {#if $editMode}
-    <p class="edit-mode-warn" transition:slide={{ y: 80, duration: 300 }}>
-      Edit mode
-    </p>
-  {/if}
 </div>

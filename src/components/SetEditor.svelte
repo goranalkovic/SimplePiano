@@ -26,7 +26,6 @@
   h4 {
     margin: 0;
     padding: 0.8rem 0;
-    text-transform: uppercase;
   }
 
   .error {

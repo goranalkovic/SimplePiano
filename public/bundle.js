@@ -6067,8 +6067,8 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (144:27) 
-    function create_if_block_48(ctx) {
+    // (129:27) 
+    function create_if_block_47(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][20] + "";
     	let span_transition;
@@ -6077,8 +6077,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 144, 8, 2989);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 129, 8, 2744);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -6110,17 +6110,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_48.name,
+    		id: create_if_block_47.name,
     		type: "if",
-    		source: "(144:27) ",
+    		source: "(129:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (137:6) {#if $editMode}
-    function create_if_block_47(ctx) {
+    // (122:6) {#if $editMode}
+    function create_if_block_46(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -6146,10 +6146,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 138, 10, 2767);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 123, 10, 2522);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][20] === void 0) add_render_callback(() => /*select_change_handler*/ ctx[4].call(select));
-    			add_location(select, file$5, 137, 8, 2702);
+    			add_location(select, file$5, 122, 8, 2457);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -6218,16 +6218,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_47.name,
+    		id: create_if_block_46.name,
     		type: "if",
-    		source: "(137:6) {#if $editMode}",
+    		source: "(122:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (140:10) {#each Object.keys(chords) as item}
+    // (125:10) {#each Object.keys(chords) as item}
     function create_each_block_23(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -6240,7 +6240,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 140, 12, 2855);
+    			add_location(option, file$5, 125, 12, 2610);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -6256,15 +6256,15 @@ var app = (function () {
     		block,
     		id: create_each_block_23.name,
     		type: "each",
-    		source: "(140:10) {#each Object.keys(chords) as item}",
+    		source: "(125:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (159:27) 
-    function create_if_block_46(ctx) {
+    // (144:27) 
+    function create_if_block_45(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][65] + "";
     	let span_transition;
@@ -6273,8 +6273,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 159, 8, 3508);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 144, 8, 3263);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -6306,17 +6306,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_46.name,
+    		id: create_if_block_45.name,
     		type: "if",
-    		source: "(159:27) ",
+    		source: "(144:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (152:6) {#if $editMode}
-    function create_if_block_45(ctx) {
+    // (137:6) {#if $editMode}
+    function create_if_block_44(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -6342,10 +6342,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 153, 10, 3286);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 138, 10, 3041);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][65] === void 0) add_render_callback(() => /*select_change_handler_1*/ ctx[5].call(select));
-    			add_location(select, file$5, 152, 8, 3221);
+    			add_location(select, file$5, 137, 8, 2976);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -6414,16 +6414,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_45.name,
+    		id: create_if_block_44.name,
     		type: "if",
-    		source: "(152:6) {#if $editMode}",
+    		source: "(137:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (155:10) {#each Object.keys(chords) as item}
+    // (140:10) {#each Object.keys(chords) as item}
     function create_each_block_22(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -6436,7 +6436,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 155, 12, 3374);
+    			add_location(option, file$5, 140, 12, 3129);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -6452,15 +6452,15 @@ var app = (function () {
     		block,
     		id: create_each_block_22.name,
     		type: "each",
-    		source: "(155:10) {#each Object.keys(chords) as item}",
+    		source: "(140:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (174:27) 
-    function create_if_block_44(ctx) {
+    // (159:27) 
+    function create_if_block_43(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][83] + "";
     	let span_transition;
@@ -6469,8 +6469,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 174, 8, 4027);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 159, 8, 3782);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -6502,17 +6502,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_44.name,
+    		id: create_if_block_43.name,
     		type: "if",
-    		source: "(174:27) ",
+    		source: "(159:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (167:6) {#if $editMode}
-    function create_if_block_43(ctx) {
+    // (152:6) {#if $editMode}
+    function create_if_block_42(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -6538,10 +6538,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 168, 10, 3805);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 153, 10, 3560);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][83] === void 0) add_render_callback(() => /*select_change_handler_2*/ ctx[6].call(select));
-    			add_location(select, file$5, 167, 8, 3740);
+    			add_location(select, file$5, 152, 8, 3495);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -6610,16 +6610,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_43.name,
+    		id: create_if_block_42.name,
     		type: "if",
-    		source: "(167:6) {#if $editMode}",
+    		source: "(152:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (170:10) {#each Object.keys(chords) as item}
+    // (155:10) {#each Object.keys(chords) as item}
     function create_each_block_21(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -6632,7 +6632,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 170, 12, 3893);
+    			add_location(option, file$5, 155, 12, 3648);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -6648,15 +6648,15 @@ var app = (function () {
     		block,
     		id: create_each_block_21.name,
     		type: "each",
-    		source: "(170:10) {#each Object.keys(chords) as item}",
+    		source: "(155:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (189:27) 
-    function create_if_block_42(ctx) {
+    // (174:27) 
+    function create_if_block_41(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][68] + "";
     	let span_transition;
@@ -6665,8 +6665,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 189, 8, 4546);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 174, 8, 4301);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -6698,17 +6698,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_42.name,
+    		id: create_if_block_41.name,
     		type: "if",
-    		source: "(189:27) ",
+    		source: "(174:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (182:6) {#if $editMode}
-    function create_if_block_41(ctx) {
+    // (167:6) {#if $editMode}
+    function create_if_block_40(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -6734,10 +6734,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 183, 10, 4324);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 168, 10, 4079);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][68] === void 0) add_render_callback(() => /*select_change_handler_3*/ ctx[7].call(select));
-    			add_location(select, file$5, 182, 8, 4259);
+    			add_location(select, file$5, 167, 8, 4014);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -6806,16 +6806,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_41.name,
+    		id: create_if_block_40.name,
     		type: "if",
-    		source: "(182:6) {#if $editMode}",
+    		source: "(167:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (185:10) {#each Object.keys(chords) as item}
+    // (170:10) {#each Object.keys(chords) as item}
     function create_each_block_20(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -6828,7 +6828,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 185, 12, 4412);
+    			add_location(option, file$5, 170, 12, 4167);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -6844,15 +6844,15 @@ var app = (function () {
     		block,
     		id: create_each_block_20.name,
     		type: "each",
-    		source: "(185:10) {#each Object.keys(chords) as item}",
+    		source: "(170:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (204:27) 
-    function create_if_block_40(ctx) {
+    // (189:27) 
+    function create_if_block_39(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][70] + "";
     	let span_transition;
@@ -6861,8 +6861,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 204, 8, 5065);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 189, 8, 4820);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -6894,17 +6894,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_40.name,
+    		id: create_if_block_39.name,
     		type: "if",
-    		source: "(204:27) ",
+    		source: "(189:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (197:6) {#if $editMode}
-    function create_if_block_39(ctx) {
+    // (182:6) {#if $editMode}
+    function create_if_block_38(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -6930,10 +6930,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 198, 10, 4843);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 183, 10, 4598);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][70] === void 0) add_render_callback(() => /*select_change_handler_4*/ ctx[8].call(select));
-    			add_location(select, file$5, 197, 8, 4778);
+    			add_location(select, file$5, 182, 8, 4533);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -7002,16 +7002,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_39.name,
+    		id: create_if_block_38.name,
     		type: "if",
-    		source: "(197:6) {#if $editMode}",
+    		source: "(182:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (200:10) {#each Object.keys(chords) as item}
+    // (185:10) {#each Object.keys(chords) as item}
     function create_each_block_19(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -7024,7 +7024,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 200, 12, 4931);
+    			add_location(option, file$5, 185, 12, 4686);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -7040,15 +7040,15 @@ var app = (function () {
     		block,
     		id: create_each_block_19.name,
     		type: "each",
-    		source: "(200:10) {#each Object.keys(chords) as item}",
+    		source: "(185:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (219:27) 
-    function create_if_block_38(ctx) {
+    // (204:27) 
+    function create_if_block_37(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][71] + "";
     	let span_transition;
@@ -7057,8 +7057,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 219, 8, 5584);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 204, 8, 5339);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -7090,17 +7090,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_38.name,
+    		id: create_if_block_37.name,
     		type: "if",
-    		source: "(219:27) ",
+    		source: "(204:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (212:6) {#if $editMode}
-    function create_if_block_37(ctx) {
+    // (197:6) {#if $editMode}
+    function create_if_block_36(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -7126,10 +7126,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 213, 10, 5362);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 198, 10, 5117);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][71] === void 0) add_render_callback(() => /*select_change_handler_5*/ ctx[9].call(select));
-    			add_location(select, file$5, 212, 8, 5297);
+    			add_location(select, file$5, 197, 8, 5052);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -7198,16 +7198,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_37.name,
+    		id: create_if_block_36.name,
     		type: "if",
-    		source: "(212:6) {#if $editMode}",
+    		source: "(197:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (215:10) {#each Object.keys(chords) as item}
+    // (200:10) {#each Object.keys(chords) as item}
     function create_each_block_18(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -7220,7 +7220,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 215, 12, 5450);
+    			add_location(option, file$5, 200, 12, 5205);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -7236,15 +7236,15 @@ var app = (function () {
     		block,
     		id: create_each_block_18.name,
     		type: "each",
-    		source: "(215:10) {#each Object.keys(chords) as item}",
+    		source: "(200:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (234:27) 
-    function create_if_block_36(ctx) {
+    // (219:27) 
+    function create_if_block_35(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][72] + "";
     	let span_transition;
@@ -7253,8 +7253,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 234, 8, 6103);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 219, 8, 5858);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -7286,17 +7286,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_36.name,
+    		id: create_if_block_35.name,
     		type: "if",
-    		source: "(234:27) ",
+    		source: "(219:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (227:6) {#if $editMode}
-    function create_if_block_35(ctx) {
+    // (212:6) {#if $editMode}
+    function create_if_block_34(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -7322,10 +7322,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 228, 10, 5881);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 213, 10, 5636);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][72] === void 0) add_render_callback(() => /*select_change_handler_6*/ ctx[10].call(select));
-    			add_location(select, file$5, 227, 8, 5816);
+    			add_location(select, file$5, 212, 8, 5571);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -7394,16 +7394,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_35.name,
+    		id: create_if_block_34.name,
     		type: "if",
-    		source: "(227:6) {#if $editMode}",
+    		source: "(212:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (230:10) {#each Object.keys(chords) as item}
+    // (215:10) {#each Object.keys(chords) as item}
     function create_each_block_17(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -7416,7 +7416,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 230, 12, 5969);
+    			add_location(option, file$5, 215, 12, 5724);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -7432,15 +7432,15 @@ var app = (function () {
     		block,
     		id: create_each_block_17.name,
     		type: "each",
-    		source: "(230:10) {#each Object.keys(chords) as item}",
+    		source: "(215:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (249:27) 
-    function create_if_block_34(ctx) {
+    // (234:27) 
+    function create_if_block_33(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][74] + "";
     	let span_transition;
@@ -7449,8 +7449,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 249, 8, 6622);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 234, 8, 6377);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -7482,17 +7482,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_34.name,
+    		id: create_if_block_33.name,
     		type: "if",
-    		source: "(249:27) ",
+    		source: "(234:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (242:6) {#if $editMode}
-    function create_if_block_33(ctx) {
+    // (227:6) {#if $editMode}
+    function create_if_block_32(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -7518,10 +7518,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 243, 10, 6400);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 228, 10, 6155);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][74] === void 0) add_render_callback(() => /*select_change_handler_7*/ ctx[11].call(select));
-    			add_location(select, file$5, 242, 8, 6335);
+    			add_location(select, file$5, 227, 8, 6090);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -7590,16 +7590,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_33.name,
+    		id: create_if_block_32.name,
     		type: "if",
-    		source: "(242:6) {#if $editMode}",
+    		source: "(227:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (245:10) {#each Object.keys(chords) as item}
+    // (230:10) {#each Object.keys(chords) as item}
     function create_each_block_16(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -7612,7 +7612,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 245, 12, 6488);
+    			add_location(option, file$5, 230, 12, 6243);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -7628,15 +7628,15 @@ var app = (function () {
     		block,
     		id: create_each_block_16.name,
     		type: "each",
-    		source: "(245:10) {#each Object.keys(chords) as item}",
+    		source: "(230:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (264:27) 
-    function create_if_block_32(ctx) {
+    // (249:27) 
+    function create_if_block_31(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][75] + "";
     	let span_transition;
@@ -7645,8 +7645,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 264, 8, 7141);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 249, 8, 6896);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -7678,17 +7678,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_32.name,
+    		id: create_if_block_31.name,
     		type: "if",
-    		source: "(264:27) ",
+    		source: "(249:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (257:6) {#if $editMode}
-    function create_if_block_31(ctx) {
+    // (242:6) {#if $editMode}
+    function create_if_block_30(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -7714,10 +7714,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 258, 10, 6919);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 243, 10, 6674);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][75] === void 0) add_render_callback(() => /*select_change_handler_8*/ ctx[12].call(select));
-    			add_location(select, file$5, 257, 8, 6854);
+    			add_location(select, file$5, 242, 8, 6609);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -7786,16 +7786,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_31.name,
+    		id: create_if_block_30.name,
     		type: "if",
-    		source: "(257:6) {#if $editMode}",
+    		source: "(242:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (260:10) {#each Object.keys(chords) as item}
+    // (245:10) {#each Object.keys(chords) as item}
     function create_each_block_15(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -7808,7 +7808,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 260, 12, 7007);
+    			add_location(option, file$5, 245, 12, 6762);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -7824,15 +7824,15 @@ var app = (function () {
     		block,
     		id: create_each_block_15.name,
     		type: "each",
-    		source: "(260:10) {#each Object.keys(chords) as item}",
+    		source: "(245:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (279:27) 
-    function create_if_block_30(ctx) {
+    // (264:27) 
+    function create_if_block_29(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][76] + "";
     	let span_transition;
@@ -7841,8 +7841,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 279, 8, 7660);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 264, 8, 7415);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -7874,17 +7874,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_30.name,
+    		id: create_if_block_29.name,
     		type: "if",
-    		source: "(279:27) ",
+    		source: "(264:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (272:6) {#if $editMode}
-    function create_if_block_29(ctx) {
+    // (257:6) {#if $editMode}
+    function create_if_block_28(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -7910,10 +7910,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 273, 10, 7438);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 258, 10, 7193);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][76] === void 0) add_render_callback(() => /*select_change_handler_9*/ ctx[13].call(select));
-    			add_location(select, file$5, 272, 8, 7373);
+    			add_location(select, file$5, 257, 8, 7128);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -7982,16 +7982,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_29.name,
+    		id: create_if_block_28.name,
     		type: "if",
-    		source: "(272:6) {#if $editMode}",
+    		source: "(257:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (275:10) {#each Object.keys(chords) as item}
+    // (260:10) {#each Object.keys(chords) as item}
     function create_each_block_14(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -8004,7 +8004,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 275, 12, 7526);
+    			add_location(option, file$5, 260, 12, 7281);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -8020,15 +8020,15 @@ var app = (function () {
     		block,
     		id: create_each_block_14.name,
     		type: "each",
-    		source: "(275:10) {#each Object.keys(chords) as item}",
+    		source: "(260:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (294:27) 
-    function create_if_block_28(ctx) {
+    // (279:27) 
+    function create_if_block_27(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][186] + "";
     	let span_transition;
@@ -8037,8 +8037,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 294, 8, 8180);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 279, 8, 7935);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -8070,17 +8070,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_28.name,
+    		id: create_if_block_27.name,
     		type: "if",
-    		source: "(294:27) ",
+    		source: "(279:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (287:6) {#if $editMode}
-    function create_if_block_27(ctx) {
+    // (272:6) {#if $editMode}
+    function create_if_block_26(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -8106,10 +8106,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 288, 10, 7958);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 273, 10, 7713);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][186] === void 0) add_render_callback(() => /*select_change_handler_10*/ ctx[14].call(select));
-    			add_location(select, file$5, 287, 8, 7892);
+    			add_location(select, file$5, 272, 8, 7647);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -8178,16 +8178,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_27.name,
+    		id: create_if_block_26.name,
     		type: "if",
-    		source: "(287:6) {#if $editMode}",
+    		source: "(272:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (290:10) {#each Object.keys(chords) as item}
+    // (275:10) {#each Object.keys(chords) as item}
     function create_each_block_13(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -8200,7 +8200,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 290, 12, 8046);
+    			add_location(option, file$5, 275, 12, 7801);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -8216,15 +8216,15 @@ var app = (function () {
     		block,
     		id: create_each_block_13.name,
     		type: "each",
-    		source: "(290:10) {#each Object.keys(chords) as item}",
+    		source: "(275:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (309:27) 
-    function create_if_block_26(ctx) {
+    // (294:27) 
+    function create_if_block_25(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][222] + "";
     	let span_transition;
@@ -8233,8 +8233,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 309, 8, 8701);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 294, 8, 8456);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -8266,17 +8266,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_26.name,
+    		id: create_if_block_25.name,
     		type: "if",
-    		source: "(309:27) ",
+    		source: "(294:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (302:6) {#if $editMode}
-    function create_if_block_25(ctx) {
+    // (287:6) {#if $editMode}
+    function create_if_block_24(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -8302,10 +8302,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 303, 10, 8479);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 288, 10, 8234);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][222] === void 0) add_render_callback(() => /*select_change_handler_11*/ ctx[15].call(select));
-    			add_location(select, file$5, 302, 8, 8413);
+    			add_location(select, file$5, 287, 8, 8168);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -8374,16 +8374,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_25.name,
+    		id: create_if_block_24.name,
     		type: "if",
-    		source: "(302:6) {#if $editMode}",
+    		source: "(287:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (305:10) {#each Object.keys(chords) as item}
+    // (290:10) {#each Object.keys(chords) as item}
     function create_each_block_12(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -8396,7 +8396,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 305, 12, 8567);
+    			add_location(option, file$5, 290, 12, 8322);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -8412,15 +8412,15 @@ var app = (function () {
     		block,
     		id: create_each_block_12.name,
     		type: "each",
-    		source: "(305:10) {#each Object.keys(chords) as item}",
+    		source: "(290:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (324:27) 
-    function create_if_block_24(ctx) {
+    // (309:27) 
+    function create_if_block_23(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][220] + "";
     	let span_transition;
@@ -8429,8 +8429,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 324, 8, 9222);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 309, 8, 8977);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -8462,17 +8462,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_24.name,
+    		id: create_if_block_23.name,
     		type: "if",
-    		source: "(324:27) ",
+    		source: "(309:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (317:6) {#if $editMode}
-    function create_if_block_23(ctx) {
+    // (302:6) {#if $editMode}
+    function create_if_block_22(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -8498,10 +8498,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 318, 10, 9000);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 303, 10, 8755);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][220] === void 0) add_render_callback(() => /*select_change_handler_12*/ ctx[16].call(select));
-    			add_location(select, file$5, 317, 8, 8934);
+    			add_location(select, file$5, 302, 8, 8689);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -8570,16 +8570,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_23.name,
+    		id: create_if_block_22.name,
     		type: "if",
-    		source: "(317:6) {#if $editMode}",
+    		source: "(302:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (320:10) {#each Object.keys(chords) as item}
+    // (305:10) {#each Object.keys(chords) as item}
     function create_each_block_11(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -8592,7 +8592,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 320, 12, 9088);
+    			add_location(option, file$5, 305, 12, 8843);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -8608,15 +8608,15 @@ var app = (function () {
     		block,
     		id: create_each_block_11.name,
     		type: "each",
-    		source: "(320:10) {#each Object.keys(chords) as item}",
+    		source: "(305:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (339:27) 
-    function create_if_block_22(ctx) {
+    // (324:27) 
+    function create_if_block_21(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][13] + "";
     	let span_transition;
@@ -8625,8 +8625,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 339, 8, 9742);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 324, 8, 9497);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -8658,17 +8658,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_22.name,
+    		id: create_if_block_21.name,
     		type: "if",
-    		source: "(339:27) ",
+    		source: "(324:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (332:6) {#if $editMode}
-    function create_if_block_21(ctx) {
+    // (317:6) {#if $editMode}
+    function create_if_block_20(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -8694,10 +8694,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 333, 10, 9520);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 318, 10, 9275);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][13] === void 0) add_render_callback(() => /*select_change_handler_13*/ ctx[17].call(select));
-    			add_location(select, file$5, 332, 8, 9455);
+    			add_location(select, file$5, 317, 8, 9210);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -8766,16 +8766,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_21.name,
+    		id: create_if_block_20.name,
     		type: "if",
-    		source: "(332:6) {#if $editMode}",
+    		source: "(317:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (335:10) {#each Object.keys(chords) as item}
+    // (320:10) {#each Object.keys(chords) as item}
     function create_each_block_10(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -8788,7 +8788,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 335, 12, 9608);
+    			add_location(option, file$5, 320, 12, 9363);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -8804,15 +8804,15 @@ var app = (function () {
     		block,
     		id: create_each_block_10.name,
     		type: "each",
-    		source: "(335:10) {#each Object.keys(chords) as item}",
+    		source: "(320:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (357:27) 
-    function create_if_block_20(ctx) {
+    // (342:27) 
+    function create_if_block_19(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][81] + "";
     	let span_transition;
@@ -8821,8 +8821,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 357, 8, 10301);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 342, 8, 10056);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -8854,17 +8854,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_20.name,
+    		id: create_if_block_19.name,
     		type: "if",
-    		source: "(357:27) ",
+    		source: "(342:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (350:6) {#if $editMode}
-    function create_if_block_19(ctx) {
+    // (335:6) {#if $editMode}
+    function create_if_block_18(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -8890,10 +8890,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 351, 10, 10079);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 336, 10, 9834);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][81] === void 0) add_render_callback(() => /*select_change_handler_14*/ ctx[18].call(select));
-    			add_location(select, file$5, 350, 8, 10014);
+    			add_location(select, file$5, 335, 8, 9769);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -8962,16 +8962,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_19.name,
+    		id: create_if_block_18.name,
     		type: "if",
-    		source: "(350:6) {#if $editMode}",
+    		source: "(335:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (353:10) {#each Object.keys(chords) as item}
+    // (338:10) {#each Object.keys(chords) as item}
     function create_each_block_9(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -8984,7 +8984,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 353, 12, 10167);
+    			add_location(option, file$5, 338, 12, 9922);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -9000,15 +9000,15 @@ var app = (function () {
     		block,
     		id: create_each_block_9.name,
     		type: "each",
-    		source: "(353:10) {#each Object.keys(chords) as item}",
+    		source: "(338:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (372:27) 
-    function create_if_block_18(ctx) {
+    // (357:27) 
+    function create_if_block_17(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][87] + "";
     	let span_transition;
@@ -9017,8 +9017,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 372, 8, 10820);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 357, 8, 10575);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -9050,17 +9050,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_18.name,
+    		id: create_if_block_17.name,
     		type: "if",
-    		source: "(372:27) ",
+    		source: "(357:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (365:6) {#if $editMode}
-    function create_if_block_17(ctx) {
+    // (350:6) {#if $editMode}
+    function create_if_block_16(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -9086,10 +9086,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 366, 10, 10598);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 351, 10, 10353);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][87] === void 0) add_render_callback(() => /*select_change_handler_15*/ ctx[19].call(select));
-    			add_location(select, file$5, 365, 8, 10533);
+    			add_location(select, file$5, 350, 8, 10288);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -9158,16 +9158,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_17.name,
+    		id: create_if_block_16.name,
     		type: "if",
-    		source: "(365:6) {#if $editMode}",
+    		source: "(350:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (368:10) {#each Object.keys(chords) as item}
+    // (353:10) {#each Object.keys(chords) as item}
     function create_each_block_8(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -9180,7 +9180,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 368, 12, 10686);
+    			add_location(option, file$5, 353, 12, 10441);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -9196,15 +9196,15 @@ var app = (function () {
     		block,
     		id: create_each_block_8.name,
     		type: "each",
-    		source: "(368:10) {#each Object.keys(chords) as item}",
+    		source: "(353:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (387:27) 
-    function create_if_block_16(ctx) {
+    // (372:27) 
+    function create_if_block_15(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][69] + "";
     	let span_transition;
@@ -9213,8 +9213,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 387, 8, 11339);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 372, 8, 11094);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -9246,17 +9246,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_16.name,
+    		id: create_if_block_15.name,
     		type: "if",
-    		source: "(387:27) ",
+    		source: "(372:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (380:6) {#if $editMode}
-    function create_if_block_15(ctx) {
+    // (365:6) {#if $editMode}
+    function create_if_block_14(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -9282,10 +9282,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 381, 10, 11117);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 366, 10, 10872);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][69] === void 0) add_render_callback(() => /*select_change_handler_16*/ ctx[20].call(select));
-    			add_location(select, file$5, 380, 8, 11052);
+    			add_location(select, file$5, 365, 8, 10807);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -9354,16 +9354,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_15.name,
+    		id: create_if_block_14.name,
     		type: "if",
-    		source: "(380:6) {#if $editMode}",
+    		source: "(365:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (383:10) {#each Object.keys(chords) as item}
+    // (368:10) {#each Object.keys(chords) as item}
     function create_each_block_7(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -9376,7 +9376,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 383, 12, 11205);
+    			add_location(option, file$5, 368, 12, 10960);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -9392,15 +9392,15 @@ var app = (function () {
     		block,
     		id: create_each_block_7.name,
     		type: "each",
-    		source: "(383:10) {#each Object.keys(chords) as item}",
+    		source: "(368:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (403:27) 
-    function create_if_block_14(ctx) {
+    // (388:27) 
+    function create_if_block_13(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][84] + "";
     	let span_transition;
@@ -9409,8 +9409,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 403, 8, 11895);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 388, 8, 11650);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -9442,17 +9442,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_14.name,
+    		id: create_if_block_13.name,
     		type: "if",
-    		source: "(403:27) ",
+    		source: "(388:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (396:6) {#if $editMode}
-    function create_if_block_13(ctx) {
+    // (381:6) {#if $editMode}
+    function create_if_block_12(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -9478,10 +9478,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 397, 10, 11673);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 382, 10, 11428);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][84] === void 0) add_render_callback(() => /*select_change_handler_17*/ ctx[21].call(select));
-    			add_location(select, file$5, 396, 8, 11608);
+    			add_location(select, file$5, 381, 8, 11363);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -9550,16 +9550,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_13.name,
+    		id: create_if_block_12.name,
     		type: "if",
-    		source: "(396:6) {#if $editMode}",
+    		source: "(381:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (399:10) {#each Object.keys(chords) as item}
+    // (384:10) {#each Object.keys(chords) as item}
     function create_each_block_6(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -9572,7 +9572,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 399, 12, 11761);
+    			add_location(option, file$5, 384, 12, 11516);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -9588,15 +9588,15 @@ var app = (function () {
     		block,
     		id: create_each_block_6.name,
     		type: "each",
-    		source: "(399:10) {#each Object.keys(chords) as item}",
+    		source: "(384:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (418:27) 
-    function create_if_block_12(ctx) {
+    // (403:27) 
+    function create_if_block_11(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][90] + "";
     	let span_transition;
@@ -9605,8 +9605,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 418, 8, 12414);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 403, 8, 12169);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -9638,17 +9638,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_12.name,
+    		id: create_if_block_11.name,
     		type: "if",
-    		source: "(418:27) ",
+    		source: "(403:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (411:6) {#if $editMode}
-    function create_if_block_11(ctx) {
+    // (396:6) {#if $editMode}
+    function create_if_block_10(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -9674,10 +9674,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 412, 10, 12192);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 397, 10, 11947);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][90] === void 0) add_render_callback(() => /*select_change_handler_18*/ ctx[22].call(select));
-    			add_location(select, file$5, 411, 8, 12127);
+    			add_location(select, file$5, 396, 8, 11882);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -9746,16 +9746,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_11.name,
+    		id: create_if_block_10.name,
     		type: "if",
-    		source: "(411:6) {#if $editMode}",
+    		source: "(396:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (414:10) {#each Object.keys(chords) as item}
+    // (399:10) {#each Object.keys(chords) as item}
     function create_each_block_5(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -9768,7 +9768,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 414, 12, 12280);
+    			add_location(option, file$5, 399, 12, 12035);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -9784,15 +9784,15 @@ var app = (function () {
     		block,
     		id: create_each_block_5.name,
     		type: "each",
-    		source: "(414:10) {#each Object.keys(chords) as item}",
+    		source: "(399:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (434:27) 
-    function create_if_block_10(ctx) {
+    // (419:27) 
+    function create_if_block_9(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][73] + "";
     	let span_transition;
@@ -9801,8 +9801,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 434, 8, 12970);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 419, 8, 12725);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -9834,17 +9834,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_10.name,
+    		id: create_if_block_9.name,
     		type: "if",
-    		source: "(434:27) ",
+    		source: "(419:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (427:6) {#if $editMode}
-    function create_if_block_9(ctx) {
+    // (412:6) {#if $editMode}
+    function create_if_block_8(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -9870,10 +9870,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 428, 10, 12748);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 413, 10, 12503);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][73] === void 0) add_render_callback(() => /*select_change_handler_19*/ ctx[23].call(select));
-    			add_location(select, file$5, 427, 8, 12683);
+    			add_location(select, file$5, 412, 8, 12438);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -9942,16 +9942,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_9.name,
+    		id: create_if_block_8.name,
     		type: "if",
-    		source: "(427:6) {#if $editMode}",
+    		source: "(412:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (430:10) {#each Object.keys(chords) as item}
+    // (415:10) {#each Object.keys(chords) as item}
     function create_each_block_4(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -9964,7 +9964,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 430, 12, 12836);
+    			add_location(option, file$5, 415, 12, 12591);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -9980,15 +9980,15 @@ var app = (function () {
     		block,
     		id: create_each_block_4.name,
     		type: "each",
-    		source: "(430:10) {#each Object.keys(chords) as item}",
+    		source: "(415:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (449:27) 
-    function create_if_block_8(ctx) {
+    // (434:27) 
+    function create_if_block_7(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][79] + "";
     	let span_transition;
@@ -9997,8 +9997,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 449, 8, 13489);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 434, 8, 13244);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -10030,17 +10030,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_8.name,
+    		id: create_if_block_7.name,
     		type: "if",
-    		source: "(449:27) ",
+    		source: "(434:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (442:6) {#if $editMode}
-    function create_if_block_7(ctx) {
+    // (427:6) {#if $editMode}
+    function create_if_block_6(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -10066,10 +10066,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 443, 10, 13267);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 428, 10, 13022);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][79] === void 0) add_render_callback(() => /*select_change_handler_20*/ ctx[24].call(select));
-    			add_location(select, file$5, 442, 8, 13202);
+    			add_location(select, file$5, 427, 8, 12957);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -10138,16 +10138,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_7.name,
+    		id: create_if_block_6.name,
     		type: "if",
-    		source: "(442:6) {#if $editMode}",
+    		source: "(427:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (445:10) {#each Object.keys(chords) as item}
+    // (430:10) {#each Object.keys(chords) as item}
     function create_each_block_3(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -10160,7 +10160,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 445, 12, 13355);
+    			add_location(option, file$5, 430, 12, 13110);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -10176,15 +10176,15 @@ var app = (function () {
     		block,
     		id: create_each_block_3.name,
     		type: "each",
-    		source: "(445:10) {#each Object.keys(chords) as item}",
+    		source: "(430:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (464:27) 
-    function create_if_block_6(ctx) {
+    // (449:27) 
+    function create_if_block_5(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][80] + "";
     	let span_transition;
@@ -10193,8 +10193,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 464, 8, 14008);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 449, 8, 13763);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -10226,17 +10226,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_6.name,
+    		id: create_if_block_5.name,
     		type: "if",
-    		source: "(464:27) ",
+    		source: "(449:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (457:6) {#if $editMode}
-    function create_if_block_5(ctx) {
+    // (442:6) {#if $editMode}
+    function create_if_block_4(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -10262,10 +10262,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 458, 10, 13786);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 443, 10, 13541);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][80] === void 0) add_render_callback(() => /*select_change_handler_21*/ ctx[25].call(select));
-    			add_location(select, file$5, 457, 8, 13721);
+    			add_location(select, file$5, 442, 8, 13476);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -10334,16 +10334,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_5.name,
+    		id: create_if_block_4.name,
     		type: "if",
-    		source: "(457:6) {#if $editMode}",
+    		source: "(442:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (460:10) {#each Object.keys(chords) as item}
+    // (445:10) {#each Object.keys(chords) as item}
     function create_each_block_2(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -10356,7 +10356,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 460, 12, 13874);
+    			add_location(option, file$5, 445, 12, 13629);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -10372,15 +10372,15 @@ var app = (function () {
     		block,
     		id: create_each_block_2.name,
     		type: "each",
-    		source: "(460:10) {#each Object.keys(chords) as item}",
+    		source: "(445:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (480:27) 
-    function create_if_block_4(ctx) {
+    // (465:27) 
+    function create_if_block_3(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][221] + "";
     	let span_transition;
@@ -10389,8 +10389,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 480, 8, 14565);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 465, 8, 14320);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -10422,17 +10422,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_4.name,
+    		id: create_if_block_3.name,
     		type: "if",
-    		source: "(480:27) ",
+    		source: "(465:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (473:6) {#if $editMode}
-    function create_if_block_3(ctx) {
+    // (458:6) {#if $editMode}
+    function create_if_block_2(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -10458,10 +10458,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 474, 10, 14343);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 459, 10, 14098);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][221] === void 0) add_render_callback(() => /*select_change_handler_22*/ ctx[26].call(select));
-    			add_location(select, file$5, 473, 8, 14277);
+    			add_location(select, file$5, 458, 8, 14032);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -10530,16 +10530,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_3.name,
+    		id: create_if_block_2.name,
     		type: "if",
-    		source: "(473:6) {#if $editMode}",
+    		source: "(458:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (476:10) {#each Object.keys(chords) as item}
+    // (461:10) {#each Object.keys(chords) as item}
     function create_each_block_1(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -10552,7 +10552,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 476, 12, 14431);
+    			add_location(option, file$5, 461, 12, 14186);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -10568,15 +10568,15 @@ var app = (function () {
     		block,
     		id: create_each_block_1.name,
     		type: "each",
-    		source: "(476:10) {#each Object.keys(chords) as item}",
+    		source: "(461:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (495:27) 
-    function create_if_block_2(ctx) {
+    // (480:27) 
+    function create_if_block_1(ctx) {
     	let span;
     	let raw_value = /*$chordNotes*/ ctx[2][8] + "";
     	let span_transition;
@@ -10585,8 +10585,8 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			span = element("span");
-    			attr_dev(span, "class", "chord svelte-142rg1j");
-    			add_location(span, file$5, 495, 8, 15084);
+    			attr_dev(span, "class", "chord svelte-1sh14hr");
+    			add_location(span, file$5, 480, 8, 14839);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -10618,17 +10618,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_2.name,
+    		id: create_if_block_1.name,
     		type: "if",
-    		source: "(495:27) ",
+    		source: "(480:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (488:6) {#if $editMode}
-    function create_if_block_1(ctx) {
+    // (473:6) {#if $editMode}
+    function create_if_block$2(ctx) {
     	let select;
     	let option;
     	let select_transition;
@@ -10654,10 +10654,10 @@ var app = (function () {
 
     			option.__value = "";
     			option.value = option.__value;
-    			add_location(option, file$5, 489, 10, 14862);
-    			attr_dev(select, "class", "svelte-142rg1j");
+    			add_location(option, file$5, 474, 10, 14617);
+    			attr_dev(select, "class", "svelte-1sh14hr");
     			if (/*$chordNotes*/ ctx[2][8] === void 0) add_render_callback(() => /*select_change_handler_23*/ ctx[27].call(select));
-    			add_location(select, file$5, 488, 8, 14798);
+    			add_location(select, file$5, 473, 8, 14553);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, select, anchor);
@@ -10726,16 +10726,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_1.name,
+    		id: create_if_block$2.name,
     		type: "if",
-    		source: "(488:6) {#if $editMode}",
+    		source: "(473:6) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (491:10) {#each Object.keys(chords) as item}
+    // (476:10) {#each Object.keys(chords) as item}
     function create_each_block$1(ctx) {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
@@ -10748,7 +10748,7 @@ var app = (function () {
     			t = text(t_value);
     			option.__value = option_value_value = /*item*/ ctx[28];
     			option.value = option.__value;
-    			add_location(option, file$5, 491, 12, 14950);
+    			add_location(option, file$5, 476, 12, 14705);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -10764,56 +10764,7 @@ var app = (function () {
     		block,
     		id: create_each_block$1.name,
     		type: "each",
-    		source: "(491:10) {#each Object.keys(chords) as item}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (504:2) {#if $editMode}
-    function create_if_block$2(ctx) {
-    	let p;
-    	let p_transition;
-    	let current;
-
-    	const block = {
-    		c: function create() {
-    			p = element("p");
-    			p.textContent = "Edit mode";
-    			attr_dev(p, "class", "edit-mode-warn svelte-142rg1j");
-    			add_location(p, file$5, 504, 4, 15283);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, p, anchor);
-    			current = true;
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-
-    			add_render_callback(() => {
-    				if (!p_transition) p_transition = create_bidirectional_transition(p, slide, { y: 80, duration: 300 }, true);
-    				p_transition.run(1);
-    			});
-
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			if (!p_transition) p_transition = create_bidirectional_transition(p, slide, { y: 80, duration: 300 }, false);
-    			p_transition.run(0);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(p);
-    			if (detaching && p_transition) p_transition.end();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block$2.name,
-    		type: "if",
-    		source: "(504:2) {#if $editMode}",
+    		source: "(476:10) {#each Object.keys(chords) as item}",
     		ctx
     	});
 
@@ -10973,10 +10924,9 @@ var app = (function () {
     	let if_block23;
     	let t72;
     	let span23;
-    	let t74;
     	let div29_class_value;
     	let current;
-    	const if_block_creators = [create_if_block_47, create_if_block_48];
+    	const if_block_creators = [create_if_block_46, create_if_block_47];
     	const if_blocks = [];
 
     	function select_block_type(ctx, dirty) {
@@ -10989,7 +10939,7 @@ var app = (function () {
     		if_block0 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
     	}
 
-    	const if_block_creators_1 = [create_if_block_45, create_if_block_46];
+    	const if_block_creators_1 = [create_if_block_44, create_if_block_45];
     	const if_blocks_1 = [];
 
     	function select_block_type_1(ctx, dirty) {
@@ -11002,7 +10952,7 @@ var app = (function () {
     		if_block1 = if_blocks_1[current_block_type_index_1] = if_block_creators_1[current_block_type_index_1](ctx);
     	}
 
-    	const if_block_creators_2 = [create_if_block_43, create_if_block_44];
+    	const if_block_creators_2 = [create_if_block_42, create_if_block_43];
     	const if_blocks_2 = [];
 
     	function select_block_type_2(ctx, dirty) {
@@ -11015,7 +10965,7 @@ var app = (function () {
     		if_block2 = if_blocks_2[current_block_type_index_2] = if_block_creators_2[current_block_type_index_2](ctx);
     	}
 
-    	const if_block_creators_3 = [create_if_block_41, create_if_block_42];
+    	const if_block_creators_3 = [create_if_block_40, create_if_block_41];
     	const if_blocks_3 = [];
 
     	function select_block_type_3(ctx, dirty) {
@@ -11028,7 +10978,7 @@ var app = (function () {
     		if_block3 = if_blocks_3[current_block_type_index_3] = if_block_creators_3[current_block_type_index_3](ctx);
     	}
 
-    	const if_block_creators_4 = [create_if_block_39, create_if_block_40];
+    	const if_block_creators_4 = [create_if_block_38, create_if_block_39];
     	const if_blocks_4 = [];
 
     	function select_block_type_4(ctx, dirty) {
@@ -11041,7 +10991,7 @@ var app = (function () {
     		if_block4 = if_blocks_4[current_block_type_index_4] = if_block_creators_4[current_block_type_index_4](ctx);
     	}
 
-    	const if_block_creators_5 = [create_if_block_37, create_if_block_38];
+    	const if_block_creators_5 = [create_if_block_36, create_if_block_37];
     	const if_blocks_5 = [];
 
     	function select_block_type_5(ctx, dirty) {
@@ -11054,7 +11004,7 @@ var app = (function () {
     		if_block5 = if_blocks_5[current_block_type_index_5] = if_block_creators_5[current_block_type_index_5](ctx);
     	}
 
-    	const if_block_creators_6 = [create_if_block_35, create_if_block_36];
+    	const if_block_creators_6 = [create_if_block_34, create_if_block_35];
     	const if_blocks_6 = [];
 
     	function select_block_type_6(ctx, dirty) {
@@ -11067,7 +11017,7 @@ var app = (function () {
     		if_block6 = if_blocks_6[current_block_type_index_6] = if_block_creators_6[current_block_type_index_6](ctx);
     	}
 
-    	const if_block_creators_7 = [create_if_block_33, create_if_block_34];
+    	const if_block_creators_7 = [create_if_block_32, create_if_block_33];
     	const if_blocks_7 = [];
 
     	function select_block_type_7(ctx, dirty) {
@@ -11080,7 +11030,7 @@ var app = (function () {
     		if_block7 = if_blocks_7[current_block_type_index_7] = if_block_creators_7[current_block_type_index_7](ctx);
     	}
 
-    	const if_block_creators_8 = [create_if_block_31, create_if_block_32];
+    	const if_block_creators_8 = [create_if_block_30, create_if_block_31];
     	const if_blocks_8 = [];
 
     	function select_block_type_8(ctx, dirty) {
@@ -11093,7 +11043,7 @@ var app = (function () {
     		if_block8 = if_blocks_8[current_block_type_index_8] = if_block_creators_8[current_block_type_index_8](ctx);
     	}
 
-    	const if_block_creators_9 = [create_if_block_29, create_if_block_30];
+    	const if_block_creators_9 = [create_if_block_28, create_if_block_29];
     	const if_blocks_9 = [];
 
     	function select_block_type_9(ctx, dirty) {
@@ -11106,7 +11056,7 @@ var app = (function () {
     		if_block9 = if_blocks_9[current_block_type_index_9] = if_block_creators_9[current_block_type_index_9](ctx);
     	}
 
-    	const if_block_creators_10 = [create_if_block_27, create_if_block_28];
+    	const if_block_creators_10 = [create_if_block_26, create_if_block_27];
     	const if_blocks_10 = [];
 
     	function select_block_type_10(ctx, dirty) {
@@ -11119,7 +11069,7 @@ var app = (function () {
     		if_block10 = if_blocks_10[current_block_type_index_10] = if_block_creators_10[current_block_type_index_10](ctx);
     	}
 
-    	const if_block_creators_11 = [create_if_block_25, create_if_block_26];
+    	const if_block_creators_11 = [create_if_block_24, create_if_block_25];
     	const if_blocks_11 = [];
 
     	function select_block_type_11(ctx, dirty) {
@@ -11132,7 +11082,7 @@ var app = (function () {
     		if_block11 = if_blocks_11[current_block_type_index_11] = if_block_creators_11[current_block_type_index_11](ctx);
     	}
 
-    	const if_block_creators_12 = [create_if_block_23, create_if_block_24];
+    	const if_block_creators_12 = [create_if_block_22, create_if_block_23];
     	const if_blocks_12 = [];
 
     	function select_block_type_12(ctx, dirty) {
@@ -11145,7 +11095,7 @@ var app = (function () {
     		if_block12 = if_blocks_12[current_block_type_index_12] = if_block_creators_12[current_block_type_index_12](ctx);
     	}
 
-    	const if_block_creators_13 = [create_if_block_21, create_if_block_22];
+    	const if_block_creators_13 = [create_if_block_20, create_if_block_21];
     	const if_blocks_13 = [];
 
     	function select_block_type_13(ctx, dirty) {
@@ -11158,7 +11108,7 @@ var app = (function () {
     		if_block13 = if_blocks_13[current_block_type_index_13] = if_block_creators_13[current_block_type_index_13](ctx);
     	}
 
-    	const if_block_creators_14 = [create_if_block_19, create_if_block_20];
+    	const if_block_creators_14 = [create_if_block_18, create_if_block_19];
     	const if_blocks_14 = [];
 
     	function select_block_type_14(ctx, dirty) {
@@ -11171,7 +11121,7 @@ var app = (function () {
     		if_block14 = if_blocks_14[current_block_type_index_14] = if_block_creators_14[current_block_type_index_14](ctx);
     	}
 
-    	const if_block_creators_15 = [create_if_block_17, create_if_block_18];
+    	const if_block_creators_15 = [create_if_block_16, create_if_block_17];
     	const if_blocks_15 = [];
 
     	function select_block_type_15(ctx, dirty) {
@@ -11184,7 +11134,7 @@ var app = (function () {
     		if_block15 = if_blocks_15[current_block_type_index_15] = if_block_creators_15[current_block_type_index_15](ctx);
     	}
 
-    	const if_block_creators_16 = [create_if_block_15, create_if_block_16];
+    	const if_block_creators_16 = [create_if_block_14, create_if_block_15];
     	const if_blocks_16 = [];
 
     	function select_block_type_16(ctx, dirty) {
@@ -11197,7 +11147,7 @@ var app = (function () {
     		if_block16 = if_blocks_16[current_block_type_index_16] = if_block_creators_16[current_block_type_index_16](ctx);
     	}
 
-    	const if_block_creators_17 = [create_if_block_13, create_if_block_14];
+    	const if_block_creators_17 = [create_if_block_12, create_if_block_13];
     	const if_blocks_17 = [];
 
     	function select_block_type_17(ctx, dirty) {
@@ -11210,7 +11160,7 @@ var app = (function () {
     		if_block17 = if_blocks_17[current_block_type_index_17] = if_block_creators_17[current_block_type_index_17](ctx);
     	}
 
-    	const if_block_creators_18 = [create_if_block_11, create_if_block_12];
+    	const if_block_creators_18 = [create_if_block_10, create_if_block_11];
     	const if_blocks_18 = [];
 
     	function select_block_type_18(ctx, dirty) {
@@ -11223,7 +11173,7 @@ var app = (function () {
     		if_block18 = if_blocks_18[current_block_type_index_18] = if_block_creators_18[current_block_type_index_18](ctx);
     	}
 
-    	const if_block_creators_19 = [create_if_block_9, create_if_block_10];
+    	const if_block_creators_19 = [create_if_block_8, create_if_block_9];
     	const if_blocks_19 = [];
 
     	function select_block_type_19(ctx, dirty) {
@@ -11236,7 +11186,7 @@ var app = (function () {
     		if_block19 = if_blocks_19[current_block_type_index_19] = if_block_creators_19[current_block_type_index_19](ctx);
     	}
 
-    	const if_block_creators_20 = [create_if_block_7, create_if_block_8];
+    	const if_block_creators_20 = [create_if_block_6, create_if_block_7];
     	const if_blocks_20 = [];
 
     	function select_block_type_20(ctx, dirty) {
@@ -11249,7 +11199,7 @@ var app = (function () {
     		if_block20 = if_blocks_20[current_block_type_index_20] = if_block_creators_20[current_block_type_index_20](ctx);
     	}
 
-    	const if_block_creators_21 = [create_if_block_5, create_if_block_6];
+    	const if_block_creators_21 = [create_if_block_4, create_if_block_5];
     	const if_blocks_21 = [];
 
     	function select_block_type_21(ctx, dirty) {
@@ -11262,7 +11212,7 @@ var app = (function () {
     		if_block21 = if_blocks_21[current_block_type_index_21] = if_block_creators_21[current_block_type_index_21](ctx);
     	}
 
-    	const if_block_creators_22 = [create_if_block_3, create_if_block_4];
+    	const if_block_creators_22 = [create_if_block_2, create_if_block_3];
     	const if_blocks_22 = [];
 
     	function select_block_type_22(ctx, dirty) {
@@ -11275,7 +11225,7 @@ var app = (function () {
     		if_block22 = if_blocks_22[current_block_type_index_22] = if_block_creators_22[current_block_type_index_22](ctx);
     	}
 
-    	const if_block_creators_23 = [create_if_block_1, create_if_block_2];
+    	const if_block_creators_23 = [create_if_block$2, create_if_block_1];
     	const if_blocks_23 = [];
 
     	function select_block_type_23(ctx, dirty) {
@@ -11287,8 +11237,6 @@ var app = (function () {
     	if (~(current_block_type_index_23 = select_block_type_23(ctx))) {
     		if_block23 = if_blocks_23[current_block_type_index_23] = if_block_creators_23[current_block_type_index_23](ctx);
     	}
-
-    	let if_block24 = /*$editMode*/ ctx[1] && create_if_block$2(ctx);
 
     	const block = {
     		c: function create() {
@@ -11444,120 +11392,118 @@ var app = (function () {
     			t72 = space();
     			span23 = element("span");
     			span23.textContent = "⌫";
-    			t74 = space();
-    			if (if_block24) if_block24.c();
-    			add_location(span0, file$5, 148, 6, 3126);
+    			add_location(span0, file$5, 133, 6, 2881);
     			attr_dev(div0, "id", "⇪");
-    			attr_dev(div0, "class", "white-key svelte-142rg1j");
-    			add_location(div0, file$5, 135, 4, 2639);
-    			add_location(span1, file$5, 163, 6, 3645);
+    			attr_dev(div0, "class", "white-key svelte-1sh14hr");
+    			add_location(div0, file$5, 120, 4, 2394);
+    			add_location(span1, file$5, 148, 6, 3400);
     			attr_dev(div1, "id", "A");
-    			attr_dev(div1, "class", "white-key svelte-142rg1j");
-    			add_location(div1, file$5, 150, 4, 3158);
-    			add_location(span2, file$5, 178, 6, 4164);
+    			attr_dev(div1, "class", "white-key svelte-1sh14hr");
+    			add_location(div1, file$5, 135, 4, 2913);
+    			add_location(span2, file$5, 163, 6, 3919);
     			attr_dev(div2, "id", "S");
-    			attr_dev(div2, "class", "white-key svelte-142rg1j");
-    			add_location(div2, file$5, 165, 4, 3677);
-    			add_location(span3, file$5, 193, 6, 4683);
+    			attr_dev(div2, "class", "white-key svelte-1sh14hr");
+    			add_location(div2, file$5, 150, 4, 3432);
+    			add_location(span3, file$5, 178, 6, 4438);
     			attr_dev(div3, "id", "D");
-    			attr_dev(div3, "class", "white-key svelte-142rg1j");
-    			add_location(div3, file$5, 180, 4, 4196);
-    			add_location(span4, file$5, 208, 6, 5202);
+    			attr_dev(div3, "class", "white-key svelte-1sh14hr");
+    			add_location(div3, file$5, 165, 4, 3951);
+    			add_location(span4, file$5, 193, 6, 4957);
     			attr_dev(div4, "id", "F");
-    			attr_dev(div4, "class", "white-key svelte-142rg1j");
-    			add_location(div4, file$5, 195, 4, 4715);
-    			add_location(span5, file$5, 223, 6, 5721);
+    			attr_dev(div4, "class", "white-key svelte-1sh14hr");
+    			add_location(div4, file$5, 180, 4, 4470);
+    			add_location(span5, file$5, 208, 6, 5476);
     			attr_dev(div5, "id", "G");
-    			attr_dev(div5, "class", "white-key svelte-142rg1j");
-    			add_location(div5, file$5, 210, 4, 5234);
-    			add_location(span6, file$5, 238, 6, 6240);
+    			attr_dev(div5, "class", "white-key svelte-1sh14hr");
+    			add_location(div5, file$5, 195, 4, 4989);
+    			add_location(span6, file$5, 223, 6, 5995);
     			attr_dev(div6, "id", "H");
-    			attr_dev(div6, "class", "white-key svelte-142rg1j");
-    			add_location(div6, file$5, 225, 4, 5753);
-    			add_location(span7, file$5, 253, 6, 6759);
+    			attr_dev(div6, "class", "white-key svelte-1sh14hr");
+    			add_location(div6, file$5, 210, 4, 5508);
+    			add_location(span7, file$5, 238, 6, 6514);
     			attr_dev(div7, "id", "J");
-    			attr_dev(div7, "class", "white-key svelte-142rg1j");
-    			add_location(div7, file$5, 240, 4, 6272);
-    			add_location(span8, file$5, 268, 6, 7278);
+    			attr_dev(div7, "class", "white-key svelte-1sh14hr");
+    			add_location(div7, file$5, 225, 4, 6027);
+    			add_location(span8, file$5, 253, 6, 7033);
     			attr_dev(div8, "id", "K");
-    			attr_dev(div8, "class", "white-key svelte-142rg1j");
-    			add_location(div8, file$5, 255, 4, 6791);
-    			add_location(span9, file$5, 283, 6, 7797);
+    			attr_dev(div8, "class", "white-key svelte-1sh14hr");
+    			add_location(div8, file$5, 240, 4, 6546);
+    			add_location(span9, file$5, 268, 6, 7552);
     			attr_dev(div9, "id", "L");
-    			attr_dev(div9, "class", "white-key svelte-142rg1j");
-    			add_location(div9, file$5, 270, 4, 7310);
-    			add_location(span10, file$5, 298, 6, 8318);
+    			attr_dev(div9, "class", "white-key svelte-1sh14hr");
+    			add_location(div9, file$5, 255, 4, 7065);
+    			add_location(span10, file$5, 283, 6, 8073);
     			attr_dev(div10, "id", "Č");
-    			attr_dev(div10, "class", "white-key svelte-142rg1j");
-    			add_location(div10, file$5, 285, 4, 7829);
-    			add_location(span11, file$5, 313, 6, 8839);
+    			attr_dev(div10, "class", "white-key svelte-1sh14hr");
+    			add_location(div10, file$5, 270, 4, 7584);
+    			add_location(span11, file$5, 298, 6, 8594);
     			attr_dev(div11, "id", "Ć");
-    			attr_dev(div11, "class", "white-key svelte-142rg1j");
-    			add_location(div11, file$5, 300, 4, 8350);
-    			add_location(span12, file$5, 328, 6, 9360);
+    			attr_dev(div11, "class", "white-key svelte-1sh14hr");
+    			add_location(div11, file$5, 285, 4, 8105);
+    			add_location(span12, file$5, 313, 6, 9115);
     			attr_dev(div12, "id", "Ž");
-    			attr_dev(div12, "class", "white-key svelte-142rg1j");
-    			add_location(div12, file$5, 315, 4, 8871);
-    			add_location(span13, file$5, 343, 6, 9879);
+    			attr_dev(div12, "class", "white-key svelte-1sh14hr");
+    			add_location(div12, file$5, 300, 4, 8626);
+    			add_location(span13, file$5, 328, 6, 9634);
     			attr_dev(div13, "id", "↵");
-    			attr_dev(div13, "class", "white-key svelte-142rg1j");
-    			add_location(div13, file$5, 330, 4, 9392);
-    			attr_dev(div14, "class", "piano-grid svelte-142rg1j");
-    			add_location(div14, file$5, 134, 2, 2609);
-    			add_location(span14, file$5, 361, 6, 10438);
+    			attr_dev(div13, "class", "white-key svelte-1sh14hr");
+    			add_location(div13, file$5, 315, 4, 9147);
+    			attr_dev(div14, "class", "piano-grid svelte-1sh14hr");
+    			add_location(div14, file$5, 119, 2, 2364);
+    			add_location(span14, file$5, 346, 6, 10193);
     			attr_dev(div15, "id", "Q");
-    			attr_dev(div15, "class", "black-key svelte-142rg1j");
-    			add_location(div15, file$5, 348, 4, 9951);
-    			add_location(span15, file$5, 376, 6, 10957);
+    			attr_dev(div15, "class", "black-key svelte-1sh14hr");
+    			add_location(div15, file$5, 333, 4, 9706);
+    			add_location(span15, file$5, 361, 6, 10712);
     			attr_dev(div16, "id", "W");
-    			attr_dev(div16, "class", "black-key svelte-142rg1j");
-    			add_location(div16, file$5, 363, 4, 10470);
-    			add_location(span16, file$5, 391, 6, 11476);
+    			attr_dev(div16, "class", "black-key svelte-1sh14hr");
+    			add_location(div16, file$5, 348, 4, 10225);
+    			add_location(span16, file$5, 376, 6, 11231);
     			attr_dev(div17, "id", "E");
-    			attr_dev(div17, "class", "black-key svelte-142rg1j");
-    			add_location(div17, file$5, 378, 4, 10989);
-    			attr_dev(div18, "class", "blank-black-key svelte-142rg1j");
-    			add_location(div18, file$5, 393, 4, 11508);
-    			add_location(span17, file$5, 407, 6, 12032);
+    			attr_dev(div17, "class", "black-key svelte-1sh14hr");
+    			add_location(div17, file$5, 363, 4, 10744);
+    			attr_dev(div18, "class", "blank-black-key svelte-1sh14hr");
+    			add_location(div18, file$5, 378, 4, 11263);
+    			add_location(span17, file$5, 392, 6, 11787);
     			attr_dev(div19, "id", "T");
-    			attr_dev(div19, "class", "black-key svelte-142rg1j");
-    			add_location(div19, file$5, 394, 4, 11545);
-    			add_location(span18, file$5, 422, 6, 12551);
+    			attr_dev(div19, "class", "black-key svelte-1sh14hr");
+    			add_location(div19, file$5, 379, 4, 11300);
+    			add_location(span18, file$5, 407, 6, 12306);
     			attr_dev(div20, "id", "Z");
-    			attr_dev(div20, "class", "black-key svelte-142rg1j");
-    			add_location(div20, file$5, 409, 4, 12064);
-    			attr_dev(div21, "class", "blank-black-key svelte-142rg1j");
-    			add_location(div21, file$5, 424, 4, 12583);
-    			add_location(span19, file$5, 438, 6, 13107);
+    			attr_dev(div20, "class", "black-key svelte-1sh14hr");
+    			add_location(div20, file$5, 394, 4, 11819);
+    			attr_dev(div21, "class", "blank-black-key svelte-1sh14hr");
+    			add_location(div21, file$5, 409, 4, 12338);
+    			add_location(span19, file$5, 423, 6, 12862);
     			attr_dev(div22, "id", "I");
-    			attr_dev(div22, "class", "black-key svelte-142rg1j");
-    			add_location(div22, file$5, 425, 4, 12620);
-    			add_location(span20, file$5, 453, 6, 13626);
+    			attr_dev(div22, "class", "black-key svelte-1sh14hr");
+    			add_location(div22, file$5, 410, 4, 12375);
+    			add_location(span20, file$5, 438, 6, 13381);
     			attr_dev(div23, "id", "O");
-    			attr_dev(div23, "class", "black-key svelte-142rg1j");
-    			add_location(div23, file$5, 440, 4, 13139);
-    			add_location(span21, file$5, 468, 6, 14145);
+    			attr_dev(div23, "class", "black-key svelte-1sh14hr");
+    			add_location(div23, file$5, 425, 4, 12894);
+    			add_location(span21, file$5, 453, 6, 13900);
     			attr_dev(div24, "id", "P");
-    			attr_dev(div24, "class", "black-key svelte-142rg1j");
-    			add_location(div24, file$5, 455, 4, 13658);
-    			attr_dev(div25, "class", "blank-black-key svelte-142rg1j");
-    			add_location(div25, file$5, 470, 4, 14177);
-    			add_location(span22, file$5, 484, 6, 14703);
+    			attr_dev(div24, "class", "black-key svelte-1sh14hr");
+    			add_location(div24, file$5, 440, 4, 13413);
+    			attr_dev(div25, "class", "blank-black-key svelte-1sh14hr");
+    			add_location(div25, file$5, 455, 4, 13932);
+    			add_location(span22, file$5, 469, 6, 14458);
     			attr_dev(div26, "id", "Đ");
-    			attr_dev(div26, "class", "black-key svelte-142rg1j");
-    			add_location(div26, file$5, 471, 4, 14214);
-    			add_location(span23, file$5, 499, 6, 15220);
+    			attr_dev(div26, "class", "black-key svelte-1sh14hr");
+    			add_location(div26, file$5, 456, 4, 13969);
+    			add_location(span23, file$5, 484, 6, 14975);
     			attr_dev(div27, "id", "⌫");
-    			attr_dev(div27, "class", "black-key svelte-142rg1j");
-    			add_location(div27, file$5, 486, 4, 14735);
-    			attr_dev(div28, "class", "piano-grid svelte-142rg1j");
-    			add_location(div28, file$5, 347, 2, 9921);
+    			attr_dev(div27, "class", "black-key svelte-1sh14hr");
+    			add_location(div27, file$5, 471, 4, 14490);
+    			attr_dev(div28, "class", "piano-grid svelte-1sh14hr");
+    			add_location(div28, file$5, 332, 2, 9676);
 
     			attr_dev(div29, "class", div29_class_value = "piano-grid-container " + (/*$isFocused*/ ctx[0] || /*$editMode*/ ctx[1]
     			? "transparent"
-    			: "") + " svelte-142rg1j");
+    			: "") + " svelte-1sh14hr");
 
-    			add_location(div29, file$5, 132, 0, 2521);
+    			add_location(div29, file$5, 117, 0, 2276);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -11787,8 +11733,6 @@ var app = (function () {
 
     			append_dev(div27, t72);
     			append_dev(div27, span23);
-    			append_dev(div29, t74);
-    			if (if_block24) if_block24.m(div29, null);
     			current = true;
     		},
     		p: function update(ctx, dirty) {
@@ -12584,28 +12528,9 @@ var app = (function () {
     				}
     			}
 
-    			if (/*$editMode*/ ctx[1]) {
-    				if (!if_block24) {
-    					if_block24 = create_if_block$2(ctx);
-    					if_block24.c();
-    					transition_in(if_block24, 1);
-    					if_block24.m(div29, null);
-    				} else {
-    					transition_in(if_block24, 1);
-    				}
-    			} else if (if_block24) {
-    				group_outros();
-
-    				transition_out(if_block24, 1, 1, () => {
-    					if_block24 = null;
-    				});
-
-    				check_outros();
-    			}
-
     			if (!current || dirty[0] & /*$isFocused, $editMode*/ 3 && div29_class_value !== (div29_class_value = "piano-grid-container " + (/*$isFocused*/ ctx[0] || /*$editMode*/ ctx[1]
     			? "transparent"
-    			: "") + " svelte-142rg1j")) {
+    			: "") + " svelte-1sh14hr")) {
     				attr_dev(div29, "class", div29_class_value);
     			}
     		},
@@ -12635,7 +12560,6 @@ var app = (function () {
     			transition_in(if_block21);
     			transition_in(if_block22);
     			transition_in(if_block23);
-    			transition_in(if_block24);
     			current = true;
     		},
     		o: function outro(local) {
@@ -12663,7 +12587,6 @@ var app = (function () {
     			transition_out(if_block21);
     			transition_out(if_block22);
     			transition_out(if_block23);
-    			transition_out(if_block24);
     			current = false;
     		},
     		d: function destroy(detaching) {
@@ -12764,8 +12687,6 @@ var app = (function () {
     			if (~current_block_type_index_23) {
     				if_blocks_23[current_block_type_index_23].d();
     			}
-
-    			if (if_block24) if_block24.d();
     		}
     	};
 
@@ -15451,7 +15372,7 @@ var app = (function () {
     /* src\components\SetEditor.svelte generated by Svelte v3.20.1 */
     const file$a = "src\\components\\SetEditor.svelte";
 
-    // (53:4) {#if $editMode}
+    // (52:4) {#if $editMode}
     function create_if_block$5(ctx) {
     	let div;
     	let div_transition;
@@ -15472,7 +15393,7 @@ var app = (function () {
     		c: function create() {
     			div = element("div");
     			create_component(button.$$.fragment);
-    			add_location(div, file$a, 53, 6, 1373);
+    			add_location(div, file$a, 52, 6, 1341);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -15517,14 +15438,14 @@ var app = (function () {
     		block,
     		id: create_if_block$5.name,
     		type: "if",
-    		source: "(53:4) {#if $editMode}",
+    		source: "(52:4) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (55:8) <Button on:click={toggleReorder} toggled={$isReordering}>
+    // (54:8) <Button on:click={toggleReorder} toggled={$isReordering}>
     function create_default_slot_1$1(ctx) {
     	let t;
 
@@ -15544,14 +15465,14 @@ var app = (function () {
     		block,
     		id: create_default_slot_1$1.name,
     		type: "slot",
-    		source: "(55:8) <Button on:click={toggleReorder} toggled={$isReordering}>",
+    		source: "(54:8) <Button on:click={toggleReorder} toggled={$isReordering}>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (68:4) <p class="error" slot="error">
+    // (67:4) <p class="error" slot="error">
     function create_error_slot(ctx) {
     	let p;
 
@@ -15559,9 +15480,9 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "No instruments";
-    			attr_dev(p, "class", "error svelte-fdo964");
+    			attr_dev(p, "class", "error svelte-f033fq");
     			attr_dev(p, "slot", "error");
-    			add_location(p, file$a, 67, 4, 1734);
+    			add_location(p, file$a, 66, 4, 1702);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -15575,14 +15496,14 @@ var app = (function () {
     		block,
     		id: create_error_slot.name,
     		type: "slot",
-    		source: "(68:4) <p class=\\\"error\\\" slot=\\\"error\\\">",
+    		source: "(67:4) <p class=\\\"error\\\" slot=\\\"error\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (62:2) <DragAndDropList      list={$instrumentSets[$activeSet].instruments}      canReroder={$isReordering}      let:item      {update}>
+    // (61:2) <DragAndDropList      list={$instrumentSets[$activeSet].instruments}      canReroder={$isReordering}      let:item      {update}>
     function create_default_slot$1(ctx) {
     	let t;
     	let current;
@@ -15637,7 +15558,7 @@ var app = (function () {
     		block,
     		id: create_default_slot$1.name,
     		type: "slot",
-    		source: "(62:2) <DragAndDropList      list={$instrumentSets[$activeSet].instruments}      canReroder={$isReordering}      let:item      {update}>",
+    		source: "(61:2) <DragAndDropList      list={$instrumentSets[$activeSet].instruments}      canReroder={$isReordering}      let:item      {update}>",
     		ctx
     	});
 
@@ -15692,12 +15613,12 @@ var app = (function () {
     			create_component(draganddroplist.$$.fragment);
     			t3 = space();
     			create_component(toast.$$.fragment);
-    			attr_dev(h4, "class", "svelte-fdo964");
-    			add_location(h4, file$a, 51, 4, 1301);
-    			attr_dev(div0, "class", "title-flex svelte-fdo964");
-    			add_location(div0, file$a, 50, 2, 1271);
+    			attr_dev(h4, "class", "svelte-f033fq");
+    			add_location(h4, file$a, 50, 4, 1269);
+    			attr_dev(div0, "class", "title-flex svelte-f033fq");
+    			add_location(div0, file$a, 49, 2, 1239);
     			set_style(div1, "width", "22rem");
-    			add_location(div1, file$a, 48, 0, 1238);
+    			add_location(div1, file$a, 47, 0, 1206);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -15864,7 +15785,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (227:4) {#if $editMode}
+    // (228:4) {#if $editMode}
     function create_if_block_3$2(ctx) {
     	let div;
     	let div_transition;
@@ -15884,7 +15805,7 @@ var app = (function () {
     		c: function create() {
     			div = element("div");
     			create_component(button.$$.fragment);
-    			add_location(div, file$b, 227, 6, 5287);
+    			add_location(div, file$b, 228, 6, 5345);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -15928,14 +15849,14 @@ var app = (function () {
     		block,
     		id: create_if_block_3$2.name,
     		type: "if",
-    		source: "(227:4) {#if $editMode}",
+    		source: "(228:4) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (229:8) <Button on:click={addSet}>
+    // (230:8) <Button on:click={addSet}>
     function create_default_slot_5(ctx) {
     	let t;
 
@@ -15955,14 +15876,14 @@ var app = (function () {
     		block,
     		id: create_default_slot_5.name,
     		type: "slot",
-    		source: "(229:8) <Button on:click={addSet}>",
+    		source: "(230:8) <Button on:click={addSet}>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (266:10) {#each set.instruments as i (i.id)}
+    // (267:10) {#each set.instruments as i (i.id)}
     function create_each_block$4(key_1, ctx) {
     	let span;
     	let t0_value = normalizedName$1(/*i*/ ctx[14].name) + "";
@@ -15980,8 +15901,8 @@ var app = (function () {
     			span = element("span");
     			t0 = text(t0_value);
     			t1 = space();
-    			attr_dev(span, "class", "info-txt svelte-1v2fje8");
-    			add_location(span, file$b, 266, 12, 6448);
+    			attr_dev(span, "class", "info-txt svelte-4pqav5");
+    			add_location(span, file$b, 267, 12, 6508);
     			this.first = span;
     		},
     		m: function mount(target, anchor) {
@@ -16030,14 +15951,14 @@ var app = (function () {
     		block,
     		id: create_each_block$4.name,
     		type: "each",
-    		source: "(266:10) {#each set.instruments as i (i.id)}",
+    		source: "(267:10) {#each set.instruments as i (i.id)}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (278:58) 
+    // (279:58) 
     function create_if_block_2$2(ctx) {
     	let div;
     	let div_transition;
@@ -16063,8 +15984,8 @@ var app = (function () {
     		c: function create() {
     			div = element("div");
     			create_component(button.$$.fragment);
-    			attr_dev(div, "class", "f-shrink transform-key svelte-1v2fje8");
-    			add_location(div, file$b, 278, 10, 6918);
+    			attr_dev(div, "class", "f-shrink transform-key svelte-4pqav5");
+    			add_location(div, file$b, 279, 10, 6978);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -16109,14 +16030,14 @@ var app = (function () {
     		block,
     		id: create_if_block_2$2.name,
     		type: "if",
-    		source: "(278:58) ",
+    		source: "(279:58) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (272:8) {#if !$editMode}
+    // (273:8) {#if !$editMode}
     function create_if_block_1$2(ctx) {
     	let div;
     	let div_transition;
@@ -16136,8 +16057,8 @@ var app = (function () {
     		c: function create() {
     			div = element("div");
     			create_component(keyboardkey.$$.fragment);
-    			attr_dev(div, "class", "f-shrink transform-key svelte-1v2fje8");
-    			add_location(div, file$b, 272, 10, 6635);
+    			attr_dev(div, "class", "f-shrink transform-key svelte-4pqav5");
+    			add_location(div, file$b, 273, 10, 6695);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -16181,14 +16102,14 @@ var app = (function () {
     		block,
     		id: create_if_block_1$2.name,
     		type: "if",
-    		source: "(272:8) {#if !$editMode}",
+    		source: "(273:8) {#if !$editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (282:12) <Button                on:click={e => deleteSet(i, e)}                outline                style="font-family: 'Inter', sans-serif; transform:                translateX(-8px) translateY(1px); padding: 0.3rem; font-size:                1rem;">
+    // (283:12) <Button                on:click={(e) => deleteSet(i, e)}                outline                style="font-family: 'Inter', sans-serif; transform:                translateX(-8px) translateY(1px); padding: 0.3rem; font-size:                1rem;">
     function create_default_slot_4$1(ctx) {
     	let t;
 
@@ -16208,14 +16129,14 @@ var app = (function () {
     		block,
     		id: create_default_slot_4$1.name,
     		type: "slot",
-    		source: "(282:12) <Button                on:click={e => deleteSet(i, e)}                outline                style=\\\"font-family: 'Inter', sans-serif; transform:                translateX(-8px) translateY(1px); padding: 0.3rem; font-size:                1rem;\\\">",
+    		source: "(283:12) <Button                on:click={(e) => deleteSet(i, e)}                outline                style=\\\"font-family: 'Inter', sans-serif; transform:                translateX(-8px) translateY(1px); padding: 0.3rem; font-size:                1rem;\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (240:4) <Card        disabled={set.instruments.length < 1 && !$editMode}        passive={false}        active={$activeSet === i}        on:click={() => {          activeSet.set(i);        }}>
+    // (241:4) <Card        disabled={set.instruments.length < 1 && !$editMode}        passive={false}        active={$activeSet === i}        on:click={() => {          activeSet.set(i);        }}>
     function create_default_slot_3$1(ctx) {
     	let div1;
     	let div0;
@@ -16276,19 +16197,19 @@ var app = (function () {
     			if (if_block) if_block.c();
     			attr_dev(input, "type", "text");
     			input.value = input_value_value = /*set*/ ctx[13].name;
-    			attr_dev(input, "class", input_class_value = "uppercase " + (/*$editMode*/ ctx[1] ? "edit-field" : "label-field") + " svelte-1v2fje8");
+    			attr_dev(input, "class", input_class_value = "uppercase " + (/*$editMode*/ ctx[1] ? "edit-field" : "label-field") + " svelte-4pqav5");
     			set_style(input, "transition-delay", 50 * /*i*/ ctx[14] + "ms");
     			input.disabled = input_disabled_value = !/*$editMode*/ ctx[1];
     			toggle_class(input, "act", /*$activeSet*/ ctx[3] === /*i*/ ctx[14] && !/*$editMode*/ ctx[1]);
-    			add_location(input, file$b, 250, 10, 5863);
-    			attr_dev(div0, "class", "f-grow svelte-1v2fje8");
-    			add_location(div0, file$b, 248, 8, 5829);
+    			add_location(input, file$b, 251, 10, 5921);
+    			attr_dev(div0, "class", "f-grow svelte-4pqav5");
+    			add_location(div0, file$b, 249, 8, 5887);
 
     			attr_dev(div1, "class", div1_class_value = "fixed-card " + (/*set*/ ctx[13].instruments.length > 0
     			? ""
-    			: "remove-btm-margin") + " svelte-1v2fje8");
+    			: "remove-btm-margin") + " svelte-4pqav5");
 
-    			add_location(div1, file$b, 246, 6, 5730);
+    			add_location(div1, file$b, 247, 6, 5788);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, div1, anchor);
@@ -16317,7 +16238,7 @@ var app = (function () {
     				prop_dev(input, "value", input_value_value);
     			}
 
-    			if (!current || dirty & /*$editMode*/ 2 && input_class_value !== (input_class_value = "uppercase " + (/*$editMode*/ ctx[1] ? "edit-field" : "label-field") + " svelte-1v2fje8")) {
+    			if (!current || dirty & /*$editMode*/ 2 && input_class_value !== (input_class_value = "uppercase " + (/*$editMode*/ ctx[1] ? "edit-field" : "label-field") + " svelte-4pqav5")) {
     				attr_dev(input, "class", input_class_value);
     			}
 
@@ -16379,7 +16300,7 @@ var app = (function () {
 
     			if (!current || dirty & /*set*/ 8192 && div1_class_value !== (div1_class_value = "fixed-card " + (/*set*/ ctx[13].instruments.length > 0
     			? ""
-    			: "remove-btm-margin") + " svelte-1v2fje8")) {
+    			: "remove-btm-margin") + " svelte-4pqav5")) {
     				attr_dev(div1, "class", div1_class_value);
     			}
     		},
@@ -16420,14 +16341,14 @@ var app = (function () {
     		block,
     		id: create_default_slot_3$1.name,
     		type: "slot",
-    		source: "(240:4) <Card        disabled={set.instruments.length < 1 && !$editMode}        passive={false}        active={$activeSet === i}        on:click={() => {          activeSet.set(i);        }}>",
+    		source: "(241:4) <Card        disabled={set.instruments.length < 1 && !$editMode}        passive={false}        active={$activeSet === i}        on:click={() => {          activeSet.set(i);        }}>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (296:4) <p slot="error">
+    // (297:4) <p slot="error">
     function create_error_slot$1(ctx) {
     	let p;
     	let t0;
@@ -16440,9 +16361,9 @@ var app = (function () {
     			t0 = text("🕳 No instrument sets.\r\n      ");
     			br = element("br");
     			t1 = text("\r\n      This is an error.");
-    			add_location(br, file$b, 297, 6, 7438);
+    			add_location(br, file$b, 298, 6, 7500);
     			attr_dev(p, "slot", "error");
-    			add_location(p, file$b, 295, 4, 7384);
+    			add_location(p, file$b, 296, 4, 7446);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -16459,14 +16380,14 @@ var app = (function () {
     		block,
     		id: create_error_slot$1.name,
     		type: "slot",
-    		source: "(296:4) <p slot=\\\"error\\\">",
+    		source: "(297:4) <p slot=\\\"error\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (234:2) <DragAndDropList      bind:list={$instrumentSets}      canReroder={$isReordering}      let:item={set}      let:index={i}      {update}>
+    // (235:2) <DragAndDropList      bind:list={$instrumentSets}      canReroder={$isReordering}      let:item={set}      let:index={i}      {update}>
     function create_default_slot_2$1(ctx) {
     	let t;
     	let current;
@@ -16529,14 +16450,14 @@ var app = (function () {
     		block,
     		id: create_default_slot_2$1.name,
     		type: "slot",
-    		source: "(234:2) <DragAndDropList      bind:list={$instrumentSets}      canReroder={$isReordering}      let:item={set}      let:index={i}      {update}>",
+    		source: "(235:2) <DragAndDropList      bind:list={$instrumentSets}      canReroder={$isReordering}      let:item={set}      let:index={i}      {update}>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (303:2) {#if $editMode}
+    // (304:2) {#if $editMode}
     function create_if_block$6(ctx) {
     	let div;
     	let t;
@@ -16569,8 +16490,8 @@ var app = (function () {
     			create_component(button0.$$.fragment);
     			t = space();
     			create_component(button1.$$.fragment);
-    			attr_dev(div, "class", "title-flex svelte-1v2fje8");
-    			add_location(div, file$b, 303, 4, 7528);
+    			attr_dev(div, "class", "title-flex svelte-4pqav5");
+    			add_location(div, file$b, 304, 4, 7590);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -16626,14 +16547,14 @@ var app = (function () {
     		block,
     		id: create_if_block$6.name,
     		type: "if",
-    		source: "(303:2) {#if $editMode}",
+    		source: "(304:2) {#if $editMode}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (305:6) <Button on:click={downloadObjectAsJson}>
+    // (306:6) <Button on:click={downloadObjectAsJson}>
     function create_default_slot_1$2(ctx) {
     	let t;
 
@@ -16653,14 +16574,14 @@ var app = (function () {
     		block,
     		id: create_default_slot_1$2.name,
     		type: "slot",
-    		source: "(305:6) <Button on:click={downloadObjectAsJson}>",
+    		source: "(306:6) <Button on:click={downloadObjectAsJson}>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (306:6) <Button on:click={restore}>
+    // (307:6) <Button on:click={restore}>
     function create_default_slot$2(ctx) {
     	let t;
 
@@ -16680,7 +16601,7 @@ var app = (function () {
     		block,
     		id: create_default_slot$2.name,
     		type: "slot",
-    		source: "(306:6) <Button on:click={restore}>",
+    		source: "(307:6) <Button on:click={restore}>",
     		ctx
     	});
 
@@ -16749,12 +16670,12 @@ var app = (function () {
     			t4 = space();
     			create_component(toast.$$.fragment);
     			set_style(h4, "font-weight", "400");
-    			attr_dev(h4, "class", "svelte-1v2fje8");
-    			add_location(h4, file$b, 225, 4, 5209);
-    			attr_dev(div0, "class", "title-flex svelte-1v2fje8");
-    			add_location(div0, file$b, 224, 2, 5179);
-    			attr_dev(div1, "class", "container svelte-1v2fje8");
-    			add_location(div1, file$b, 222, 0, 5150);
+    			attr_dev(h4, "class", "svelte-4pqav5");
+    			add_location(h4, file$b, 226, 4, 5267);
+    			attr_dev(div0, "class", "title-flex svelte-4pqav5");
+    			add_location(div0, file$b, 225, 2, 5237);
+    			attr_dev(div1, "class", "container svelte-4pqav5");
+    			add_location(div1, file$b, 223, 0, 5208);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -19515,6 +19436,7 @@ var app = (function () {
     			set_style(span, "border", "1px solid var(--body-text)");
     			set_style(span, "border-radius", "2px");
     			set_style(span, "padding", "0 4px");
+    			set_style(span, "color", "var(--body-text)");
     			add_location(span, file$e, 342, 8, 9016);
     			set_style(div, "display", "flex");
     			add_location(div, file$e, 340, 6, 8959);
@@ -19703,7 +19625,7 @@ var app = (function () {
     			t = space();
     			create_component(button1.$$.fragment);
     			attr_dev(div, "class", "chord-controls svelte-1fbu7kd");
-    			add_location(div, file$e, 356, 4, 9343);
+    			add_location(div, file$e, 356, 4, 9367);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -19863,7 +19785,7 @@ var app = (function () {
     			t6 = space();
     			create_component(toast.$$.fragment);
     			attr_dev(div0, "class", "split svelte-1fbu7kd");
-    			add_location(div0, file$e, 383, 2, 9992);
+    			add_location(div0, file$e, 383, 2, 10016);
     			attr_dev(div1, "class", "container");
     			add_location(div1, file$e, 330, 0, 8647);
     		},

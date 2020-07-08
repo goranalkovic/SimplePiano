@@ -30,8 +30,8 @@
       {
         id: randId(),
         name: "New set",
-        instruments: []
-      }
+        instruments: [],
+      },
     ]);
 
     window.pushToast("Instrument set added");
@@ -147,13 +147,14 @@
   }
 
   .uppercase {
-    text-transform: uppercase;
+    /* text-transform: uppercase; */
     font-size: 0.8rem;
-    font-weight: 400 !important;
-    letter-spacing: 1.2px;
+    font-weight: 500 !important;
+    /* letter-spacing: 1.2px; */
     margin: 0;
     padding: 0;
     transition: 0.2s transform;
+    font-family: var(--font-family);
   }
 
   .info-txt {
@@ -177,7 +178,7 @@
     /* box-shadow: var(--shadow-small); */
     height: 20px;
     font-family: var(--font-family);
-    text-transform: uppercase;
+    /* text-transform: uppercase; */
     font-size: 13px;
     margin: 0 0 11px 0;
     padding: 4px 8px;
@@ -251,7 +252,7 @@
           <input
             type="text"
             value={set.name}
-            on:input={e => updateValue(set, 'name', e.target.value)}
+            on:input={(e) => updateValue(set, 'name', e.target.value)}
             class="uppercase {$editMode ? 'edit-field' : 'label-field'}"
             class:act={$activeSet === i && !$editMode}
             style="transition-delay: {50 * i}ms;"
@@ -280,7 +281,7 @@
             class="f-shrink transform-key"
             transition:fade={{ duration: 150 }}>
             <Button
-              on:click={e => deleteSet(i, e)}
+              on:click={(e) => deleteSet(i, e)}
               outline
               style="font-family: 'Inter', sans-serif; transform:
               translateX(-8px) translateY(1px); padding: 0.3rem; font-size:
