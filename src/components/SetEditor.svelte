@@ -58,8 +58,10 @@
     activeSet.set($activeSet);
   }
 
-  $: tempInstrs = $instrumentSets[$activeSet].instruments ?? [];
-  $: console.log(tempInstrs);
+  $: tempInstrs =
+    $instrumentSets[$activeSet] == null
+      ? []
+      : $instrumentSets[$activeSet].instruments;
 </script>
 
 <style>
