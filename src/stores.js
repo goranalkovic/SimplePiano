@@ -1,9 +1,9 @@
-import { writable, readable } from 'svelte/store';
+import { writable } from 'svelte/store';
 import store from "store";
 import cloneDeep from "lodash.clonedeep";
 
 const createWritableStore = (key, startValue) => {
-    const { subscribe, set } = writable(startValue);
+    const { subscribe, set, update } = writable(startValue);
 
     return {
         subscribe,

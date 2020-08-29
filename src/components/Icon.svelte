@@ -1,6 +1,6 @@
 <script>
   export let icon;
-  export let style;
+  export let style = null;
 </script>
 
 <style>

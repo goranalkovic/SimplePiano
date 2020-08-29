@@ -80,11 +80,11 @@
       adsr: [-0.01, -0.01, -0.01, -0.01],
     };
 
-    let currentSets = $instrumentSets;
+    $instrumentSets[$activeSet].instruments.push(newInstr);
 
-    currentSets[$activeSet].instruments.push(newInstr);
+    instrumentSets.set([...$instrumentSets]);
 
-    instrumentSets.set(currentSets);
+    console.log($instrumentSets);
   }
 
   function switchSf() {
@@ -193,6 +193,17 @@
     border-width: 1px;
     border-color: var(--border-color);
     border-style: solid;
+  }
+
+  @media (max-width: 1100px) {
+    .column {
+      border-left: none;
+      border-top: 1px solid var(--border-color);
+      padding: 0;
+      padding-top: var(--padding);
+      margin-left: calc(var(--padding) * -2);
+      margin-right: calc(var(--padding) * -2);
+    }
   }
 </style>
 

@@ -17,7 +17,7 @@
   const over = (ev) => {
     ev.preventDefault();
     let dragged = getDraggedParent(ev.target);
-    if (isOver !== dragged.id) isOver = JSON.parse(dragged.id);
+    if (isOver !== dragged.id) isOver = dragged.id;
   };
   const leave = (ev) => {
     let dragged = getDraggedParent(ev.target);
@@ -57,8 +57,6 @@
     overflow-y: scroll;
   }
 
-  /* The emerging W3C standard
-   that is currently Firefox-only */
   .list {
     scrollbar-width: thin;
     scrollbar-color: var(--white-key-color) transparent;
@@ -88,16 +86,16 @@
     <li
       class:reordering={canReroder}
       data-index={index}
-      data-id={JSON.stringify(getKey(item))}
+      data-id={item.id}
       draggable={canReroder}
       on:dragstart={start}
       on:dragover={over}
       on:dragleave={leave}
       on:drop={drop}
-      animate:flip={{ duration: 300 }}>
+      animate:flip={{ duration: 200 }}>
       <slot {item} {index} />
     </li>
   {:else}
-    <slot name="error" />
+    <slot name="error">No items</slot>
   {/each}
 </ul>

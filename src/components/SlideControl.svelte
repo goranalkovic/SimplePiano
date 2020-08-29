@@ -2,14 +2,14 @@
   import KeyboardKey from "./KeyboardKey.svelte";
   import Icon from "./Icon.svelte";
 
-  export let title;
+  export let title = null;
   export let min;
   export let max;
   export let step;
   export let value;
   export let keyboardKeys = null;
   export let customValueDisplay = null;
-  export let icon;
+  export let icon = null;
   export let darker = false;
 
   $: formattedValue =

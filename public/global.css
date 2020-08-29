@@ -86,18 +86,66 @@ body {
 	flex-direction: column;
 	justify-content: center;
 	font-family: var(--font-family);
-	width: 100%;
+	width: 100vw;
 	height: 100vh;
 }
 
 .piano-key-highlight {
 	/* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6) !important; */
 	background: var(--accent-color) !important;
-	color: #fff !important;
+	/* color: #fff !important; */
 	transform-origin: 50% 0% 0 !important;
 	/*transform: scaleY(0.99);*/
 }
 
+/* 
+.white-key.piano-key-highlight {
+	/* background: var(--hover-color) !important; 
+
+box-shadow: 0 0.5px 1px 1px var(--accent-color) !important;
+}
+
+.black-key.piano-key-highlight {
+	/* background: var(--button-hover-color) !important; 
+	box-shadow: 0 0.5px 1px 1px var(--accent-color) !important;
+}
+
+*/
+
 button:focus, input:focus, button:active, input:active {
 	outline: none;
+}
+
+body {
+	scrollbar-width: thin;
+	scrollbar-color: var(--white-key-color) transparent;
+}
+
+/* Works on Chrome/Edge/Safari */
+
+*::-webkit-scrollbar {
+	width: 2px;
+	height: 2px;
+}
+
+*::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+	background-color: var(--white-key-color);
+	border-radius: 20px;
+	border: none;
+}
+
+@media (max-width:1100px) {
+	.grid-container {
+		grid-template-columns: auto 1fr;
+		grid-template-rows: auto auto 1fr;
+		grid-template-areas: "tl tl" "tr tr" "bl br";
+		overflow-x: hidden;
+		margin: 0;
+		padding: 0;
+		width: 100vw;
+	}
 }

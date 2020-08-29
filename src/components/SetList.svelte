@@ -38,21 +38,6 @@
     window.pushToast("Instrument set added");
   }
 
-  function deleteSet(set, event) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    const name = $instrumentSets[set].name;
-
-    if (confirm("Delete instrument set?")) {
-      let newSets = [...$instrumentSets];
-      newSets.splice(set, 1);
-      instrumentSets.set([...newSets]);
-    }
-
-    window.pushToast("Removed <i>" + name + "</i>");
-  }
-
   function downloadObjectAsJson() {
     var dataStr =
       "data:text/json;charset=utf-8," +
@@ -104,6 +89,37 @@
     //   $instrumentSets.map(i => (i === item ? { ...i, [prop]: value } : i))
     // );
   };
+
+  function deleteSet(i, event, name) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    console.log("ActSet " + $activeSet);
+
+    if (confirm("Delete instrument set?")) {
+      let newSets = [...$instrumentSets];
+      newSets.splice(i, 1);
+      instrumentSets.set(newSets);
+
+      console.log("len: " + newSets.length);
+
+      if (newSets.length < 2) {
+        activeSet.set(0);
+      }
+      if ($activeSet >= newSets.length) {
+        activeSet.set(newSets.length - 1);
+      }
+      // else if (i < $activeSet) {
+      //   activeSet.set(currSet - 1);
+      // } else {
+      //   activeSet.set(0);
+      // }
+    }
+
+    console.log("ActSet " + $activeSet);
+    console.log($instrumentSets[$activeSet]);
+    window.pushToast("Removed <i>" + name + "</i>");
+  }
 </script>
 
 <style>
@@ -158,10 +174,13 @@
     let:index={i}
     {update}>
 
-    <SetListItem {set} {i} />
+    <SetListItem
+      {set}
+      {i}
+      on:remove={(e) => deleteSet(i, e, $instrumentSets[i].name)} />
 
     <p slot="error">
-      🕳 No instrument sets.
+      No instrument sets.
       <br />
       This is an error.
     </p>

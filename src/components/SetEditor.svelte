@@ -7,11 +7,12 @@
   import { slide } from "svelte/transition";
   import { quintOut } from "svelte/easing";
   import { flip } from "svelte/animate";
+  import { onMount, afterUpdate } from "svelte";
+  import App from "../App.svelte";
 
   function update(from, to) {
     let newList = [...$instrumentSets[$activeSet].instruments];
     newList[from] = [newList[to], (newList[to] = newList[from])][0];
-
     $instrumentSets[$activeSet].instruments = [...newList];
     instrumentSets.set($instrumentSets);
   }
@@ -20,17 +21,51 @@
     isReordering.set(!$isReordering);
     window.pushToast("Reordering " + ($isReordering ? "on" : "off"));
   }
+
+  onMount(() => {
+    if (
+      $instrumentSets[$activeSet] == null ||
+      $instrumentSets[$activeSet] == undefined
+    ) {
+      activeSet.set(0);
+    }
+    // console.log($instrumentSets[$activeSet].instruments);
+  });
+  afterUpdate(() => {
+    if (
+      $instrumentSets[$activeSet] == null ||
+      $instrumentSets[$activeSet] == undefined
+    ) {
+      activeSet.set(0);
+    }
+    // console.log($instrumentSets[$activeSet].instruments);
+  });
+
+  function removeInstrument(index) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    let currentInstruments = [...$instrumentSets[$activeSet].instruments];
+
+    currentInstruments.splice(index, 1);
+
+    $instrumentSets[$activeSet].instruments = [...currentInstruments];
+
+    instrumentSets.set([...$instrumentSets]);
+
+    instrumentSets.set($instrumentSets);
+
+    activeSet.set($activeSet);
+  }
+
+  $: tempInstrs = $instrumentSets[$activeSet].instruments ?? [];
+  $: console.log(tempInstrs);
 </script>
 
 <style>
   h4 {
     margin: 0;
     padding: 0;
-  }
-
-  .error {
-    font-size: 0.9rem;
-    font-weight: 400;
   }
 
   .title-flex {
@@ -53,28 +88,37 @@
 
 <div class="container">
 
-  <div class="title-flex">
-    <h4>{$instrumentSets[$activeSet].name}</h4>
-    {#if $editMode}
-      <div transition:slide>
-        <Button
-          on:click={toggleReorder}
-          toggled={$isReordering}
-          label="Reorder items"
-          icon="reorder" />
-      </div>
-    {/if}
-  </div>
+  {#if $instrumentSets[$activeSet] != null}
+    <div class="title-flex">
+      <h4>{$instrumentSets[$activeSet].name}</h4>
+      {#if $editMode}
+        <div transition:slide>
+          <Button
+            on:click={toggleReorder}
+            toggled={$isReordering}
+            label="Reorder"
+            icon="reorder" />
+        </div>
+      {/if}
+    </div>
 
-  <DragAndDropList
-    list={$instrumentSets[$activeSet].instruments}
-    canReroder={$isReordering}
-    let:item
-    {update}>
-    <InstrumentCard {...item} nohover={$isReordering} />
-    <p class="error" slot="error">No instruments</p>
-  </DragAndDropList>
+    <DragAndDropList
+      list={$instrumentSets[$activeSet].instruments}
+      canReroder={$isReordering}
+      let:item
+      let:index
+      {update}>
+      <InstrumentCard
+        {...item}
+        {index}
+        on:remove={() => removeInstrument(index)}
+        nohover={$isReordering} />
 
+      <p slot="error" style="font-size: 0.8rem;padding:0 var(--padding)">
+        No instruments in this set
+      </p>
+    </DragAndDropList>
+  {/if}
 </div>
 
 <Toast />

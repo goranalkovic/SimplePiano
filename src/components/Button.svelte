@@ -87,7 +87,7 @@
 
   button.inline {
     border: none;
-    padding: 0;
+    padding: 2px;
     background-color: transparent;
   }
 
@@ -96,6 +96,10 @@
     background-color: var(--button-hover-color);
     color: var(--text-color);
     opacity: 0.24;
+  }
+
+  button.inline:disabled {
+    background-color: transparent;
   }
 </style>
 

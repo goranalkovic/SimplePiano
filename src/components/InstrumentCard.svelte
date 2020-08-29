@@ -5,6 +5,7 @@
   import Button from "./Button.svelte";
   import Icon from "./Icon.svelte";
   import SlideControl from "./SlideControl.svelte";
+  import { createEventDispatcher } from "svelte";
 
   import {
     instrumentSets,
@@ -20,13 +21,15 @@
   export let name;
   export let volume;
   export let octave;
-  export let data;
   export let soundfont;
   export let adsr;
   export let absoluteVolume;
   export let nohover = false;
+  export let index;
 
   let optionsVisible = false;
+
+  const dispatch = createEventDispatcher();
 
   function normalizedName(name) {
     name = name.replace(/_/g, " ");
@@ -71,6 +74,8 @@
     instrumentSets.set(currentSets);
   }
 
+  $: console.log(this);
+
   function octaveMinus() {
     let currentSets = $instrumentSets;
 
@@ -88,22 +93,12 @@
     instrumentSets.set(currentSets);
   }
 
-  function removeInstrument() {
-    let currentSets = $instrumentSets;
-
-    currentSets[$activeSet].instruments = currentSets[
-      $activeSet
-    ].instruments.filter((i) => i.id !== id);
-
-    instrumentSets.set(currentSets);
-  }
-
   function setVolume() {
     let currentSets = $instrumentSets;
 
-    let index = currentSets[$activeSet].instruments.findIndex(
-      (i) => i.id === id
-    );
+    // let index = currentSets[$activeSet].instruments.findIndex(
+    //   (i) => i.id === id
+    // );
 
     currentSets[$activeSet].instruments[index].volume = volume;
 
@@ -147,6 +142,8 @@
 
     instrumentSets.set(currentSets);
   }
+
+  let remove = () => dispatch("remove");
 </script>
 
 <style>
@@ -154,7 +151,7 @@
     /* display: flex; */
     margin-top: var(--padding);
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     justify-content: start;
     gap: calc(var(--padding) / 2);
   }
@@ -189,15 +186,41 @@
     font-weight: 400 !important;
     /* letter-spacing: 1.2px; */
   }
+
+  .card {
+    padding: var(--padding);
+    border-radius: var(--border-radius);
+    background: var(--bg-color);
+    transition: var(--transition);
+    user-select: none;
+    box-sizing: border-box;
+    border: none;
+  }
+
+  .card:not(.nohover):hover {
+    background-color: var(--hover-color);
+  }
+  .nohover {
+    pointer-events: none;
+  }
+
+  .soundfont {
+    background-color: var(--white-key-color);
+    font-size: 0.8rem;
+    padding: 4px;
+    border-radius: var(--border-radius);
+    opacity: 0.6;
+  }
 </style>
 
-<Card
-  passive={!$editMode}
+<div
+  transition:slide
+  class="card"
   on:mouseover={() => (optionsVisible = nohover ? false : true)}
-  on:mouseleave={() => (optionsVisible = false)}>
+  on:mouseleave={() => (optionsVisible = false)}
+  class:nohover={nohover || !$editMode}>
   <div class="row">
     <h4 class="uppercase status">{normalizedName(name)}</h4>
-
     {#if !optionsVisible}
       <div
         transition:slide
@@ -218,8 +241,14 @@
     {/if}
 
     {#if $editMode}
+      {#if optionsVisible}
+        <span transition:fade class="soundfont">
+          {normalizedName(soundfont)}
+        </span>
+      {/if}
       <div transition:fade style="margin-left: 2px;">
-        <Button square inline icon="delete" on:click={removeInstrument} />
+
+        <Button square inline icon="delete" on:click={remove} />
       </div>
     {/if}
 
@@ -235,7 +264,8 @@
         step="1"
         icon="octaveAdjust"
         bind:value={octave}
-        on:change={setOctaveShift} />
+        on:change={setOctaveShift}
+        customValueDisplay={{ '0': '—', '1': '+1', '2': '+2', '3': '+3' }} />
 
       <div
         style="display:flex;align-items:center;justify-content: space-between;">
@@ -257,8 +287,6 @@
           label={absoluteVolume ? '% of current' : 'Absolute'} />
 
       </div>
-
-      <p class="info-txt">Sound font: {normalizedName(soundfont)}</p>
 
       {#if $showAdsr && $editMode}
         <SlideControl
@@ -299,4 +327,4 @@
       {/if}
     </div>
   {/if}
-</Card>
+</div>

@@ -7,22 +7,20 @@
   export let selectable = false;
   export let passive = true;
   export let addClass = "";
-  export let style;
+  export let style = null;
 </script>
 
 <style>
   .card,
   .card.passive {
-    /* box-shadow: var(--shadow-small-transparent); */
     padding: var(--padding);
     border-radius: var(--border-radius);
-    background: transparent;
-    /* margin: 0.4rem 0; */
+    background: var(--bg-color);
     transition: var(--transition);
     user-select: none;
     box-sizing: border-box;
     border: none;
-    pointer-events: none;
+    /* pointer-events: none; */
   }
 
   .card:not(.passive) {
@@ -59,7 +57,6 @@
     on:mouseover
     on:mouseleave
     transition:slide
-    animation:flip={{ duration: 300 }}
     class="card passive {addClass}"
     class:active
     class:disabled
@@ -73,7 +70,6 @@
     on:mouseover
     on:mouseleave
     transition:slide
-    animation:flip={{ duration: 300 }}
     class="card {addClass}"
     class:active
     class:disabled={disabled && !active}

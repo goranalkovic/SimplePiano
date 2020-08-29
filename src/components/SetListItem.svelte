@@ -1,7 +1,10 @@
 <script>
   import { activeSet, instrumentSets, editMode, isReordering } from "../stores";
+  import { createEventDispatcher } from "svelte";
   export let set;
   export let i;
+
+  const dispatch = createEventDispatcher();
 
   import Button from "./Button.svelte";
   import Icon from "./Icon.svelte";
@@ -20,21 +23,6 @@
     // );
   };
 
-  function deleteSet(set, event) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    const name = $instrumentSets[set].name;
-
-    if (confirm("Delete instrument set?")) {
-      let newSets = [...$instrumentSets];
-      newSets.splice(set, 1);
-      instrumentSets.set([...newSets]);
-    }
-
-    window.pushToast("Removed <i>" + name + "</i>");
-  }
-
   function normalizedName(name) {
     name = name.replace(/_/g, " ");
 
@@ -42,6 +30,8 @@
   }
 
   let isHovering = false;
+
+  let remove = () => dispatch("remove");
 </script>
 
 <style>
@@ -92,6 +82,8 @@
     padding: calc(var(--padding) / 2) var(--padding);
     width: 100%;
     transition: var(--transition);
+
+    background-color: var(--white-key-color);
   }
 
   .active input {
@@ -144,7 +136,7 @@
     {#if $editMode}
       <div class="f-shrink transform-key" transition:fade={{ duration: 150 }}>
         <Button
-          on:click={(e) => deleteSet(i, e)}
+          on:click={remove}
           inline
           icon="delete"
           disabled={i === $activeSet || $instrumentSets.length < 2} />
@@ -156,7 +148,6 @@
       {#each set.instruments as i (i.id)}
         <li transition:slide animate:flip>
           <span>{normalizedName(i.name)}</span>
-
         </li>
       {/each}
     </ul>

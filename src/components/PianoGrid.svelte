@@ -59,9 +59,9 @@
   .piano-grid-container {
     margin: 2rem auto;
     height: 12rem;
-    transition: 0.1s opacity;
     position: relative;
     grid-area: tr;
+    transition: 0.3s transform ease;
   }
 
   .piano-grid-container .piano-grid:first-child {
@@ -88,11 +88,27 @@
     width: 3rem;
   }
 
-  .chord {
-    opacity: 0.6;
-    font-size: 80%;
-    margin-bottom: 0.3rem;
+  .white-key span,
+  .black-key span {
+    border-radius: var(--border-radius);
+    padding: 2px 1px;
+    width: 1.5rem;
     text-align: center;
+    display: inline-block;
+  }
+
+  .white-key span {
+    background-color: var(--white-key-color);
+  }
+
+  .black-key span {
+    background-color: var(--black-key-color);
+  }
+
+  .chord {
+    opacity: 0.8;
+    font-size: 70%;
+    margin-bottom: 0.3rem;
   }
 
   select {
@@ -115,7 +131,7 @@
 
   select:hover {
     background: var(--accent-color) !important;
-    color: var(--on-accent);
+    color: var(--on-accent) !important;
   }
 
   .white-key select {
@@ -130,6 +146,26 @@
 
   select option {
     text-align: center;
+    background-color: var(--white-key-color) !important;
+    color: var(--body-text) !important;
+    padding: var(--padding) !important;
+  }
+
+  @media (max-width: 700px) {
+    .piano-grid-container {
+      transform: scale(0.8);
+      margin: 0 calc(auto - 20%);
+      height: 10rem;
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .piano-grid-container {
+      margin: 0 calc(auto - 20%);
+      margin-top: 3rem;
+      margin-bottom: 2rem;
+      height: 12rem;
+    }
   }
 </style>
 

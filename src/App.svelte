@@ -334,6 +334,7 @@
     align-items: center;
     justify-content: center;
     gap: calc(var(--padding) * 2);
+    grid-area: tl;
   }
 
   .split {
@@ -347,6 +348,25 @@
     margin-left: calc(var(--padding) * -1);
     gap: calc(var(--padding) * 2);
     border-top: 1px solid var(--border-color);
+  }
+
+  @media (max-width: 1100px) {
+    .split {
+      display: flex;
+      flex-direction: column;
+      padding-right: calc(var(--padding) * 2);
+      /* margin-right: calc(var(--padding) * 2); */
+      /* width: 90%; */
+    }
+
+    .titlebar {
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+      margin-bottom: -2rem;
+    }
   }
 </style>
 
@@ -382,6 +402,8 @@
       <div class="chord-controls">
         <Button
           spaced
+          icon="chordMode"
+          label="Clear"
           on:click={() => {
             let temp = $chordNotes;
             for (let keyboardKey of Object.keys(defaultChords)) {
@@ -391,16 +413,14 @@
             for (let sel of document.querySelectorAll('.piano-grid select')) {
               sel.value = null;
             }
-          }}>
-          Clear all chords
-        </Button>
+          }} />
         <Button
           spaced
+          icon="chordMode"
+          label="Reset"
           on:click={() => {
             chordNotes.set(defaultChords);
-          }}>
-          Reset to default
-        </Button>
+          }} />
       </div>
     {/if}
 
