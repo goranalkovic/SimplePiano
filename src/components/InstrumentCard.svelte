@@ -3,6 +3,7 @@
 
   import Card from "./Card.svelte";
   import Button from "./Button.svelte";
+  import Icon from "./Icon.svelte";
   import SlideControl from "./SlideControl.svelte";
 
   import {
@@ -12,7 +13,7 @@
     currentSoundFont,
     defaultAdsr,
     showAdsr,
-    editMode
+    editMode,
   } from "../stores";
 
   export let id;
@@ -44,7 +45,7 @@
     volume > -1
       ? volume < 1
         ? "Muted"
-        : `Volume ${volume}${absoluteVolume ? "%" : ""}`
+        : `${volume}${absoluteVolume ? "%" : ""}`
       : "Custom volume not set";
 
   function clamp(value, min, max) {
@@ -56,7 +57,9 @@
   function octavePlus() {
     let currentSets = $instrumentSets;
 
-    let index = currentSets[$activeSet].instruments.findIndex(i => i.id === id);
+    let index = currentSets[$activeSet].instruments.findIndex(
+      (i) => i.id === id
+    );
 
     let currentShift = currentSets[$activeSet].instruments[index].octave;
     currentSets[$activeSet].instruments[index].octave = clamp(
@@ -71,7 +74,9 @@
   function octaveMinus() {
     let currentSets = $instrumentSets;
 
-    let index = currentSets[$activeSet].instruments.findIndex(i => i.id === id);
+    let index = currentSets[$activeSet].instruments.findIndex(
+      (i) => i.id === id
+    );
 
     let currentShift = currentSets[$activeSet].instruments[index].octave;
     currentSets[$activeSet].instruments[index].octave = clamp(
@@ -88,7 +93,7 @@
 
     currentSets[$activeSet].instruments = currentSets[
       $activeSet
-    ].instruments.filter(i => i.id !== id);
+    ].instruments.filter((i) => i.id !== id);
 
     instrumentSets.set(currentSets);
   }
@@ -96,9 +101,23 @@
   function setVolume() {
     let currentSets = $instrumentSets;
 
-    let index = currentSets[$activeSet].instruments.findIndex(i => i.id === id);
+    let index = currentSets[$activeSet].instruments.findIndex(
+      (i) => i.id === id
+    );
 
     currentSets[$activeSet].instruments[index].volume = volume;
+
+    instrumentSets.set(currentSets);
+  }
+
+  function setOctaveShift() {
+    let currentSets = $instrumentSets;
+
+    let index = currentSets[$activeSet].instruments.findIndex(
+      (i) => i.id === id
+    );
+
+    currentSets[$activeSet].instruments[index].octave = octave;
 
     instrumentSets.set(currentSets);
   }
@@ -106,7 +125,9 @@
   function toggleAbsoluteVolume() {
     let currentSets = $instrumentSets;
 
-    let index = currentSets[$activeSet].instruments.findIndex(i => i.id === id);
+    let index = currentSets[$activeSet].instruments.findIndex(
+      (i) => i.id === id
+    );
 
     currentSets[$activeSet].instruments[index].absoluteVolume = !currentSets[
       $activeSet
@@ -118,7 +139,9 @@
   function setAdsr() {
     let currentSets = $instrumentSets;
 
-    let index = currentSets[$activeSet].instruments.findIndex(i => i.id === id);
+    let index = currentSets[$activeSet].instruments.findIndex(
+      (i) => i.id === id
+    );
 
     currentSets[$activeSet].instruments[index].adsr = adsr;
 
@@ -129,107 +152,120 @@
 <style>
   .toolbar {
     /* display: flex; */
-    margin-top: -0.1rem;
+    margin-top: var(--padding);
     display: flex;
     flex-direction: column;
     justify-content: start;
+    gap: calc(var(--padding) / 2);
   }
 
   .status {
-    display: flex;
-    flex-direction: column;
     flex-grow: 1;
   }
 
   .info-txt {
     display: inline-block;
     font-size: 0.8rem;
-    opacity: 0.6;
-    margin: 0.05rem 0;
+
+    margin: 0;
   }
 
   h4 {
-    margin: 0 0 0.2rem 0;
+    margin: 0;
     font-weight: normal;
     font-size: 0.95rem;
   }
 
   .row {
     display: flex;
-    align-items: start;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
   }
 
   .uppercase {
-    text-transform: uppercase;
+    /* text-transform: uppercase; */
     font-size: 0.8rem;
     font-weight: 400 !important;
-    letter-spacing: 1.2px;
+    /* letter-spacing: 1.2px; */
   }
 </style>
 
 <Card
+  passive={!$editMode}
   on:mouseover={() => (optionsVisible = nohover ? false : true)}
   on:mouseleave={() => (optionsVisible = false)}>
   <div class="row">
-    <div class="status">
-      <h4 class="uppercase">{normalizedName(name)}</h4>
-      <span class="info-txt">{octShift}</span>
-      {#if volume > -1}
-        <span class="info-txt" transition:slide>{volTxt}</span>
-      {/if}
+    <h4 class="uppercase status">{normalizedName(name)}</h4>
 
-    </div>
-    {#if $editMode}
-      <div transition:fade>
-        <Button
-          style="height: 1.6rem; width: 1.6rem; padding: 0; margin: 0.2rem;
-          transform: translateY(0.15rem)"
-          outline
-          on:click={removeInstrument}>
-          <span style="font-family: 'Inter', sans-serif; font-size: 1.2rem;">
-            ✗
+    {#if !optionsVisible}
+      <div
+        transition:slide
+        style="opacity: 0.6; display: flex;
+        align-items:center;justify-content:center; gap: 4px">
+        {#if volume > -1}
+          <Icon style="opacity: 0.5" icon="volume" />
+          <span class="info-txt">{volTxt}</span>
+        {/if}
+        {#if octave != 0}
+          <Icon style="opacity: 0.5; margin-left: 8px" icon="octaveAdjust" />
+          <span class="info-txt">
+            {octave == 0 ? '—' : octave > 0 ? `+${octave}` : octave}
           </span>
-        </Button>
+        {/if}
+
       </div>
     {/if}
+
+    {#if $editMode}
+      <div transition:fade style="margin-left: 2px;">
+        <Button square inline icon="delete" on:click={removeInstrument} />
+      </div>
+    {/if}
+
   </div>
 
   {#if optionsVisible && $editMode}
     <div transition:slide class="toolbar">
 
-      <p class="info-txt">Sound font: {normalizedName(soundfont)}</p>
-      <div style="margin: 0.6rem 0" class="row">
-        <Button outline on:click={octavePlus}>Octave +</Button>
-        <Button outline on:click={octaveMinus} spaced>Octave -</Button>
-      </div>
+      <SlideControl
+        darker
+        min="-3"
+        max="3"
+        step="1"
+        icon="octaveAdjust"
+        bind:value={octave}
+        on:change={setOctaveShift} />
 
-      <div class="row">
-        <div style="flex-grow: 1">
-          <SlideControl
-            min={-1}
-            max={100}
-            step={1}
-            title={'Volume'}
-            bind:value={volume}
-            on:change={setVolume}
-            customValueDisplay={{ '-1': absoluteVolume ? 'Current' : 'Default', '0': 'Muted' }} />
-        </div>
+      <div
+        style="display:flex;align-items:center;justify-content: space-between;">
+
+        <SlideControl
+          darker
+          min="-1"
+          max="100"
+          step="1"
+          icon="volume"
+          bind:value={volume}
+          on:change={setVolume}
+          customValueDisplay={{ '-1': absoluteVolume ? 'Current' : 'Default', '0': 'Muted' }} />
         <Button
-          style="transform: translateY(0.8rem)"
-          outline
+          inline
           on:click={toggleAbsoluteVolume}
-          spaced>
-          {absoluteVolume ? '% of current' : 'Absolute'}
-        </Button>
+          iconStyle="opacity: 0.6"
+          icon="audioOptions"
+          label={absoluteVolume ? '% of current' : 'Absolute'} />
 
       </div>
+
+      <p class="info-txt">Sound font: {normalizedName(soundfont)}</p>
 
       {#if $showAdsr && $editMode}
         <SlideControl
           min={-0.01}
           max={1}
           step={0.01}
-          title={'Attack'}
+          title={'A'}
           bind:value={adsr[0]}
           on:change={setAdsr}
           customValueDisplay={{ '-0.01': 'Default', '0.005': 'Default' }} />
@@ -238,7 +274,7 @@
           min={-0.01}
           max={1}
           step={0.01}
-          title={'Delay'}
+          title={'D'}
           bind:value={adsr[1]}
           on:change={setAdsr}
           customValueDisplay={{ '-0.01': 'Default', '0.395': 'Default' }} />
@@ -247,7 +283,7 @@
           min={-0.01}
           max={1}
           step={0.01}
-          title={'Sustain'}
+          title={'S'}
           bind:value={adsr[2]}
           on:change={setAdsr}
           customValueDisplay={{ '-0.01': 'Default', '0.8': 'Default' }} />
@@ -256,7 +292,7 @@
           min={-0.01}
           max={1}
           step={0.01}
-          title={'Release'}
+          title={'R'}
           bind:value={adsr[3]}
           on:change={setAdsr}
           customValueDisplay={{ '-0.01': 'Default', '1.2': 'Default' }} />

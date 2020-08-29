@@ -50,10 +50,10 @@
   .options {
     display: flex;
     flex-direction: column;
-    box-shadow: var(--shadow-big);
-    background: var(--black-key-color);
-    padding: 0.5rem 0;
-    border-radius: 6px;
+    box-shadow: var(--shadow-small);
+    background: var(--menu-background);
+    padding: calc(var(--padding) / 4);
+    border-radius: var(--border-radius);
     position: absolute;
     top: 1.5rem;
     left: 0;
@@ -62,6 +62,7 @@
     transition: var(--transition);
     transform: scaleY(0.1) scaleX(0.4);
     box-sizing: border-box;
+    backdrop-filter: blur(20px) saturate(125%) brightness(125%);
   }
 
   ul {
@@ -75,6 +76,8 @@
     font-size: 0.85rem;
     padding: 0.5rem 0.8rem;
     transition: var(--transition);
+    margin: 6px;
+    border-radius: var(--border-radius);
   }
 
   li:not(.active):hover {
@@ -83,7 +86,8 @@
   }
 
   li.active {
-    color: var(--accent-color);
+    background-color: var(--accent-color);
+    color: var(--on-accent);
     pointer-events: none;
   }
 
@@ -107,9 +111,10 @@
 
 <div class="container">
   <div>
-    <Button on:click={toggleOptionsVisibility} active={optionsVisible}>
-      Theme
-    </Button>
+    <Button
+      on:click={toggleOptionsVisibility}
+      active={optionsVisible}
+      icon="theme" />
   </div>
   <div class="options" class:visible={optionsVisible}>
     <ul>

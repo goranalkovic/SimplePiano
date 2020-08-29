@@ -72,7 +72,7 @@
     display: block;
     font-family: "Inter", sans-serif;
     font-size: 0.8rem;
-    transform: translateX(-10px) translateY(3px);
+    transform: translateY(3px);
     margin-bottom: 4px;
     height: 1.4rem;
     font-weight: 500;

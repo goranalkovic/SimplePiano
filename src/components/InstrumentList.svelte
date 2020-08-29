@@ -114,44 +114,22 @@
 </script>
 
 <style>
-  .list {
-    display: flex;
-    flex-direction: column;
-    margin: 0;
-    padding: 0;
-  }
-
   h4 {
     margin: 0;
     padding: 0.8rem 0;
   }
 
-  select {
-    background: var(--white-key-color);
-    color: var(--white-key-text);
-    border: none;
-    padding: 6px 8px;
-    box-shadow: var(--shadow-small);
-    border-radius: var(--border-radius);
-    -webkit-appearance: none;
-    cursor: s-resize;
-    transition: var(--transition);
-    font-family: var(--font-family);
-    width: 12rem;
-  }
-
-  select:hover {
-    box-shadow: var(--shadow-big);
-  }
-
   .column {
     display: flex;
     flex-direction: column;
-    width: 14rem;
+    border-left: 1px solid var(--border-color);
+    padding: 0 calc(var(--padding) * 2);
+    padding-top: var(--padding);
+    align-items: center;
   }
 
   .scrollList {
-    height: 28rem;
+    height: 50vh;
     overflow-y: scroll;
   }
 
@@ -160,41 +138,15 @@
   }
 
   .search-box {
-    background: var(--white-key-color);
+    background: var(--black-key-color);
     color: var(--white-key-text);
     border: none;
     padding: 6px 8px;
-    box-shadow: var(--shadow-small);
     border-radius: var(--border-radius);
     width: 12rem;
     margin-bottom: 1rem;
     font-family: var(--font-family);
     margin-top: 0.5rem;
-  }
-
-  .mini-column {
-    display: flex;
-    flex-direction: column;
-    font-size: 0.8rem;
-    margin-top: 1rem;
-    width: 11.4rem;
-    margin-left: 0.5rem;
-  }
-
-  .mini-column span {
-    margin-bottom: 0.4rem;
-    flex-grow: 1;
-  }
-
-  .row {
-    display: flex;
-    height: 2rem;
-    align-items: baseline;
-  }
-
-  .transparent {
-    opacity: 0.2;
-    pointer-events: none;
   }
 
   ul {
@@ -203,19 +155,21 @@
     padding: 0;
     width: 7rem;
     border-radius: 3px;
-    box-shadow: var(--shadow-small);
+    /* box-shadow: var(--shadow-small); */
     width: 12rem;
-    background: var(--white-key-color);
+    /* background: var(--white-key-color); */
   }
 
   li {
-    font-size: 0.85rem;
-    padding: 0.5rem 0.8rem;
+    font-size: 0.8rem;
+    padding: calc(var(--padding) * 0.8) var(--padding);
     transition: var(--transition);
+    border-radius: var(--border-radius);
+    margin-bottom: 2px;
   }
 
   li:hover {
-    background: rgba(var(--body-text-values), 0.06);
+    background-color: var(--hover-color);
     cursor: pointer;
   }
 
@@ -228,58 +182,65 @@
   .info-msg span {
     font-weight: bold;
   }
+
+  hr {
+    width: calc(100% + 4 * var(--padding));
+    padding: 0;
+    margin: 0;
+    display: block;
+    margin-top: var(--padding);
+    margin-bottom: calc(var(--padding) * 2);
+    border-width: 1px;
+    border-color: var(--border-color);
+    border-style: solid;
+  }
 </style>
 
-{#if $editMode}
-  <div class="column">
-    <h4>Instruments</h4>
+<div class="column">
+  <h4>Instruments</h4>
 
-    <div class="selector">
+  <div class="selector">
 
-      <input
-        on:focus={setFocused}
-        on:blur={setUnfocused}
-        class="search-box"
-        placeholder="Search..."
-        type="search"
-        bind:value={filterString} />
+    <input
+      on:focus={setFocused}
+      on:blur={setUnfocused}
+      class="search-box"
+      placeholder="Search..."
+      type="search"
+      bind:value={filterString} />
 
-      <div class="scrollList">
-        {#if filteredList.length > 0}
-          <ul transition:slide={{ duration: 200 }}>
-            {#each filteredList as item (item)}
-              <li on:click={(e) => addPickedInstrument(item)}>
-                {normalizeInstrumentName(item)}
-              </li>
-            {/each}
-          </ul>
-        {:else}
-          <p class="info-msg" transition:slide={{ duration: 200 }}>
-            No instruments match
-            <br />
-            <span>{filterString}</span>
-          </p>
-        {/if}
-      </div>
-
+    <div class="scrollList">
+      {#if filteredList.length > 0}
+        <ul transition:slide={{ duration: 200 }}>
+          {#each filteredList as item (item)}
+            <li on:click={(e) => addPickedInstrument(item)}>
+              {normalizeInstrumentName(item)}
+            </li>
+          {/each}
+        </ul>
+      {:else}
+        <p class="info-msg" transition:slide={{ duration: 200 }}>
+          No instruments match
+          <br />
+          <span>{filterString}</span>
+        </p>
+      {/if}
     </div>
 
-    <div class="mini-column">
-      <div class="row">
-        <span>Sound font</span>
-        <Button on:click={switchSf}>{$currentSoundFont}</Button>
-      </div>
-
-      <div class="row" style="align-items: flex-end;">
-        <!-- <span style="margin-top: 0.8rem"></span> -->
-        <Button
-          on:click={switchAdsrOpt}
-          toggled={$showAdsr}
-          style="width: 100%">
-          Show ADSR controls
-        </Button>
-      </div>
-    </div>
   </div>
-{/if}
+
+  <hr />
+  <Button
+    on:click={switchAdsrOpt}
+    toggled={$showAdsr}
+    label="ADSR controls"
+    icon="adsr" />
+  <br />
+  <span style="font-size: 0.8rem; margin-bottom: var(--padding)">
+    Soundfont
+  </span>
+
+  <Button on:click={switchSf}>{$currentSoundFont}</Button>
+
+</div>
 <Toast />

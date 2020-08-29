@@ -3,22 +3,24 @@
 </script>
 
 <style>
-    .titlebar {
-        width: 60vw;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-    }
+  .titlebar {
+    width: 85%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--padding);
+    /* margin-bottom: 2rem; */
+  }
 
-    .right {
-        display: flex;
+  @media (max-width: 850px) {
+    .titlebar {
+      justify-content: center;
     }
+  }
 </style>
 
 <div class="titlebar">
-    <slot name="left" />
-    <div class="right">
-        <slot/>
-    </div>
+
+  <slot />
 </div>

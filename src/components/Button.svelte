@@ -1,31 +1,47 @@
 <script>
+  import Icon from "./Icon.svelte";
+
   export let spaced = false;
   export let style = null;
   export let outline = false;
   export let toggled = false;
   export let active = false;
   export let rectangular = false;
+  export let icon = null;
+  export let label = null;
+  export let square = false;
+  export let inline = false;
+  export let disabled = false;
+  export let iconStyle = null;
 </script>
 
 <style>
   button {
     border: none;
-    background: var(--white-key-color);
+    background: var(--black-key-color);
     color: var(--body-text);
-    padding: 4px 8px;
-    box-shadow: var(--shadow-small);
-    border-radius: 3px;
+    padding: calc(var(--padding) / 2) var(--padding);
+    /* box-shadow: var(--shadow-small); */
+    border-radius: var(--border-radius);
     transition: var(--transition);
     cursor: pointer;
     font-family: var(--font-family);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: calc(var(--padding) / 2);
   }
 
-  button:hover,
   button.active {
     /*font-weight: 600;*/
-    background: var(--accent-color);
-    color: var(--black-key-color);
-    box-shadow: var(--shadow-big);
+    background-color: var(--accent-color);
+    color: var(--on-accent);
+    /* box-shadow: var(--shadow-big); */
+  }
+
+  button:hover {
+    background-color: var(--button-hover-color);
   }
 
   button.outline {
@@ -43,20 +59,13 @@
   }
 
   .spaced {
-    margin-left: 6px;
-    margin-right: 6px;
+    margin-right: 2px;
   }
 
-  button:not(.outline).toggled {
-    border-bottom: 2px solid var(--accent-color);
-  }
-
-  button:not(.outline).toggled:hover {
-    border-bottom: 2px solid var(--body-text);
-  }
-
-  button.outline.toggled {
-    border: 1px solid var(--accent-color);
+  button.toggled,
+  button.inline:hover {
+    background: var(--accent-color);
+    color: var(--on-accent);
   }
 
   button.outline.toggled:hover {
@@ -66,15 +75,49 @@
   button.rectangular {
     border-radius: 0;
   }
+
+  button.square {
+    width: 24px;
+    height: 24px;
+  }
+
+  .label {
+    font-size: 0.8rem;
+  }
+
+  button.inline {
+    border: none;
+    padding: 0;
+    background-color: transparent;
+  }
+
+  button:disabled {
+    pointer-events: none;
+    background-color: var(--button-hover-color);
+    color: var(--text-color);
+    opacity: 0.24;
+  }
 </style>
 
 <button
+  class:inline
   class:spaced
+  class:square
   class:outline
   class:toggled
   class:active
   class:rectangular
   {style}
+  {disabled}
   on:click>
-  <slot />
+  {#if icon == null && label == null}
+    <slot />
+  {:else if label == null && icon != null}
+    <Icon style={iconStyle} {icon} />
+  {:else if label != null && icon == null}
+    <span class="label">{label}</span>
+  {:else}
+    <Icon style={iconStyle} {icon} />
+    <span class="label">{label}</span>
+  {/if}
 </button>

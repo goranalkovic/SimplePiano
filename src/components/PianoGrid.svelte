@@ -41,8 +41,8 @@
   .white-key {
     margin-right: 0.2rem;
     width: 2.5rem;
-    border-radius: 0 0 3px 3px;
-    box-shadow: var(--shadow-small);
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+    /* box-shadow: var(--shadow-small); */
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -52,6 +52,8 @@
     user-select: none;
     transition: var(--transition);
     position: relative;
+    /* border: 1px solid var(--bg-color); */
+    box-shadow: 0 0 1px 1px var(--bg-color);
   }
 
   .piano-grid-container {
@@ -59,6 +61,7 @@
     height: 12rem;
     transition: 0.1s opacity;
     position: relative;
+    grid-area: tr;
   }
 
   .piano-grid-container .piano-grid:first-child {
@@ -78,14 +81,11 @@
   } */
 
   .transparent .black-key,
-  .transparent .white-key {
-    /* background: var(--white-key-color); */
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    width: 4rem;
-  }
-
+  .transparent .white-key,
   .transparent .blank-black-key {
-    width: 4rem;
+    /* background: var(--white-key-color); */
+    /* box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); */
+    width: 3rem;
   }
 
   .chord {
@@ -96,12 +96,26 @@
   }
 
   select {
-    width: 3.5rem;
+    width: 2.25rem;
     border: none;
-    padding: 0.5rem 0;
-    margin-bottom: 0.1rem;
-    font-family: "Rubik", sans-serif;
-    font-size: 0.8rem;
+    padding: 0;
+    margin-bottom: 0.5rem;
+    font-family: var(--font-family);
+    font-size: 0.7rem !important;
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    appearance: none;
+    text-align: center !important;
+    border-radius: var(--border-radius);
+    padding: calc(var(--padding) / 2);
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  select:hover {
+    background: var(--accent-color) !important;
+    color: var(--on-accent);
   }
 
   .white-key select {
@@ -112,6 +126,10 @@
   .black-key select {
     background: var(--white-key-color);
     color: var(--white-key-text);
+  }
+
+  select option {
+    text-align: center;
   }
 </style>
 

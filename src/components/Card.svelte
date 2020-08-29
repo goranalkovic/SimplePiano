@@ -7,20 +7,22 @@
   export let selectable = false;
   export let passive = true;
   export let addClass = "";
+  export let style;
 </script>
 
 <style>
   .card,
   .card.passive {
-    box-shadow: var(--shadow-small);
-    padding: 8px;
+    /* box-shadow: var(--shadow-small-transparent); */
+    padding: var(--padding);
     border-radius: var(--border-radius);
-    background: var(--white-key-color);
-    margin: 0.4rem 0;
+    background: transparent;
+    /* margin: 0.4rem 0; */
     transition: var(--transition);
     user-select: none;
     box-sizing: border-box;
-    border: 1px solid transparent;
+    border: none;
+    pointer-events: none;
   }
 
   .card:not(.passive) {
@@ -29,8 +31,9 @@
   }
 
   .card.active {
-    /*box-shadow: var(--shadow-big-accent);*/
-    border: 1px solid var(--accent-color);
+    background-color: var(--accent-color);
+    /* pointer-events: none; */
+    color: var(--on-accent);
   }
 
   .card.disabled {
@@ -39,12 +42,20 @@
 
   .card:not(.passive):hover {
     opacity: 1;
-    box-shadow: var(--shadow-big);
+    /* box-shadow: var(--shadow-big); */
+    color: var(--on-accent);
+    background-color: var(--hover-color);
+  }
+
+  .card:not(.active):hover {
+    background-color: var(--hover-color);
+    color: var(--text-color);
   }
 </style>
 
 {#if passive}
   <div
+    {style}
     on:mouseover
     on:mouseleave
     transition:slide
@@ -57,6 +68,7 @@
   </div>
 {:else}
   <div
+    {style}
     on:click
     on:mouseover
     on:mouseleave

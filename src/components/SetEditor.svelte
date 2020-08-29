@@ -25,7 +25,7 @@
 <style>
   h4 {
     margin: 0;
-    padding: 0.8rem 0;
+    padding: 0;
   }
 
   .error {
@@ -35,25 +35,33 @@
 
   .title-flex {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    width: 100%;
+    align-items: center;
+    width: calc(100% - 2 * var(--padding));
+    padding: var(--padding);
     margin: 0;
-    /* padding: 0.8rem 0; */
-    padding: 0;
-    height: 3rem;
+  }
+
+  .container {
+    grid-area: l;
+
+    display: flex;
+    flex-direction: column;
+    padding-top: var(--padding);
   }
 </style>
 
-<div style="width: 22rem;">
+<div class="container">
 
   <div class="title-flex">
     <h4>{$instrumentSets[$activeSet].name}</h4>
     {#if $editMode}
       <div transition:slide>
-        <Button on:click={toggleReorder} toggled={$isReordering}>
-          Reorder
-        </Button>
+        <Button
+          on:click={toggleReorder}
+          toggled={$isReordering}
+          label="Reorder items"
+          icon="reorder" />
       </div>
     {/if}
   </div>

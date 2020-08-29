@@ -1,5 +1,6 @@
 <script>
   import KeyboardKey from "./KeyboardKey.svelte";
+  import Icon from "./Icon.svelte";
 
   export let title;
   export let min;
@@ -8,6 +9,8 @@
   export let value;
   export let keyboardKeys = null;
   export let customValueDisplay = null;
+  export let icon;
+  export let darker = false;
 
   $: formattedValue =
     customValueDisplay != null && customValueDisplay[value] != null
@@ -18,10 +21,11 @@
 </script>
 
 <style>
-  .slide-ctrl {
+  .slide-ctrl label {
     /*margin-right: 60px;*/
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    gap: calc(var(--slider-size) / 2);
   }
 
   .title {
@@ -29,8 +33,10 @@
     opacity: 0.9;
     margin-bottom: 0.4rem;
     margin-left: 0.05rem;
-    font-size: 0.9rem;
-    transform: translateY(-2px);
+    font-size: 0.8rem;
+    margin: 0;
+    font-weight: 500;
+    /* transform: translateY(-6px); */
   }
 
   .value {
@@ -39,7 +45,8 @@
     margin-left: 0.2rem;
     font-size: 0.9rem;
     opacity: 0.8;
-    transform: translateY(-0.35rem);
+    margin: 0;
+    /* transform: translateY(calc(var(--slider-size) * -1 + 6px)); */
   }
 
   .hints {
@@ -61,7 +68,7 @@
     padding: 0;
     background: none;
     display: inline-block;
-    transform: translateY(-8px);
+    /* transform: translateY(-8px); */
   }
 
   input[type="range"]:focus {
@@ -70,27 +77,44 @@
 
   input[type="range"]::-webkit-slider-runnable-track {
     width: 100%;
-    height: 2px;
-    background: rgba(var(--body-text-values), 0.4);
-    border-radius: 1px;
+    height: var(--slider-size);
+    background: var(--black-key-color);
     cursor: pointer;
     transition: var(--transition);
+    border-radius: calc(var(--slider-size) / 2);
   }
 
   input[type="range"]::-webkit-slider-thumb {
-    height: 14px;
-    width: 14px;
+    height: var(--slider-size);
+    width: var(--slider-size);
     border-radius: 50%;
     background: var(--body-text);
     cursor: cursor;
     -webkit-appearance: none;
-    margin-top: -6px;
+    opacity: 0.4;
+    /* margin-top: -6px; */
+    transition: 0.3s opacity;
+    margin: 0;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover {
+    opacity: 0.8;
+  }
+
+  .darker input[type="range"]::-webkit-slider-runnable-track {
+    background: var(--white-key-color);
   }
 </style>
 
-<div class="slide-ctrl">
+<div class="slide-ctrl" class:darker>
+
   <label>
-    <span class="title">{title}</span>
+
+    {#if icon != null}
+      <Icon {icon} />
+    {:else if title != null}
+      <span class="title">{title}</span>
+    {/if}
+
     <input type="range" {min} {max} {step} bind:value on:change />
     <span class="value">{formattedValue}</span>
   </label>

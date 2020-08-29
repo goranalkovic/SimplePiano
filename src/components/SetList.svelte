@@ -10,6 +10,7 @@
 
   import Card from "./Card.svelte";
   import KeyboardKey from "./KeyboardKey.svelte";
+  import SetListItem from "./SetListItem.svelte";
 
   function normalizedName(name) {
     name = name.replace(/_/g, " ");
@@ -109,7 +110,15 @@
   .container {
     display: flex;
     flex-direction: column;
-    margin: 0 2rem;
+    margin: 0;
+    justify-content: start;
+    /* padding: var(--padding); */
+    gap: calc(var(--padding) / 4);
+    padding: 0 var(--padding);
+    border-right: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-color);
+    grid-area: bl;
+    padding-top: var(--padding);
   }
 
   h4 {
@@ -119,115 +128,25 @@
     text-align: left;
   }
 
-  .fixed-card {
-    width: 14rem;
-    display: flex;
-    padding: 0;
-    margin: 0;
-    transition: 0.2s all;
-  }
-
-  .remove-btm-margin {
-    margin-bottom: -0.6rem;
-  }
-
-  .f-grow {
-    flex-grow: 1;
-    margin: 0;
-    padding: 0;
-  }
-
-  .f-shrink {
-    margin: 0;
-    padding: 0;
-  }
-
-  .act {
-    color: var(--accent-color) !important;
-  }
-
-  .uppercase {
-    /* text-transform: uppercase; */
-    font-size: 0.8rem;
-    font-weight: 500 !important;
-    /* letter-spacing: 1.2px; */
-    margin: 0;
-    padding: 0;
-    transition: 0.2s transform;
-    font-family: var(--font-family);
-  }
-
-  .info-txt {
-    display: block;
-    font-size: 0.8rem;
-    opacity: 0.6;
-    margin: 0.05rem 0;
-  }
-
-  .transform-key {
-    transform: translateX(0.6rem) translateY(-0.1rem);
-  }
-
-  .edit-field {
-    /* background: transparent; */
-    /* background: var(--white-key-color); */
-    background: rgba(var(--body-text-values), 0.03);
-    border: 1px solid transparent;
-    border-bottom: 1px solid rgba(var(--body-text-values), 0.2);
-    border-radius: 3px;
-    /* box-shadow: var(--shadow-small); */
-    height: 20px;
-    font-family: var(--font-family);
-    /* text-transform: uppercase; */
-    font-size: 13px;
-    margin: 0 0 11px 0;
-    padding: 4px 8px;
-    transition: var(--transition);
-    color: var(--white-key-text);
-  }
-
-  .edit-field:hover {
-    border-bottom: 1px solid rgba(var(--body-text-values), 0.6);
-  }
-
-  .edit-field:focus {
-    border: 1px solid transparent;
-    border-bottom: 1px solid var(--accent);
-  }
-
-  input.act.edit-field {
-    font-weight: 900;
-  }
-
-  .label-field {
-    background: transparent;
-    border: none !important;
-    height: 10px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-    /* transform: translateY(0px); */
-    transition: var(--transition);
-    color: var(--body-text);
-  }
-
   .title-flex {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    width: 100%;
+    align-items: center;
+    width: calc(100% - 2 * var(--padding));
+    padding: var(--padding) calc(var(--padding) * 2);
     margin: 0;
-    padding: 0.8rem 0;
   }
 </style>
 
 <div class="container">
 
   <div class="title-flex">
-    <h4 style="font-weight: 400">Instrument sets</h4>
+    <h4>Sets</h4>
     {#if $editMode}
-      <div transition:slide>
-        <Button on:click={addSet}>Add</Button>
+      <div transition:slide style="display:flex;gap:4px;">
+        <Button on:click={downloadObjectAsJson} icon="save" />
+        <Button on:click={restore} icon="open" />
+        <Button on:click={addSet} icon="add3" />
       </div>
     {/if}
   </div>
@@ -238,61 +157,8 @@
     let:item={set}
     let:index={i}
     {update}>
-    <Card
-      disabled={set.instruments.length < 1 && !$editMode}
-      passive={false}
-      active={$activeSet === i}
-      on:click={() => {
-        activeSet.set(i);
-      }}>
-      <div
-        class="fixed-card {set.instruments.length > 0 ? '' : 'remove-btm-margin'}">
-        <div class="f-grow">
 
-          <input
-            type="text"
-            value={set.name}
-            on:input={(e) => updateValue(set, 'name', e.target.value)}
-            class="uppercase {$editMode ? 'edit-field' : 'label-field'}"
-            class:act={$activeSet === i && !$editMode}
-            style="transition-delay: {50 * i}ms;"
-            disabled={!$editMode} />
-
-          <!-- <div>
-              {#if isEditing}
-                <Button outline on:click={finishEditing}>Save</Button>
-              {/if}
-            </div> -->
-
-          {#each set.instruments as i (i.id)}
-            <span class="info-txt" transition:slide animate:flip>
-              {normalizedName(i.name)}
-            </span>
-          {/each}
-        </div>
-        {#if !$editMode}
-          <div
-            class="f-shrink transform-key"
-            transition:fade={{ duration: 150, delay: 50 * i }}>
-            <KeyboardKey square key={i + 1 < 10 ? i + 1 : i >= 10 ? '' : 0} />
-          </div>
-        {:else if $editMode && i >= 1 && i !== $activeSet}
-          <div
-            class="f-shrink transform-key"
-            transition:fade={{ duration: 150 }}>
-            <Button
-              on:click={(e) => deleteSet(i, e)}
-              outline
-              style="font-family: 'Inter', sans-serif; transform:
-              translateX(-8px) translateY(1px); padding: 0.3rem; font-size:
-              1rem;">
-              ⌫
-            </Button>
-          </div>
-        {/if}
-      </div>
-
-    </Card>
+    <SetListItem {set} {i} />
 
     <p slot="error">
       🕳 No instrument sets.
@@ -301,12 +167,6 @@
     </p>
   </DragAndDropList>
 
-  {#if $editMode}
-    <div class="title-flex" transition:slide>
-      <Button on:click={downloadObjectAsJson}>Backup</Button>
-      <Button on:click={restore}>Restore</Button>
-    </div>
-  {/if}
 </div>
 
 <Toast />

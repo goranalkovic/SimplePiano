@@ -9,21 +9,21 @@
 
   // DRAG AND DROP
   let isOver = false;
-  const getDraggedParent = node =>
+  const getDraggedParent = (node) =>
     (node.dataset.index && node.dataset) || getDraggedParent(node.parentNode);
-  const start = ev => {
+  const start = (ev) => {
     ev.dataTransfer.setData("source", ev.target.dataset.index);
   };
-  const over = ev => {
+  const over = (ev) => {
     ev.preventDefault();
     let dragged = getDraggedParent(ev.target);
     if (isOver !== dragged.id) isOver = JSON.parse(dragged.id);
   };
-  const leave = ev => {
+  const leave = (ev) => {
     let dragged = getDraggedParent(ev.target);
     if (isOver === dragged.id) isOver = false;
   };
-  const drop = ev => {
+  const drop = (ev) => {
     isOver = false;
     ev.preventDefault();
     let dragged = getDraggedParent(ev.target);
@@ -42,7 +42,7 @@
   // UTILS
   let key = "id";
 
-  const getKey = item => (key ? item[key] : item);
+  const getKey = (item) => (key ? item[key] : item);
 </script>
 
 <style>
@@ -52,6 +52,29 @@
     margin: 0;
     padding: 0;
     list-style-type: none;
+    gap: calc(var(--padding) / 2);
+    max-height: 70vh;
+    overflow-y: scroll;
+  }
+
+  /* The emerging W3C standard
+   that is currently Firefox-only */
+  .list {
+    scrollbar-width: thin;
+    scrollbar-color: var(--white-key-color) transparent;
+  }
+
+  /* Works on Chrome/Edge/Safari */
+  *::-webkit-scrollbar {
+    width: 2px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--white-key-color);
+    border-radius: 20px;
+    border: none;
   }
 
   .reordering,

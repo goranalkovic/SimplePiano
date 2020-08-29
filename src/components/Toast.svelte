@@ -15,8 +15,8 @@
       {
         _id: id,
         type: type,
-        msg
-      }
+        msg,
+      },
     ];
     setTimeout(() => {
       unshiftToast(id);
@@ -67,6 +67,7 @@
     cursor: pointer;
     transition: width 0.2s ease, height 0.2s ease;
     transform-origin: top right;
+    backdrop-filter: blur(30px) saturate(125%) brightness(125%);
   }
   .toast-item span {
     display: block;

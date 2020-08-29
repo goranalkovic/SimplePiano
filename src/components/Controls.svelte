@@ -4,6 +4,7 @@
 
   let volumeControl = {
     title: "Volume",
+    icon: "volume",
     min: 0,
     max: 100,
     step: 1,
@@ -17,6 +18,7 @@
 
   let octaveControl = {
     title: "Octave shift",
+    icon: "octaveAdjust",
     min: -3,
     max: 3,
     step: 0.5,
@@ -24,13 +26,20 @@
       { label: "Up", key: "⇧", square: false },
       { label: "Dn", key: "<small>Ctrl</small>", square: false },
     ],
+    customValueDisplay: {
+      "0": "—",
+      "1": "+1",
+      "2": "+2",
+      "3": "+3",
+    },
   };
 </script>
 
 <style>
   .flex {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: calc(var(--padding) / 2);
   }
 
   .spacer {

@@ -10,6 +10,7 @@
   import InstrumentList from "./components/InstrumentList.svelte";
   import ThemeSwitcher from "./components/ThemeSwitcher.svelte";
   import Toast from "./components/Toast.svelte";
+  import Icon from "./components/Icon.svelte";
   import KeyboardKey from "./components/KeyboardKey.svelte";
 
   import {
@@ -314,77 +315,106 @@
 </script>
 
 <style>
-  .split {
-    display: flex;
-  }
-
   h3 {
     font-weight: 400;
+    font-family: "Rubik", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+      sans-serif;
+    margin: 0 var(--padding) 0 0;
   }
 
   .chord-controls {
     display: flex;
     justify-content: center;
   }
+
+  .titlebar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: calc(var(--padding) * 2);
+  }
+
+  .split {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "l r";
+    grid-area: br;
+    padding: 0 calc(var(--padding) * 2);
+    padding-right: 0;
+    margin: 0;
+    margin-left: calc(var(--padding) * -1);
+    gap: calc(var(--padding) * 2);
+    border-top: 1px solid var(--border-color);
+  }
 </style>
 
-<div class="container">
+<div class="grid-container">
 
-  <TitleBar>
-    <h3 slot="left">Piano</h3>
+  <div class="titlebar">
 
-    <Button on:click={stopAllSounds}>Stop all sounds</Button>
-    <Button spaced toggled={$editMode} on:click={toggleEditMode}>
-      Edit mode
-    </Button>
-    <Button spaced toggled={$chordMode} on:click={toggleChordMode}>
-      <div style="display: flex">
-        Chord mode
-        <span
-          style="opacity: 0.6; margin-left: 5px; font-family: 'Inter',
-          sans-serif; border: 1px solid var(--body-text); border-radius: 2px;
-          padding: 0 4px; color: var(--body-text)">
-          ~
-        </span>
-      </div>
-    </Button>
-    <ThemeSwitcher />
-  </TitleBar>
-
-  <Controls />
-
-  {#if $editMode}
-    <div class="chord-controls">
+    <h3>Piano</h3>
+    <div style="display: flex; align-items:center;justify-content:center; ">
       <Button
         spaced
-        on:click={() => {
-          let temp = $chordNotes;
-          for (let keyboardKey of Object.keys(defaultChords)) {
-            temp[keyboardKey] = '';
-          }
-          chordNotes.set(temp);
-          for (let sel of document.querySelectorAll('.piano-grid select')) {
-            sel.value = null;
-          }
-        }}>
-        Clear all chords
-      </Button>
+        on:click={stopAllSounds}
+        icon="stopAll2"
+        disabled={$editMode} />
       <Button
         spaced
-        on:click={() => {
-          chordNotes.set(defaultChords);
-        }}>
-        Reset to default
-      </Button>
+        toggled={$editMode}
+        on:click={toggleEditMode}
+        icon="edit" />
+
+      <Button
+        spaced
+        disabled={$editMode}
+        toggled={$chordMode}
+        on:click={toggleChordMode}
+        icon="chordMode" />
+      <ThemeSwitcher />
     </div>
-  {/if}
+
+    <Controls />
+
+    {#if $editMode}
+      <div class="chord-controls">
+        <Button
+          spaced
+          on:click={() => {
+            let temp = $chordNotes;
+            for (let keyboardKey of Object.keys(defaultChords)) {
+              temp[keyboardKey] = '';
+            }
+            chordNotes.set(temp);
+            for (let sel of document.querySelectorAll('.piano-grid select')) {
+              sel.value = null;
+            }
+          }}>
+          Clear all chords
+        </Button>
+        <Button
+          spaced
+          on:click={() => {
+            chordNotes.set(defaultChords);
+          }}>
+          Reset to default
+        </Button>
+      </div>
+    {/if}
+
+  </div>
 
   <PianoGrid />
 
+  <SetList />
   <div class="split">
-    <InstrumentList />
     <SetEditor />
-    <SetList />
+
+    {#if $editMode}
+      <InstrumentList />
+    {/if}
   </div>
 
 </div>
