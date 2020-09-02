@@ -80,6 +80,8 @@
     } catch (error) {}
   }
 
+  let isDark = false;
+
   function applyTheme() {
     if (
       ($theme === 0 &&
@@ -87,8 +89,16 @@
       $theme === 2
     ) {
       document.querySelector("html").className = "dark";
+      document
+        .querySelector('meta[name="theme-color"]')
+        .setAttribute("content", "#242424");
+      isDark = true;
     } else {
       document.querySelector("html").className = "";
+      document
+        .querySelector('meta[name="theme-color"]')
+        .setAttribute("content", "#ffffff");
+      isDark = false;
     }
   }
 
@@ -371,9 +381,7 @@
 </style>
 
 <div class="grid-container">
-
   <div class="titlebar">
-
     <h3>Piano</h3>
     <div style="display: flex; align-items:center;justify-content:center; ">
       <Button
@@ -423,7 +431,6 @@
           }} />
       </div>
     {/if}
-
   </div>
 
   <PianoGrid />
@@ -436,9 +443,12 @@
       <InstrumentList />
     {/if}
   </div>
-
 </div>
 
 <svelte:window on:keydown={handleKeyDown} on:keyup={handleKeyUp} />
 
 <Toast />
+
+<svelte:head>
+  <meta name="theme-color" content="#{isDark ? '242424' : 'ffffff'}" />
+</svelte:head>

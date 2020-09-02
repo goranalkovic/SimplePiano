@@ -1,5 +1,7 @@
 @import url('https://rsms.me/inter/inter.css');
 @import url('https://fonts.googleapis.com/css?family=Rubik:400,400i,500,500i&display=swap&subset=latin-ext');
+:root {}
+
 html {
 	--bg-color: #fff;
 	--white-key-color: hsl(0, 0%, 98%);
@@ -68,7 +70,7 @@ body, html {
 	grid-template-columns: auto 1fr;
 	grid-template-rows: auto 1fr;
 	grid-template-areas: "tl tr" "bl br";
-	max-width: 1200px;
+	max-width: 1400px;
 	width: 100%;
 	margin: 0 auto;
 	gap: var(--padding);
