@@ -7,37 +7,26 @@
     switch (key) {
       case 0:
         return square ? "" : "⓪";
-        break;
       case 1:
         return square ? "" : "①";
-        break;
       case 2:
         return square ? "" : "②";
-        break;
       case 3:
         return square ? "" : "③";
-        break;
       case 4:
         return square ? "" : "④";
-        break;
       case 5:
         return square ? "" : "⑤";
-        break;
       case 6:
         return square ? "" : "⑥";
-        break;
       case 7:
         return square ? "" : "⑦";
-        break;
       case 8:
         return square ? "" : "⑧";
-        break;
       case 9:
         return square ? "" : "⑨";
-        break;
       default:
         return key;
-        break;
     }
   }
 </script>

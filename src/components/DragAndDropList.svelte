@@ -6,6 +6,8 @@
   export let list;
   export let update;
   export let canReroder = false;
+  export let wrap = false;
+  export let column = false;
 
   // DRAG AND DROP
   let isOver = false;
@@ -45,10 +47,29 @@
   const getKey = (item) => (key ? item[key] : item);
 </script>
 
+<div class:wrap class:column class="list">
+  {#each list as item, index (item.id)}
+    <div
+      class:reordering={canReroder}
+      data-index={index}
+      data-id={item.id}
+      draggable={canReroder}
+      on:dragstart={start}
+      on:dragover={over}
+      on:dragleave={leave}
+      on:drop={drop}
+      animate:flip={{ duration: 200 }}
+    >
+      <slot {item} {index} />
+    </div>
+  {:else}
+    <slot name="error">No items</slot>
+  {/each}
+</div>
+
 <style>
   .list {
     display: flex;
-    flex-direction: column;
     margin: 0;
     padding: 0;
     list-style-type: none;
@@ -57,6 +78,14 @@
     overflow-y: scroll;
   }
 
+  .wrap {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .column {
+    flex-direction: column;
+  }
   .list {
     scrollbar-width: thin;
     scrollbar-color: var(--white-key-color) transparent;
@@ -80,22 +109,3 @@
     cursor: move !important;
   }
 </style>
-
-<ul class="list">
-  {#each list as item, index (item.id)}
-    <li
-      class:reordering={canReroder}
-      data-index={index}
-      data-id={item.id}
-      draggable={canReroder}
-      on:dragstart={start}
-      on:dragover={over}
-      on:dragleave={leave}
-      on:drop={drop}
-      animate:flip={{ duration: 200 }}>
-      <slot {item} {index} />
-    </li>
-  {:else}
-    <slot name="error">No items</slot>
-  {/each}
-</ul>

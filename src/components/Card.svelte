@@ -1,6 +1,5 @@
 <script>
-  import { slide } from "svelte/transition";
-  import { flip } from "svelte/animate";
+  import { fade } from "svelte/transition";
 
   export let disabled = false;
   export let active = false;
@@ -16,7 +15,7 @@
     padding: var(--padding);
     border-radius: var(--border-radius);
     background: var(--bg-color);
-    transition: var(--transition);
+    transition: var(--transition-colors), 0.2s opacity ease-in-out;
     user-select: none;
     box-sizing: border-box;
     border: none;
@@ -56,7 +55,7 @@
     {style}
     on:mouseover
     on:mouseleave
-    transition:slide
+    transition:fade
     class="card passive {addClass}"
     class:active
     class:disabled
@@ -69,7 +68,7 @@
     on:click
     on:mouseover
     on:mouseleave
-    transition:slide
+    transition:fade
     class="card {addClass}"
     class:active
     class:disabled={disabled && !active}

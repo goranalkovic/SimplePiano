@@ -1,5 +1,6 @@
 <script>
   import Icon from "./Icon.svelte";
+  import { fly } from "svelte/transition";
 
   export let spaced = false;
   export let style = null;
@@ -13,7 +14,53 @@
   export let inline = false;
   export let disabled = false;
   export let iconStyle = null;
+  export let tooltip = null;
+  export let inlineTooltip = false;
+
+  let isHovering = false;
 </script>
+
+<button
+  on:mouseover={tooltip != null && inlineTooltip
+    ? () => (isHovering = true)
+    : null}
+  on:mouseout={tooltip != null && inlineTooltip
+    ? () => (isHovering = false)
+    : null}
+  data-tooltip={tooltip ?? label ?? ""}
+  class:tooltip={!inlineTooltip && tooltip != null}
+  class:inline
+  class:spaced
+  class:square
+  class:outline
+  class:toggled
+  class:active
+  class:rectangular
+  {style}
+  {disabled}
+  on:click
+>
+  {#if icon == null && label == null}
+    <slot />
+  {:else if label == null && icon != null}
+    <Icon style={iconStyle} {icon} />
+  {:else if label != null && icon == null}
+    <span class="label">{label}</span>
+  {:else}
+    <Icon style={iconStyle} {icon} />
+    <span class="label">{label}</span>
+  {/if}
+
+  {#if isHovering}
+    <span
+      in:fly={{ duration: 300, x: -20, opacity: 0 }}
+      out:fly={{ duration: 200, x: -20, opacity: 0 }}
+      class="inline-tooltip"
+    >
+      {tooltip}
+    </span>
+  {/if}
+</button>
 
 <style>
   button {
@@ -21,9 +68,8 @@
     background: var(--black-key-color);
     color: var(--body-text);
     padding: calc(var(--padding) / 2) var(--padding);
-    /* box-shadow: var(--shadow-small); */
     border-radius: var(--border-radius);
-    transition: var(--transition);
+    transition: var(--transition-colors), 0.2s border ease-in-out;
     cursor: pointer;
     font-family: var(--font-family);
     margin: 0;
@@ -34,10 +80,8 @@
   }
 
   button.active {
-    /*font-weight: 600;*/
     background-color: var(--accent-color);
     color: var(--on-accent);
-    /* box-shadow: var(--shadow-big); */
   }
 
   button:hover {
@@ -101,27 +145,37 @@
   button.inline:disabled {
     background-color: transparent;
   }
-</style>
 
-<button
-  class:inline
-  class:spaced
-  class:square
-  class:outline
-  class:toggled
-  class:active
-  class:rectangular
-  {style}
-  {disabled}
-  on:click>
-  {#if icon == null && label == null}
-    <slot />
-  {:else if label == null && icon != null}
-    <Icon style={iconStyle} {icon} />
-  {:else if label != null && icon == null}
-    <span class="label">{label}</span>
-  {:else}
-    <Icon style={iconStyle} {icon} />
-    <span class="label">{label}</span>
-  {/if}
-</button>
+  .tooltip {
+    position: relative;
+  }
+  .tooltip::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: 80%;
+    transform: translateY(-100%) translateX(-50%) scale(0.2);
+    transform-origin: bottom center;
+    opacity: 0;
+    left: 50%;
+    padding: 0.3rem 0.6rem;
+    border-radius: 10px;
+    background: var(--tooltip-background);
+    backdrop-filter: blur(20px) saturate(150%);
+    font-size: 0.8rem;
+    color: var(--tooltip-text);
+    text-align: center;
+    transition: var(--transition);
+    pointer-events: none;
+    width: max-content;
+    z-index: 10000;
+  }
+
+  .tooltip:hover::before {
+    opacity: 1;
+    transform: translateY(0.5rem) translateX(-50%) scale(1);
+  }
+  .inline-tooltip {
+    font-size: 0.8rem;
+    pointer-events: none;
+  }
+</style>

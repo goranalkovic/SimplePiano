@@ -1,6 +1,5 @@
 @import url('https://rsms.me/inter/inter.css');
 @import url('https://fonts.googleapis.com/css?family=Rubik:400,400i,500,500i&display=swap&subset=latin-ext');
-:root {}
 
 html {
 	--bg-color: #fff;
@@ -14,6 +13,8 @@ html {
 	--shadow-big: 0 3px 10px hsla(0, 0%, 0%, 0.24);
 	--shadow-big-accent: 0 3px 6px hsla(202, 76%, 60%, 0.4);
 	--transition: 0.3s all ease-in-out;
+	--transition-colors: 0.2s color ease-in-out, 0.2s background-color ease-in-out;
+	--transition-quick: 0.1s all ease-in-out;
 	--key-highlight: #176EFC;
 	--accent-color: #176EFC;
 	--body-text-values: 34, 34, 34;
@@ -27,6 +28,8 @@ html {
 	--hover-color: hsl(0, 0%, 94%);
 	--button-hover-color: hsl(0, 0%, 88%);
 	--menu-background: hsla(0, 0%, 98%, 0.7);
+	--tooltip-background: hsla(0, 0%, 18%, 0.7);
+	--tooltip-text: hsla(0, 0%, 98%);
 	--border-color: #eee;
 }
 
@@ -47,6 +50,8 @@ html.dark {
 	--hover-color: hsl(0, 0%, 18%);
 	--button-hover-color: hsl(0, 0%, 24%);
 	--menu-background: hsla(0, 0%, 16%, 0.7);
+	--tooltip-background: hsla(0, 0%, 94%, 0.7);
+	--tooltip-text: hsla(0, 0%, 10%);
 	--border-color: hsl(0, 0%, 22%);
 }
 
@@ -61,22 +66,19 @@ h1, h2, h3, h4, h5, h6, p, b, span, button, label {
 body, html {
 	margin: 0;
 	padding: 0;
-	transition: var(--transition);
+	transition: var(--transition-colors);
 	user-select: none;
 }
 
 .grid-container {
-	display: grid;
-	grid-template-columns: auto 1fr;
-	grid-template-rows: auto 1fr;
-	grid-template-areas: "tl tr" "bl br";
-	max-width: 1400px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	max-width: 720px;
 	width: 100%;
 	margin: 0 auto;
 	gap: var(--padding);
 	height: 100%;
-	border-left: 1px solid var(--border-color);
-	border-right: 1px solid var(--border-color);
 }
 
 body {
@@ -93,26 +95,9 @@ body {
 }
 
 .piano-key-highlight {
-	/* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6) !important; */
 	background: var(--accent-color) !important;
-	/* color: #fff !important; */
 	transform-origin: 50% 0% 0 !important;
-	/*transform: scaleY(0.99);*/
 }
-
-/* 
-.white-key.piano-key-highlight {
-	/* background: var(--hover-color) !important; 
-
-box-shadow: 0 0.5px 1px 1px var(--accent-color) !important;
-}
-
-.black-key.piano-key-highlight {
-	/* background: var(--button-hover-color) !important; 
-	box-shadow: 0 0.5px 1px 1px var(--accent-color) !important;
-}
-
-*/
 
 button:focus, input:focus, button:active, input:active {
 	outline: none;
@@ -121,6 +106,43 @@ button:focus, input:focus, button:active, input:active {
 body {
 	scrollbar-width: thin;
 	scrollbar-color: var(--white-key-color) transparent;
+}
+
+/* Dialog */
+
+dialog::backdrop {
+	background-color: rgba(0, 0, 0, 0.8);
+}
+
+dialog {
+	border: 0 ;
+	min-width: 12rem;
+	min-height: 8rem;
+	border-radius: var(--border-radius);
+	background-color: var(--menu-background);
+	backdrop-filter: blur(20px) saturate(125%);
+	box-shadow: var(--shadow-big);
+	opacity: 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	transition: var(--transition);
+	pointer-events: none;
+}
+
+dialog[open] {
+	opacity: 1;
+	pointer-events: all;
+}
+
+dialog h4 {
+	font-size: 1.2rem;
+}
+
+dialog .actions {
+	display: flex;
+justify-content: flex-end;
+gap: 0.5rem;
 }
 
 /* Works on Chrome/Edge/Safari */
@@ -140,14 +162,3 @@ body {
 	border: none;
 }
 
-@media (max-width:1100px) {
-	.grid-container {
-		grid-template-columns: auto 1fr;
-		grid-template-rows: auto auto 1fr;
-		grid-template-areas: "tl tl" "tr tr" "bl br";
-		overflow-x: hidden;
-		margin: 0;
-		padding: 0;
-		width: 100vw;
-	}
-}

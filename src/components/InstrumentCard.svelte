@@ -1,7 +1,6 @@
 <script>
   import { slide, fade } from "svelte/transition";
 
-  import Card from "./Card.svelte";
   import Button from "./Button.svelte";
   import Icon from "./Icon.svelte";
   import SlideControl from "./SlideControl.svelte";
@@ -10,9 +9,6 @@
   import {
     instrumentSets,
     activeSet,
-    octaveShift,
-    currentSoundFont,
-    defaultAdsr,
     showAdsr,
     editMode,
   } from "../stores";
@@ -26,23 +22,17 @@
   export let absoluteVolume;
   export let nohover = false;
   export let index;
+  export let data = null;
 
   let optionsVisible = false;
 
   const dispatch = createEventDispatcher();
 
-  function normalizedName(name) {
+  const normalizedName = (name) => {
     name = name.replace(/_/g, " ");
 
     return name.charAt(0).toUpperCase() + name.slice(1);
   }
-
-  $: octShift =
-    octave == 0
-      ? "No octave shift"
-      : octave < 0
-      ? `Octave ${octave}`
-      : `Octave +${octave}`;
 
   $: volTxt =
     volume > -1
@@ -51,61 +41,13 @@
         : `${volume}${absoluteVolume ? "%" : ""}`
       : "Custom volume not set";
 
-  function clamp(value, min, max) {
-    if (value <= min) return min;
-    if (value >= max) return max;
-    return value;
-  }
-
-  function octavePlus() {
+  const setVolume = () => {
     let currentSets = $instrumentSets;
-
-    let index = currentSets[$activeSet].instruments.findIndex(
-      (i) => i.id === id
-    );
-
-    let currentShift = currentSets[$activeSet].instruments[index].octave;
-    currentSets[$activeSet].instruments[index].octave = clamp(
-      currentShift + 1,
-      -3,
-      3
-    );
-
-    instrumentSets.set(currentSets);
-  }
-
-  $: console.log(this);
-
-  function octaveMinus() {
-    let currentSets = $instrumentSets;
-
-    let index = currentSets[$activeSet].instruments.findIndex(
-      (i) => i.id === id
-    );
-
-    let currentShift = currentSets[$activeSet].instruments[index].octave;
-    currentSets[$activeSet].instruments[index].octave = clamp(
-      currentShift - 1,
-      -3,
-      3
-    );
-
-    instrumentSets.set(currentSets);
-  }
-
-  function setVolume() {
-    let currentSets = $instrumentSets;
-
-    // let index = currentSets[$activeSet].instruments.findIndex(
-    //   (i) => i.id === id
-    // );
-
     currentSets[$activeSet].instruments[index].volume = volume;
-
     instrumentSets.set(currentSets);
   }
 
-  function setOctaveShift() {
+  const setOctaveShift = () => {
     let currentSets = $instrumentSets;
 
     let index = currentSets[$activeSet].instruments.findIndex(
@@ -117,7 +59,7 @@
     instrumentSets.set(currentSets);
   }
 
-  function toggleAbsoluteVolume() {
+  const toggleAbsoluteVolume = () => {
     let currentSets = $instrumentSets;
 
     let index = currentSets[$activeSet].instruments.findIndex(
@@ -131,7 +73,7 @@
     instrumentSets.set(currentSets);
   }
 
-  function setAdsr() {
+  const setAdsr = () => {
     let currentSets = $instrumentSets;
 
     let index = currentSets[$activeSet].instruments.findIndex(
@@ -143,12 +85,11 @@
     instrumentSets.set(currentSets);
   }
 
-  let remove = () => dispatch("remove");
+  const remove = () => dispatch("remove");
 </script>
 
 <style>
   .toolbar {
-    /* display: flex; */
     margin-top: var(--padding);
     display: flex;
     flex-wrap: wrap;
@@ -181,17 +122,15 @@
   }
 
   .uppercase {
-    /* text-transform: uppercase; */
     font-size: 0.8rem;
     font-weight: 400 !important;
-    /* letter-spacing: 1.2px; */
   }
 
   .card {
     padding: var(--padding);
     border-radius: var(--border-radius);
     background: var(--bg-color);
-    transition: var(--transition);
+    transition: var(--transition-colors);
     user-select: none;
     box-sizing: border-box;
     border: none;
@@ -206,10 +145,11 @@
 
   .soundfont {
     background-color: var(--white-key-color);
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     padding: 4px;
     border-radius: var(--border-radius);
     opacity: 0.6;
+    margin-left: 0.5rem;
   }
 </style>
 
@@ -220,7 +160,14 @@
   on:mouseleave={() => (optionsVisible = false)}
   class:nohover={nohover || !$editMode}>
   <div class="row">
-    <h4 class="uppercase status">{normalizedName(name)}</h4>
+    <h4 class="uppercase status">
+      {normalizedName(name)}
+      {#if optionsVisible}
+      <span transition:fade class="soundfont">
+        {normalizedName(soundfont)}
+      </span>
+    {/if}
+    </h4>
     {#if !optionsVisible}
       <div
         transition:slide
@@ -241,11 +188,7 @@
     {/if}
 
     {#if $editMode}
-      {#if optionsVisible}
-        <span transition:fade class="soundfont">
-          {normalizedName(soundfont)}
-        </span>
-      {/if}
+     
       <div transition:fade style="margin-left: 2px;">
 
         <Button square inline icon="delete" on:click={remove} />
@@ -281,6 +224,7 @@
           customValueDisplay={{ '-1': absoluteVolume ? 'Current' : 'Default', '0': 'Muted' }} />
         <Button
           inline
+          spaced
           on:click={toggleAbsoluteVolume}
           iconStyle="opacity: 0.6"
           icon="audioOptions"

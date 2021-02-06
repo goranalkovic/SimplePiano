@@ -1,5 +1,6 @@
 <script>
   import { volume, octaveShift, editMode } from "../stores";
+  import { fade } from 'svelte/transition';
   import SlideControl from "./SlideControl.svelte";
 
   let volumeControl = {
@@ -38,7 +39,7 @@
 <style>
   .flex {
     display: flex;
-    flex-direction: column;
+    margin: 0 auto;
     gap: calc(var(--padding) / 2);
   }
 
@@ -49,12 +50,12 @@
   }
 
   .transparent {
-    opacity: 0.2;
+    opacity: 0.1;
     pointer-events: none;
   }
 </style>
 
-<div class="flex" class:transparent={$editMode}>
+<div transition:fade class="flex" class:transparent={$editMode}>
   <SlideControl {...volumeControl} bind:value={$volume} />
   <div class="spacer" />
   <SlideControl {...octaveControl} bind:value={$octaveShift} />

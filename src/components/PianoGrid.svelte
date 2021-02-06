@@ -6,8 +6,7 @@
     chords,
     chordNotes,
   } from "../stores";
-  import { fade, slide } from "svelte/transition";
-  import Button from "./Button.svelte";
+  import { fade } from "svelte/transition";
 </script>
 
 <style>
@@ -42,7 +41,6 @@
     margin-right: 0.2rem;
     width: 2.5rem;
     border-radius: 0 0 var(--border-radius) var(--border-radius);
-    /* box-shadow: var(--shadow-small); */
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -50,9 +48,8 @@
     padding: 0.5rem 0;
     font-size: 0.9rem;
     user-select: none;
-    transition: var(--transition);
+    transition: var(--transition-colors), 0.2s width ease-out;
     position: relative;
-    /* border: 1px solid var(--bg-color); */
     box-shadow: 0 0 1px 1px var(--bg-color);
   }
 
@@ -75,16 +72,9 @@
     top: -13rem;
     left: 1rem;
   }
-
-  /* .transparent .piano-grid {
-    opacity: 0.2;
-  } */
-
   .transparent .black-key,
   .transparent .white-key,
   .transparent .blank-black-key {
-    /* background: var(--white-key-color); */
-    /* box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); */
     width: 3rem;
   }
 
@@ -181,7 +171,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[20]}
         </span>
       {/if}
@@ -196,7 +186,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[65]}
         </span>
       {/if}
@@ -211,7 +201,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[83]}
         </span>
       {/if}
@@ -226,7 +216,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[68]}
         </span>
       {/if}
@@ -241,7 +231,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[70]}
         </span>
       {/if}
@@ -256,7 +246,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[71]}
         </span>
       {/if}
@@ -271,7 +261,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[72]}
         </span>
       {/if}
@@ -286,7 +276,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[74]}
         </span>
       {/if}
@@ -301,7 +291,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[75]}
         </span>
       {/if}
@@ -316,7 +306,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[76]}
         </span>
       {/if}
@@ -331,7 +321,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[186]}
         </span>
       {/if}
@@ -346,7 +336,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[222]}
         </span>
       {/if}
@@ -361,7 +351,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[220]}
         </span>
       {/if}
@@ -376,7 +366,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[13]}
         </span>
       {/if}
@@ -394,7 +384,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[81]}
         </span>
       {/if}
@@ -409,7 +399,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[87]}
         </span>
       {/if}
@@ -424,7 +414,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[69]}
         </span>
       {/if}
@@ -440,7 +430,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[84]}
         </span>
       {/if}
@@ -455,7 +445,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[90]}
         </span>
       {/if}
@@ -471,7 +461,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[73]}
         </span>
       {/if}
@@ -486,7 +476,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[79]}
         </span>
       {/if}
@@ -501,7 +491,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[80]}
         </span>
       {/if}
@@ -517,7 +507,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[221]}
         </span>
       {/if}
@@ -532,7 +522,7 @@
           {/each}
         </select>
       {:else if $chordMode}
-        <span class="chord" transition:slide={{ y: 80, duration: 300 }}>
+        <span class="chord" transition:fade={{ duration: 200 }}>
           {@html $chordNotes[8]}
         </span>
       {/if}

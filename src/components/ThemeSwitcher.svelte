@@ -75,7 +75,7 @@
   li {
     font-size: 0.85rem;
     padding: 0.5rem 0.8rem;
-    transition: var(--transition);
+    transition: var(--transition-colors);
     margin: 6px;
     border-radius: var(--border-radius);
   }
@@ -112,6 +112,7 @@
 <div class="container">
   <div>
     <Button
+    tooltip="Change theme"
       on:click={toggleOptionsVisibility}
       active={optionsVisible}
       icon="theme" />

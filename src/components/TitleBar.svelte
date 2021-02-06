@@ -10,7 +10,6 @@
     align-items: center;
     flex-wrap: wrap;
     gap: var(--padding);
-    /* margin-bottom: 2rem; */
   }
 
   @media (max-width: 850px) {
@@ -21,6 +20,5 @@
 </style>
 
 <div class="titlebar">
-
   <slot />
 </div>

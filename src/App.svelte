@@ -1,20 +1,17 @@
 <script>
-  import { onMount, onDestroy } from "svelte";
+  import { onMount } from "svelte";
+  import { fade } from "svelte/transition";
 
   import Button from "./components/Button.svelte";
-  import TitleBar from "./components/TitleBar.svelte";
   import Controls from "./components/Controls.svelte";
   import PianoGrid from "./components/PianoGrid.svelte";
-  import SetEditor from "./components/SetEditor.svelte";
   import SetList from "./components/SetList.svelte";
-  import InstrumentList from "./components/InstrumentList.svelte";
   import ThemeSwitcher from "./components/ThemeSwitcher.svelte";
   import Toast from "./components/Toast.svelte";
-  import Icon from "./components/Icon.svelte";
-  import KeyboardKey from "./components/KeyboardKey.svelte";
+
+  import Soundfont from "soundfont-player";
 
   import {
-    soundFont,
     keyCodes,
     keyNotes,
     activeSet,
@@ -37,8 +34,6 @@
     defaultChords,
   } from "./stores.js";
 
-  import Soundfont from "soundfont-player";
-
   instrumentSets.useLocalStorage();
   showAdsr.useLocalStorage();
   currentSoundFont.useLocalStorage();
@@ -51,8 +46,6 @@
   chordMode.useLocalStorage();
   chordNotes.useLocalStorage();
 
-  $: themeName = $theme === 0 ? "Auto" : $theme === 1 ? "Light" : "Dark";
-
   function clamp(value, min, max) {
     if (value <= min) return min;
     if (value >= max) return max;
@@ -64,7 +57,6 @@
       if ($instrumentSets[$activeSet].instruments.length < 1) return;
 
       for (let instr of $instrumentSets[$activeSet].instruments) {
-        console.log(instr);
         instr.data.then((k) => {
           k.stop();
         });
@@ -125,8 +117,6 @@
 
     let kCode = e.keyCode;
 
-    // console.log(kCode);
-
     if ($instrumentSets[$activeSet].instruments.length < 1) return;
     if (keyCodes[kCode] == null) return;
     if (keyNotes[kCode] == null) return;
@@ -138,10 +128,6 @@
       .classList.add("piano-key-highlight");
 
     $keysDown[kCode] = true;
-    // keysDown.update(kd => {
-    //   kd[kCode] = true;
-    //   return kd;
-    // });
 
     for (let instrument of $instrumentSets[$activeSet].instruments) {
       let vol =
@@ -183,10 +169,6 @@
               let currentPressed = $keysPressed[kCode];
 
               $keysPressed[kCode] = [...currentPressed, inst];
-              // keysPressed.update(kp => {
-              //   kp[kCode] = [...currentPressed, inst];
-              //   return kp;
-              // });
             }
           } catch (error) {
             window.popToast("Error: " + error.message);
@@ -221,7 +203,6 @@
 
     if (kCode === 16) {
       if ($octaveShift <= 2) {
-        // octaveShift.update(os => os + 1);
         octaveShift.set($octaveShift + 1);
       }
       return;
@@ -229,35 +210,28 @@
 
     if (kCode === 17) {
       if ($octaveShift >= -2) {
-        // octaveShift.update(os => os - 1);
         octaveShift.set($octaveShift - 1);
       }
       return;
     }
 
     if (kCode === 37) {
-      // if ($volume >= 1) volume.update(v => v - 1);
       if ($volume >= 1) volume.set($volume - 1);
       return;
     }
 
     if (kCode === 40) {
-      // if ($volume >= 10) volume.update(v => v - 10);
-      // if ($volume - 10 < 0) volume.update(v => v = 0);
       if ($volume >= 10) volume.set($volume - 10);
       if ($volume - 10 < 0) volume.set(0);
       return;
     }
 
     if (kCode === 39) {
-      // if ($volume < 99) volume.update(v => v + 1);
       if ($volume < 99) volume.set($volume + 1);
       return;
     }
 
     if (kCode === 38) {
-      // if ($volume <= 90) volume.update(v => v + 10);
-      // if($volume + 10 > 100) volume.update(v => v = 100);
       if ($volume <= 90) volume.set($volume + 10);
       if ($volume + 10 > 100) volume.set(100);
       return;
@@ -279,10 +253,6 @@
       .classList.remove("piano-key-highlight");
 
     $keysDown[kCode] = false;
-    // keysDown.update(kd => {
-    //   kd[kCode] = false;
-    //   return kd;
-    // });
 
     for (var i of $keysPressed[kCode]) {
       try {
@@ -295,12 +265,6 @@
     }
 
     $keysPressed[kCode] = [];
-    // keysPressed.update(kp => {
-    //   kp[kCode] = [];
-    //   return kp;
-    // });
-
-    // console.log('Pressed key ' + keyCodes[kCode] + ' (key code ' + kCode + ', note ' + keyNotes[kCode] + ')')
   }
 
   onMount(() => {
@@ -324,6 +288,81 @@
   }
 </script>
 
+<div class="grid-container" class:edit-mode={$editMode}>
+  <div class="titlebar">
+    <h3>Piano</h3>
+    <div style="display: flex; align-items:center;justify-content:center; ">
+      {#if $editMode}
+        <div transition:fade class="chord-controls">
+          <Button
+            spaced
+            outline
+            icon="chordMode"
+            label="Clear chords"
+            on:click={() => {
+              let temp = $chordNotes;
+              for (let keyboardKey of Object.keys(defaultChords)) {
+                temp[keyboardKey] = "";
+              }
+              chordNotes.set(temp);
+              for (let sel of document.querySelectorAll(".piano-grid select")) {
+                sel.value = null;
+              }
+            }}
+          />
+          <Button
+            spaced
+            outline
+            icon="chordMode"
+            label="Reset chords"
+            on:click={() => {
+              chordNotes.set(defaultChords);
+            }}
+          />
+        </div>
+      {/if}
+      <Button
+        spaced
+        on:click={stopAllSounds}
+        tooltip="Stop all sounds"
+        icon="stopAll2"
+        disabled={$editMode}
+      />
+      <Button
+        spaced
+        tooltip="Edit mode"
+        toggled={$editMode}
+        on:click={toggleEditMode}
+        icon="edit"
+      />
+
+      <Button
+        spaced
+        disabled={$editMode}
+        toggled={$chordMode}
+        on:click={toggleChordMode}
+        tooltip="Chord mode"
+        icon="chordMode"
+      />
+      <ThemeSwitcher />
+    </div>
+  </div>
+
+  <PianoGrid />
+
+  <Controls />
+
+  <SetList />
+</div>
+
+<svelte:window on:keydown={handleKeyDown} on:keyup={handleKeyUp} />
+
+<Toast />
+
+<svelte:head>
+  <meta name="theme-color" content="#{isDark ? '242424' : 'ffffff'}" />
+</svelte:head>
+
 <style>
   h3 {
     font-weight: 400;
@@ -335,120 +374,27 @@
 
   .chord-controls {
     display: flex;
-    justify-content: center;
   }
 
   .titlebar {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     gap: calc(var(--padding) * 2);
-    grid-area: tl;
+    width: 37.5rem;
+    margin: 3rem auto 0;
   }
 
-  .split {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-areas: "l r";
-    grid-area: br;
-    padding: 0 calc(var(--padding) * 2);
-    padding-right: 0;
-    margin: 0;
-    margin-left: calc(var(--padding) * -1);
-    gap: calc(var(--padding) * 2);
-    border-top: 1px solid var(--border-color);
+  .edit-mode .titlebar {
+    width: 44rem;
   }
 
-  @media (max-width: 1100px) {
-    .split {
-      display: flex;
-      flex-direction: column;
-      padding-right: calc(var(--padding) * 2);
-      /* margin-right: calc(var(--padding) * 2); */
-      /* width: 90%; */
-    }
-
+  @media (max-width: 700px) {
     .titlebar {
-      flex-direction: row;
-      justify-content: center;
-      align-items: center;
-      flex-wrap: wrap;
-      margin-top: 2rem;
-      margin-bottom: -2rem;
+      width: 30.25rem;
+    }
+    .edit-mode .titlebar {
+      width: 35.8rem;
     }
   }
 </style>
-
-<div class="grid-container">
-  <div class="titlebar">
-    <h3>Piano</h3>
-    <div style="display: flex; align-items:center;justify-content:center; ">
-      <Button
-        spaced
-        on:click={stopAllSounds}
-        icon="stopAll2"
-        disabled={$editMode} />
-      <Button
-        spaced
-        toggled={$editMode}
-        on:click={toggleEditMode}
-        icon="edit" />
-
-      <Button
-        spaced
-        disabled={$editMode}
-        toggled={$chordMode}
-        on:click={toggleChordMode}
-        icon="chordMode" />
-      <ThemeSwitcher />
-    </div>
-
-    <Controls />
-
-    {#if $editMode}
-      <div class="chord-controls">
-        <Button
-          spaced
-          icon="chordMode"
-          label="Clear"
-          on:click={() => {
-            let temp = $chordNotes;
-            for (let keyboardKey of Object.keys(defaultChords)) {
-              temp[keyboardKey] = '';
-            }
-            chordNotes.set(temp);
-            for (let sel of document.querySelectorAll('.piano-grid select')) {
-              sel.value = null;
-            }
-          }} />
-        <Button
-          spaced
-          icon="chordMode"
-          label="Reset"
-          on:click={() => {
-            chordNotes.set(defaultChords);
-          }} />
-      </div>
-    {/if}
-  </div>
-
-  <PianoGrid />
-
-  <SetList />
-  <div class="split">
-    <SetEditor />
-
-    {#if $editMode}
-      <InstrumentList />
-    {/if}
-  </div>
-</div>
-
-<svelte:window on:keydown={handleKeyDown} on:keyup={handleKeyUp} />
-
-<Toast />
-
-<svelte:head>
-  <meta name="theme-color" content="#{isDark ? '242424' : 'ffffff'}" />
-</svelte:head>

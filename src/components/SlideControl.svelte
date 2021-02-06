@@ -28,6 +28,10 @@
     gap: calc(var(--slider-size) / 2);
   }
 
+  .long-value {
+    margin-right: 0.5rem;
+  }
+
   .title {
     display: block;
     opacity: 0.9;
@@ -36,17 +40,16 @@
     font-size: 0.8rem;
     margin: 0;
     font-weight: 500;
-    /* transform: translateY(-6px); */
   }
 
   .value {
     display: inline-block;
-    width: 2rem;
+    min-width: 2rem;
     margin-left: 0.2rem;
     font-size: 0.9rem;
     opacity: 0.8;
     margin: 0;
-    /* transform: translateY(calc(var(--slider-size) * -1 + 6px)); */
+    font-variant-numeric: tabular-nums;
   }
 
   .hints {
@@ -62,13 +65,16 @@
     user-select: none;
   }
 
+  .long-value .value {
+    font-size: 0.75rem;
+  }
+
   input[type="range"] {
     -webkit-appearance: none;
     margin: 0;
     padding: 0;
     background: none;
     display: inline-block;
-    /* transform: translateY(-8px); */
   }
 
   input[type="range"]:focus {
@@ -80,7 +86,7 @@
     height: var(--slider-size);
     background: var(--black-key-color);
     cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transition-colors);
     border-radius: calc(var(--slider-size) / 2);
   }
 
@@ -92,7 +98,6 @@
     cursor: cursor;
     -webkit-appearance: none;
     opacity: 0.4;
-    /* margin-top: -6px; */
     transition: 0.3s opacity;
     margin: 0;
   }
@@ -105,7 +110,7 @@
   }
 </style>
 
-<div class="slide-ctrl" class:darker>
+<div class="slide-ctrl" class:long-value={formattedValue.length > 3} class:darker>
 
   <label>
 
@@ -116,7 +121,7 @@
     {/if}
 
     <input type="range" {min} {max} {step} bind:value on:change />
-    <span class="value">{formattedValue}</span>
+    <span  class="value">{formattedValue}</span>
   </label>
 
   {#if keyboardKeys && hovering}

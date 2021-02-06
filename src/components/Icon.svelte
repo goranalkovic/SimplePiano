@@ -7,6 +7,7 @@
   svg {
     width: 18px;
     height: 18px;
+    pointer-events: none;
   }
 </style>
 
