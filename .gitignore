@@ -5,6 +5,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# IntelliJ IDEA
+.idea/
+
+# VSCode
+.vscode/
+
 # Runtime data
 pids
 *.pid
