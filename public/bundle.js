@@ -166,7 +166,7 @@ var app = (function () {
             node.setAttribute(attribute, value);
     }
     function to_number(value) {
-        return value === '' ? undefined : +value;
+        return value === '' ? null : +value;
     }
     function children(element) {
         return Array.from(element.childNodes);
@@ -258,7 +258,7 @@ var app = (function () {
             stylesheet.insertRule(`@keyframes ${name} ${rule}`, stylesheet.cssRules.length);
         }
         const animation = node.style.animation || '';
-        node.style.animation = `${animation ? `${animation}, ` : ``}${name} ${duration}ms linear ${delay}ms 1 both`;
+        node.style.animation = `${animation ? `${animation}, ` : ''}${name} ${duration}ms linear ${delay}ms 1 both`;
         active += 1;
         return name;
     }
@@ -366,7 +366,7 @@ var app = (function () {
     }
     function get_current_component() {
         if (!current_component)
-            throw new Error(`Function called outside component initialization`);
+            throw new Error('Function called outside component initialization');
         return current_component;
     }
     function onMount(fn) {
@@ -431,6 +431,7 @@ var app = (function () {
                 set_current_component(component);
                 update(component.$$);
             }
+            set_current_component(null);
             dirty_components.length = 0;
             while (binding_callbacks.length)
                 binding_callbacks.pop()();
@@ -668,7 +669,7 @@ var app = (function () {
                 program.group = outros;
                 outros.r += 1;
             }
-            if (running_program) {
+            if (running_program || pending_program) {
                 pending_program = program;
             }
             else {
@@ -839,7 +840,7 @@ var app = (function () {
         for (let i = 0; i < list.length; i++) {
             const key = get_key(get_context(ctx, list, i));
             if (keys.has(key)) {
-                throw new Error(`Cannot have duplicate keys in a keyed each`);
+                throw new Error('Cannot have duplicate keys in a keyed each');
             }
             keys.add(key);
         }
@@ -932,7 +933,6 @@ var app = (function () {
     function init(component, options, instance, create_fragment, not_equal, props, dirty = [-1]) {
         const parent_component = current_component;
         set_current_component(component);
-        const prop_values = options.props || {};
         const $$ = component.$$ = {
             fragment: null,
             ctx: null,
@@ -954,7 +954,7 @@ var app = (function () {
         };
         let ready = false;
         $$.ctx = instance
-            ? instance(component, prop_values, (i, ret, ...rest) => {
+            ? instance(component, options.props || {}, (i, ret, ...rest) => {
                 const value = rest.length ? rest[0] : ret;
                 if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
                     if (!$$.skip_bound && $$.bound[i])
@@ -988,6 +988,9 @@ var app = (function () {
         }
         set_current_component(parent_component);
     }
+    /**
+     * Base class for Svelte components. Used when dev=false.
+     */
     class SvelteComponent {
         $destroy() {
             destroy_component(this, 1);
@@ -1012,49 +1015,49 @@ var app = (function () {
     }
 
     function dispatch_dev(type, detail) {
-        document.dispatchEvent(custom_event(type, Object.assign({ version: '3.24.1' }, detail)));
+        document.dispatchEvent(custom_event(type, Object.assign({ version: '3.32.1' }, detail)));
     }
     function append_dev(target, node) {
-        dispatch_dev("SvelteDOMInsert", { target, node });
+        dispatch_dev('SvelteDOMInsert', { target, node });
         append(target, node);
     }
     function insert_dev(target, node, anchor) {
-        dispatch_dev("SvelteDOMInsert", { target, node, anchor });
+        dispatch_dev('SvelteDOMInsert', { target, node, anchor });
         insert(target, node, anchor);
     }
     function detach_dev(node) {
-        dispatch_dev("SvelteDOMRemove", { node });
+        dispatch_dev('SvelteDOMRemove', { node });
         detach(node);
     }
     function listen_dev(node, event, handler, options, has_prevent_default, has_stop_propagation) {
-        const modifiers = options === true ? ["capture"] : options ? Array.from(Object.keys(options)) : [];
+        const modifiers = options === true ? ['capture'] : options ? Array.from(Object.keys(options)) : [];
         if (has_prevent_default)
             modifiers.push('preventDefault');
         if (has_stop_propagation)
             modifiers.push('stopPropagation');
-        dispatch_dev("SvelteDOMAddEventListener", { node, event, handler, modifiers });
+        dispatch_dev('SvelteDOMAddEventListener', { node, event, handler, modifiers });
         const dispose = listen(node, event, handler, options);
         return () => {
-            dispatch_dev("SvelteDOMRemoveEventListener", { node, event, handler, modifiers });
+            dispatch_dev('SvelteDOMRemoveEventListener', { node, event, handler, modifiers });
             dispose();
         };
     }
     function attr_dev(node, attribute, value) {
         attr(node, attribute, value);
         if (value == null)
-            dispatch_dev("SvelteDOMRemoveAttribute", { node, attribute });
+            dispatch_dev('SvelteDOMRemoveAttribute', { node, attribute });
         else
-            dispatch_dev("SvelteDOMSetAttribute", { node, attribute, value });
+            dispatch_dev('SvelteDOMSetAttribute', { node, attribute, value });
     }
     function prop_dev(node, property, value) {
         node[property] = value;
-        dispatch_dev("SvelteDOMSetProperty", { node, property, value });
+        dispatch_dev('SvelteDOMSetProperty', { node, property, value });
     }
     function set_data_dev(text, data) {
         data = '' + data;
         if (text.wholeText === data)
             return;
-        dispatch_dev("SvelteDOMSetData", { node: text, data });
+        dispatch_dev('SvelteDOMSetData', { node: text, data });
         text.data = data;
     }
     function validate_each_argument(arg) {
@@ -1073,17 +1076,20 @@ var app = (function () {
             }
         }
     }
+    /**
+     * Base class for Svelte components with some minor dev-enhancements. Used when dev=true.
+     */
     class SvelteComponentDev extends SvelteComponent {
         constructor(options) {
             if (!options || (!options.target && !options.$$inline)) {
-                throw new Error(`'target' is a required option`);
+                throw new Error("'target' is a required option");
             }
             super();
         }
         $destroy() {
             super.$destroy();
             this.$destroy = () => {
-                console.warn(`Component was already destroyed`); // eslint-disable-line no-console
+                console.warn('Component was already destroyed'); // eslint-disable-line no-console
             };
         }
         $capture_state() { }
@@ -1103,18 +1109,18 @@ var app = (function () {
     }
 
     /*! *****************************************************************************
-    Copyright (c) Microsoft Corporation. All rights reserved.
-    Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-    this file except in compliance with the License. You may obtain a copy of the
-    License at http://www.apache.org/licenses/LICENSE-2.0
+    Copyright (c) Microsoft Corporation.
 
-    THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
-    WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-    MERCHANTABLITY OR NON-INFRINGEMENT.
+    Permission to use, copy, modify, and/or distribute this software for any
+    purpose with or without fee is hereby granted.
 
-    See the Apache Version 2.0 License for specific language governing permissions
-    and limitations under the License.
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+    AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+    LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+    OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+    PERFORMANCE OF THIS SOFTWARE.
     ***************************************************************************** */
 
     function __rest(s, e) {
@@ -1128,7 +1134,7 @@ var app = (function () {
             }
         return t;
     }
-    function fade(node, { delay = 0, duration = 400, easing = identity }) {
+    function fade(node, { delay = 0, duration = 400, easing = identity } = {}) {
         const o = +getComputedStyle(node).opacity;
         return {
             delay,
@@ -1137,7 +1143,7 @@ var app = (function () {
             css: t => `opacity: ${t * o}`
         };
     }
-    function fly(node, { delay = 0, duration = 400, easing = cubicOut, x = 0, y = 0, opacity = 0 }) {
+    function fly(node, { delay = 0, duration = 400, easing = cubicOut, x = 0, y = 0, opacity = 0 } = {}) {
         const style = getComputedStyle(node);
         const target_opacity = +style.opacity;
         const transform = style.transform === 'none' ? '' : style.transform;
@@ -1151,7 +1157,7 @@ var app = (function () {
 			opacity: ${target_opacity - (od * u)}`
         };
     }
-    function slide(node, { delay = 0, duration = 400, easing = cubicOut }) {
+    function slide(node, { delay = 0, duration = 400, easing = cubicOut } = {}) {
         const style = getComputedStyle(node);
         const opacity = +style.opacity;
         const height = parseFloat(style.height);
@@ -1165,7 +1171,7 @@ var app = (function () {
             delay,
             duration,
             easing,
-            css: t => `overflow: hidden;` +
+            css: t => 'overflow: hidden;' +
                 `opacity: ${Math.min(t * 20, 1) * opacity};` +
                 `height: ${t * height}px;` +
                 `padding-top: ${t * padding_top}px;` +
@@ -1176,7 +1182,7 @@ var app = (function () {
                 `border-bottom-width: ${t * border_bottom_width}px;`
         };
     }
-    function scale(node, { delay = 0, duration = 400, easing = cubicOut, start = 0, opacity = 0 }) {
+    function scale(node, { delay = 0, duration = 400, easing = cubicOut, start = 0, opacity = 0 } = {}) {
         const style = getComputedStyle(node);
         const target_opacity = +style.opacity;
         const transform = style.transform === 'none' ? '' : style.transform;
@@ -1243,7 +1249,7 @@ var app = (function () {
         ];
     }
 
-    /* src\components\Icon.svelte generated by Svelte v3.24.1 */
+    /* src\components\Icon.svelte generated by Svelte v3.32.1 */
 
     const file = "src\\components\\Icon.svelte";
 
@@ -2249,6 +2255,8 @@ var app = (function () {
     }
 
     function instance($$self, $$props, $$invalidate) {
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("Icon", slots, []);
     	let { icon } = $$props;
     	let { style = null } = $$props;
     	const writable_props = ["icon", "style"];
@@ -2256,9 +2264,6 @@ var app = (function () {
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Icon> was created with unknown prop '${key}'`);
     	});
-
-    	let { $$slots = {}, $$scope } = $$props;
-    	validate_slots("Icon", $$slots, []);
 
     	$$self.$$set = $$props => {
     		if ("icon" in $$props) $$invalidate(0, icon = $$props.icon);
@@ -2316,7 +2321,7 @@ var app = (function () {
     	}
     }
 
-    /* src\components\Button.svelte generated by Svelte v3.24.1 */
+    /* src\components\Button.svelte generated by Svelte v3.32.1 */
     const file$1 = "src\\components\\Button.svelte";
 
     // (49:2) {:else}
@@ -2477,7 +2482,7 @@ var app = (function () {
     // (43:2) {#if icon == null && label == null}
     function create_if_block_1$1(ctx) {
     	let current;
-    	const default_slot_template = /*$$slots*/ ctx[16].default;
+    	const default_slot_template = /*#slots*/ ctx[16].default;
     	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[15], null);
 
     	const block = {
@@ -2688,6 +2693,8 @@ var app = (function () {
     				if (!if_block0) {
     					if_block0 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
     					if_block0.c();
+    				} else {
+    					if_block0.p(ctx, dirty);
     				}
 
     				transition_in(if_block0, 1);
@@ -2793,6 +2800,8 @@ var app = (function () {
     }
 
     function instance$1($$self, $$props, $$invalidate) {
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("Button", slots, ['default']);
     	let { spaced = false } = $$props;
     	let { style = null } = $$props;
     	let { outline = false } = $$props;
@@ -2829,9 +2838,6 @@ var app = (function () {
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Button> was created with unknown prop '${key}'`);
     	});
-
-    	let { $$slots = {}, $$scope } = $$props;
-    	validate_slots("Button", $$slots, ['default']);
 
     	function click_handler(event) {
     		bubble($$self, event);
@@ -2917,7 +2923,7 @@ var app = (function () {
     		inlineTooltip,
     		isHovering,
     		$$scope,
-    		$$slots,
+    		slots,
     		click_handler,
     		mouseover_handler,
     		mouseout_handler
@@ -4456,7 +4462,7 @@ var app = (function () {
     var root = freeGlobal || freeSelf || Function('return this')();
 
     /** Detect free variable `exports`. */
-    var freeExports =  exports && !exports.nodeType && exports;
+    var freeExports = exports && !exports.nodeType && exports;
 
     /** Detect free variable `module`. */
     var freeModule = freeExports && 'object' == 'object' && module && !module.nodeType && module;
@@ -6475,7 +6481,7 @@ var app = (function () {
         "Hsus4": ["72", "73", "186"],
     };
 
-    /* src\components\KeyboardKey.svelte generated by Svelte v3.24.1 */
+    /* src\components\KeyboardKey.svelte generated by Svelte v3.32.1 */
 
     const file$2 = "src\\components\\KeyboardKey.svelte";
 
@@ -6577,6 +6583,8 @@ var app = (function () {
     }
 
     function instance$2($$self, $$props, $$invalidate) {
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("KeyboardKey", slots, []);
     	let { label = null } = $$props;
     	let { key } = $$props;
     	let { square = false } = $$props;
@@ -6613,9 +6621,6 @@ var app = (function () {
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<KeyboardKey> was created with unknown prop '${key}'`);
     	});
-
-    	let { $$slots = {}, $$scope } = $$props;
-    	validate_slots("KeyboardKey", $$slots, []);
 
     	$$self.$$set = $$props => {
     		if ("label" in $$props) $$invalidate(0, label = $$props.label);
@@ -6683,7 +6688,7 @@ var app = (function () {
     	}
     }
 
-    /* src\components\SlideControl.svelte generated by Svelte v3.24.1 */
+    /* src\components\SlideControl.svelte generated by Svelte v3.32.1 */
     const file$3 = "src\\components\\SlideControl.svelte";
 
     function get_each_context(ctx, list, i) {
@@ -7042,6 +7047,8 @@ var app = (function () {
     					if (!if_block0) {
     						if_block0 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
     						if_block0.c();
+    					} else {
+    						if_block0.p(ctx, dirty);
     					}
 
     					transition_in(if_block0, 1);
@@ -7136,6 +7143,9 @@ var app = (function () {
     }
 
     function instance$3($$self, $$props, $$invalidate) {
+    	let formattedValue;
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("SlideControl", slots, []);
     	let { title = null } = $$props;
     	let { min } = $$props;
     	let { max } = $$props;
@@ -7162,9 +7172,6 @@ var app = (function () {
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<SlideControl> was created with unknown prop '${key}'`);
     	});
-
-    	let { $$slots = {}, $$scope } = $$props;
-    	validate_slots("SlideControl", $$slots, []);
 
     	function change_handler(event) {
     		bubble($$self, event);
@@ -7217,15 +7224,13 @@ var app = (function () {
     		if ("formattedValue" in $$props) $$invalidate(8, formattedValue = $$props.formattedValue);
     	};
 
-    	let formattedValue;
-
     	if ($$props && "$$inject" in $$props) {
     		$$self.$inject_state($$props.$$inject);
     	}
 
     	$$self.$$.update = () => {
     		if ($$self.$$.dirty & /*customValueDisplay, value*/ 1025) {
-    			 $$invalidate(8, formattedValue = customValueDisplay != null && customValueDisplay[value] != null
+    			$$invalidate(8, formattedValue = customValueDisplay != null && customValueDisplay[value] != null
     			? customValueDisplay[value]
     			: value);
     		}
@@ -7364,7 +7369,7 @@ var app = (function () {
     	}
     }
 
-    /* src\components\Controls.svelte generated by Svelte v3.24.1 */
+    /* src\components\Controls.svelte generated by Svelte v3.32.1 */
     const file$4 = "src\\components\\Controls.svelte";
 
     function create_fragment$4(ctx) {
@@ -7526,6 +7531,8 @@ var app = (function () {
     	component_subscribe($$self, volume, $$value => $$invalidate(1, $volume = $$value));
     	validate_store(octaveShift, "octaveShift");
     	component_subscribe($$self, octaveShift, $$value => $$invalidate(2, $octaveShift = $$value));
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("Controls", slots, []);
 
     	let volumeControl = {
     		title: "Volume",
@@ -7568,9 +7575,6 @@ var app = (function () {
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Controls> was created with unknown prop '${key}'`);
     	});
-
-    	let { $$slots = {}, $$scope } = $$props;
-    	validate_slots("Controls", $$slots, []);
 
     	function slidecontrol0_value_binding(value) {
     		$volume = value;
@@ -7629,7 +7633,7 @@ var app = (function () {
     	}
     }
 
-    /* src\components\PianoGrid.svelte generated by Svelte v3.24.1 */
+    /* src\components\PianoGrid.svelte generated by Svelte v3.32.1 */
 
     const { Object: Object_1 } = globals;
     const file$5 = "src\\components\\PianoGrid.svelte";
@@ -7949,13 +7953,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 169, 12, 3729);
@@ -8152,13 +8155,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 184, 12, 4240);
@@ -8355,13 +8357,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 199, 12, 4751);
@@ -8558,13 +8559,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 214, 12, 5262);
@@ -8761,13 +8761,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 229, 12, 5773);
@@ -8964,13 +8963,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 244, 12, 6284);
@@ -9167,13 +9165,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 259, 12, 6795);
@@ -9370,13 +9367,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 274, 12, 7306);
@@ -9573,13 +9569,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 289, 12, 7817);
@@ -9776,13 +9771,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 304, 12, 8328);
@@ -9979,13 +9973,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 319, 12, 8840);
@@ -10182,13 +10175,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 334, 12, 9353);
@@ -10385,13 +10377,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 349, 12, 9866);
@@ -10588,13 +10579,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 364, 12, 10378);
@@ -10791,13 +10781,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 382, 12, 10929);
@@ -10994,13 +10983,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 397, 12, 11440);
@@ -11197,13 +11185,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 412, 12, 11951);
@@ -11400,13 +11387,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 428, 12, 12499);
@@ -11603,13 +11589,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 443, 12, 13010);
@@ -11806,13 +11791,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 459, 12, 13558);
@@ -12009,13 +11993,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 474, 12, 14069);
@@ -12212,13 +12195,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 489, 12, 14580);
@@ -12415,13 +12397,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 505, 12, 15129);
@@ -12618,13 +12599,12 @@ var app = (function () {
     	let option;
     	let t_value = /*item*/ ctx[28].replace("<br>", "/") + "";
     	let t;
-    	let option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*item*/ ctx[28];
+    			option.__value = /*item*/ ctx[28];
     			option.value = option.__value;
     			attr_dev(option, "class", "svelte-1nlptl7");
     			add_location(option, file$5, 520, 12, 15640);
@@ -13663,6 +13643,8 @@ var app = (function () {
     					if (!if_block0) {
     						if_block0 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
     						if_block0.c();
+    					} else {
+    						if_block0.p(ctx, dirty);
     					}
 
     					transition_in(if_block0, 1);
@@ -13696,6 +13678,8 @@ var app = (function () {
     					if (!if_block1) {
     						if_block1 = if_blocks_1[current_block_type_index_1] = if_block_creators_1[current_block_type_index_1](ctx);
     						if_block1.c();
+    					} else {
+    						if_block1.p(ctx, dirty);
     					}
 
     					transition_in(if_block1, 1);
@@ -13729,6 +13713,8 @@ var app = (function () {
     					if (!if_block2) {
     						if_block2 = if_blocks_2[current_block_type_index_2] = if_block_creators_2[current_block_type_index_2](ctx);
     						if_block2.c();
+    					} else {
+    						if_block2.p(ctx, dirty);
     					}
 
     					transition_in(if_block2, 1);
@@ -13762,6 +13748,8 @@ var app = (function () {
     					if (!if_block3) {
     						if_block3 = if_blocks_3[current_block_type_index_3] = if_block_creators_3[current_block_type_index_3](ctx);
     						if_block3.c();
+    					} else {
+    						if_block3.p(ctx, dirty);
     					}
 
     					transition_in(if_block3, 1);
@@ -13795,6 +13783,8 @@ var app = (function () {
     					if (!if_block4) {
     						if_block4 = if_blocks_4[current_block_type_index_4] = if_block_creators_4[current_block_type_index_4](ctx);
     						if_block4.c();
+    					} else {
+    						if_block4.p(ctx, dirty);
     					}
 
     					transition_in(if_block4, 1);
@@ -13828,6 +13818,8 @@ var app = (function () {
     					if (!if_block5) {
     						if_block5 = if_blocks_5[current_block_type_index_5] = if_block_creators_5[current_block_type_index_5](ctx);
     						if_block5.c();
+    					} else {
+    						if_block5.p(ctx, dirty);
     					}
 
     					transition_in(if_block5, 1);
@@ -13861,6 +13853,8 @@ var app = (function () {
     					if (!if_block6) {
     						if_block6 = if_blocks_6[current_block_type_index_6] = if_block_creators_6[current_block_type_index_6](ctx);
     						if_block6.c();
+    					} else {
+    						if_block6.p(ctx, dirty);
     					}
 
     					transition_in(if_block6, 1);
@@ -13894,6 +13888,8 @@ var app = (function () {
     					if (!if_block7) {
     						if_block7 = if_blocks_7[current_block_type_index_7] = if_block_creators_7[current_block_type_index_7](ctx);
     						if_block7.c();
+    					} else {
+    						if_block7.p(ctx, dirty);
     					}
 
     					transition_in(if_block7, 1);
@@ -13927,6 +13923,8 @@ var app = (function () {
     					if (!if_block8) {
     						if_block8 = if_blocks_8[current_block_type_index_8] = if_block_creators_8[current_block_type_index_8](ctx);
     						if_block8.c();
+    					} else {
+    						if_block8.p(ctx, dirty);
     					}
 
     					transition_in(if_block8, 1);
@@ -13960,6 +13958,8 @@ var app = (function () {
     					if (!if_block9) {
     						if_block9 = if_blocks_9[current_block_type_index_9] = if_block_creators_9[current_block_type_index_9](ctx);
     						if_block9.c();
+    					} else {
+    						if_block9.p(ctx, dirty);
     					}
 
     					transition_in(if_block9, 1);
@@ -13993,6 +13993,8 @@ var app = (function () {
     					if (!if_block10) {
     						if_block10 = if_blocks_10[current_block_type_index_10] = if_block_creators_10[current_block_type_index_10](ctx);
     						if_block10.c();
+    					} else {
+    						if_block10.p(ctx, dirty);
     					}
 
     					transition_in(if_block10, 1);
@@ -14026,6 +14028,8 @@ var app = (function () {
     					if (!if_block11) {
     						if_block11 = if_blocks_11[current_block_type_index_11] = if_block_creators_11[current_block_type_index_11](ctx);
     						if_block11.c();
+    					} else {
+    						if_block11.p(ctx, dirty);
     					}
 
     					transition_in(if_block11, 1);
@@ -14059,6 +14063,8 @@ var app = (function () {
     					if (!if_block12) {
     						if_block12 = if_blocks_12[current_block_type_index_12] = if_block_creators_12[current_block_type_index_12](ctx);
     						if_block12.c();
+    					} else {
+    						if_block12.p(ctx, dirty);
     					}
 
     					transition_in(if_block12, 1);
@@ -14092,6 +14098,8 @@ var app = (function () {
     					if (!if_block13) {
     						if_block13 = if_blocks_13[current_block_type_index_13] = if_block_creators_13[current_block_type_index_13](ctx);
     						if_block13.c();
+    					} else {
+    						if_block13.p(ctx, dirty);
     					}
 
     					transition_in(if_block13, 1);
@@ -14125,6 +14133,8 @@ var app = (function () {
     					if (!if_block14) {
     						if_block14 = if_blocks_14[current_block_type_index_14] = if_block_creators_14[current_block_type_index_14](ctx);
     						if_block14.c();
+    					} else {
+    						if_block14.p(ctx, dirty);
     					}
 
     					transition_in(if_block14, 1);
@@ -14158,6 +14168,8 @@ var app = (function () {
     					if (!if_block15) {
     						if_block15 = if_blocks_15[current_block_type_index_15] = if_block_creators_15[current_block_type_index_15](ctx);
     						if_block15.c();
+    					} else {
+    						if_block15.p(ctx, dirty);
     					}
 
     					transition_in(if_block15, 1);
@@ -14191,6 +14203,8 @@ var app = (function () {
     					if (!if_block16) {
     						if_block16 = if_blocks_16[current_block_type_index_16] = if_block_creators_16[current_block_type_index_16](ctx);
     						if_block16.c();
+    					} else {
+    						if_block16.p(ctx, dirty);
     					}
 
     					transition_in(if_block16, 1);
@@ -14224,6 +14238,8 @@ var app = (function () {
     					if (!if_block17) {
     						if_block17 = if_blocks_17[current_block_type_index_17] = if_block_creators_17[current_block_type_index_17](ctx);
     						if_block17.c();
+    					} else {
+    						if_block17.p(ctx, dirty);
     					}
 
     					transition_in(if_block17, 1);
@@ -14257,6 +14273,8 @@ var app = (function () {
     					if (!if_block18) {
     						if_block18 = if_blocks_18[current_block_type_index_18] = if_block_creators_18[current_block_type_index_18](ctx);
     						if_block18.c();
+    					} else {
+    						if_block18.p(ctx, dirty);
     					}
 
     					transition_in(if_block18, 1);
@@ -14290,6 +14308,8 @@ var app = (function () {
     					if (!if_block19) {
     						if_block19 = if_blocks_19[current_block_type_index_19] = if_block_creators_19[current_block_type_index_19](ctx);
     						if_block19.c();
+    					} else {
+    						if_block19.p(ctx, dirty);
     					}
 
     					transition_in(if_block19, 1);
@@ -14323,6 +14343,8 @@ var app = (function () {
     					if (!if_block20) {
     						if_block20 = if_blocks_20[current_block_type_index_20] = if_block_creators_20[current_block_type_index_20](ctx);
     						if_block20.c();
+    					} else {
+    						if_block20.p(ctx, dirty);
     					}
 
     					transition_in(if_block20, 1);
@@ -14356,6 +14378,8 @@ var app = (function () {
     					if (!if_block21) {
     						if_block21 = if_blocks_21[current_block_type_index_21] = if_block_creators_21[current_block_type_index_21](ctx);
     						if_block21.c();
+    					} else {
+    						if_block21.p(ctx, dirty);
     					}
 
     					transition_in(if_block21, 1);
@@ -14389,6 +14413,8 @@ var app = (function () {
     					if (!if_block22) {
     						if_block22 = if_blocks_22[current_block_type_index_22] = if_block_creators_22[current_block_type_index_22](ctx);
     						if_block22.c();
+    					} else {
+    						if_block22.p(ctx, dirty);
     					}
 
     					transition_in(if_block22, 1);
@@ -14422,6 +14448,8 @@ var app = (function () {
     					if (!if_block23) {
     						if_block23 = if_blocks_23[current_block_type_index_23] = if_block_creators_23[current_block_type_index_23](ctx);
     						if_block23.c();
+    					} else {
+    						if_block23.p(ctx, dirty);
     					}
 
     					transition_in(if_block23, 1);
@@ -14617,14 +14645,13 @@ var app = (function () {
     	component_subscribe($$self, chordNotes, $$value => $$invalidate(2, $chordNotes = $$value));
     	validate_store(chordMode, "chordMode");
     	component_subscribe($$self, chordMode, $$value => $$invalidate(3, $chordMode = $$value));
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("PianoGrid", slots, []);
     	const writable_props = [];
 
     	Object_1.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<PianoGrid> was created with unknown prop '${key}'`);
     	});
-
-    	let { $$slots = {}, $$scope } = $$props;
-    	validate_slots("PianoGrid", $$slots, []);
 
     	function select_change_handler() {
     		$chordNotes[20] = select_value(this);
@@ -14805,7 +14832,7 @@ var app = (function () {
     	}
     }
 
-    function flip(node, animation, params) {
+    function flip(node, animation, params = {}) {
         const style = getComputedStyle(node);
         const transform = style.transform === 'none' ? '' : style.transform;
         const scaleX = animation.from.width / node.clientWidth;
@@ -14822,9 +14849,16 @@ var app = (function () {
         };
     }
 
-    /* src\components\DragAndDropList.svelte generated by Svelte v3.24.1 */
+    /* src\components\DragAndDropList.svelte generated by Svelte v3.32.1 */
 
     const file$6 = "src\\components\\DragAndDropList.svelte";
+
+    function get_each_context$2(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[17] = list[i];
+    	child_ctx[19] = i;
+    	return child_ctx;
+    }
 
     const get_error_slot_changes = dirty => ({
     	item: dirty & /*list*/ 1,
@@ -14846,17 +14880,10 @@ var app = (function () {
     	index: /*index*/ ctx[19]
     });
 
-    function get_each_context$2(ctx, list, i) {
-    	const child_ctx = ctx.slice();
-    	child_ctx[17] = list[i];
-    	child_ctx[19] = i;
-    	return child_ctx;
-    }
-
     // (65:2) {:else}
     function create_else_block$1(ctx) {
     	let current;
-    	const error_slot_template = /*$$slots*/ ctx[10].error;
+    	const error_slot_template = /*#slots*/ ctx[10].error;
     	const error_slot = create_slot(error_slot_template, ctx, /*$$scope*/ ctx[9], get_error_slot_context);
     	const error_slot_or_fallback = error_slot || fallback_block(ctx);
 
@@ -14941,7 +14968,7 @@ var app = (function () {
     	let current;
     	let mounted;
     	let dispose;
-    	const default_slot_template = /*$$slots*/ ctx[10].default;
+    	const default_slot_template = /*#slots*/ ctx[10].default;
     	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[9], get_default_slot_context);
 
     	const block = {
@@ -14980,7 +15007,9 @@ var app = (function () {
     				mounted = true;
     			}
     		},
-    		p: function update(ctx, dirty) {
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
+
     			if (default_slot) {
     				if (default_slot.p && dirty & /*$$scope, list*/ 513) {
     					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[9], dirty, get_default_slot_changes, get_default_slot_context);
@@ -15099,7 +15128,7 @@ var app = (function () {
     		},
     		p: function update(ctx, [dirty]) {
     			if (dirty & /*list, canReroder, start, over, leave, drop, $$scope*/ 755) {
-    				const each_value = /*list*/ ctx[0];
+    				each_value = /*list*/ ctx[0];
     				validate_each_argument(each_value);
     				group_outros();
     				for (let i = 0; i < each_blocks.length; i += 1) each_blocks[i].r();
@@ -15173,6 +15202,8 @@ var app = (function () {
     }
 
     function instance$6($$self, $$props, $$invalidate) {
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("DragAndDropList", slots, ['default','error']);
     	let { list } = $$props;
     	let { update } = $$props;
     	let { canReroder = false } = $$props;
@@ -15223,9 +15254,6 @@ var app = (function () {
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<DragAndDropList> was created with unknown prop '${key}'`);
     	});
-
-    	let { $$slots = {}, $$scope } = $$props;
-    	validate_slots("DragAndDropList", $$slots, ['default','error']);
 
     	$$self.$$set = $$props => {
     		if ("list" in $$props) $$invalidate(0, list = $$props.list);
@@ -15284,7 +15312,7 @@ var app = (function () {
     		drop,
     		update,
     		$$scope,
-    		$$slots
+    		slots
     	];
     }
 
@@ -15360,7 +15388,7 @@ var app = (function () {
     	}
     }
 
-    /* src\components\Toast.svelte generated by Svelte v3.24.1 */
+    /* src\components\Toast.svelte generated by Svelte v3.32.1 */
     const file$7 = "src\\components\\Toast.svelte";
 
     function get_each_context$3(ctx, list, i) {
@@ -15385,8 +15413,8 @@ var app = (function () {
     	let mounted;
     	let dispose;
 
-    	function click_handler(...args) {
-    		return /*click_handler*/ ctx[2](/*toast*/ ctx[6], ...args);
+    	function click_handler() {
+    		return /*click_handler*/ ctx[2](/*toast*/ ctx[6]);
     	}
 
     	const block = {
@@ -15517,7 +15545,7 @@ var app = (function () {
     		},
     		p: function update(ctx, [dirty]) {
     			if (dirty & /*toasts, unshiftToast, getCurrentTime*/ 3) {
-    				const each_value = /*toasts*/ ctx[0];
+    				each_value = /*toasts*/ ctx[0];
     				validate_each_argument(each_value);
     				group_outros();
     				validate_each_keys(ctx, each_value, get_each_context$3, get_key);
@@ -15568,6 +15596,8 @@ var app = (function () {
     }
 
     function instance$7($$self, $$props, $$invalidate) {
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("Toast", slots, []);
     	let toasts = [];
     	let retainMs = 2000;
     	let toastId = 0;
@@ -15598,8 +15628,6 @@ var app = (function () {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Toast> was created with unknown prop '${key}'`);
     	});
 
-    	let { $$slots = {}, $$scope } = $$props;
-    	validate_slots("Toast", $$slots, []);
     	const click_handler = toast => unshiftToast(toast._id);
 
     	$$self.$capture_state = () => ({
@@ -15642,7 +15670,7 @@ var app = (function () {
     	}
     }
 
-    /* src\components\InstrumentCard.svelte generated by Svelte v3.24.1 */
+    /* src\components\InstrumentCard.svelte generated by Svelte v3.32.1 */
     const file$8 = "src\\components\\InstrumentCard.svelte";
 
     // (165:6) {#if optionsVisible}
@@ -16644,6 +16672,7 @@ var app = (function () {
     }
 
     function instance$8($$self, $$props, $$invalidate) {
+    	let volTxt;
     	let $instrumentSets;
     	let $activeSet;
     	let $editMode;
@@ -16656,6 +16685,8 @@ var app = (function () {
     	component_subscribe($$self, editMode, $$value => $$invalidate(9, $editMode = $$value));
     	validate_store(showAdsr, "showAdsr");
     	component_subscribe($$self, showAdsr, $$value => $$invalidate(10, $showAdsr = $$value));
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("InstrumentCard", slots, []);
     	let { id } = $$props;
     	let { name } = $$props;
     	let { volume } = $$props;
@@ -16719,9 +16750,6 @@ var app = (function () {
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<InstrumentCard> was created with unknown prop '${key}'`);
     	});
-
-    	let { $$slots = {}, $$scope } = $$props;
-    	validate_slots("InstrumentCard", $$slots, []);
 
     	function slidecontrol0_value_binding(value) {
     		octave = value;
@@ -16820,15 +16848,13 @@ var app = (function () {
     		if ("volTxt" in $$props) $$invalidate(8, volTxt = $$props.volTxt);
     	};
 
-    	let volTxt;
-
     	if ($$props && "$$inject" in $$props) {
     		$$self.$inject_state($$props.$$inject);
     	}
 
     	$$self.$$.update = () => {
     		if ($$self.$$.dirty & /*volume, absoluteVolume*/ 33) {
-    			 $$invalidate(8, volTxt = volume > -1
+    			$$invalidate(8, volTxt = volume > -1
     			? volume < 1
     				? "Muted"
     				: `${volume}${absoluteVolume ? "%" : ""}`
@@ -17009,7 +17035,7 @@ var app = (function () {
     	}
     }
 
-    /* src\components\InstrumentAdder.svelte generated by Svelte v3.24.1 */
+    /* src\components\InstrumentAdder.svelte generated by Svelte v3.32.1 */
     const file$9 = "src\\components\\InstrumentAdder.svelte";
 
     function get_each_context$4(ctx, list, i) {
@@ -17036,7 +17062,9 @@ var app = (function () {
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
     		},
-    		p: function update(ctx, dirty) {
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
+
     			if (dirty & /*availableInstruments*/ 1 && option_value_value !== (option_value_value = normalizeInstrumentName(/*instrument*/ ctx[8]))) {
     				prop_dev(option, "__value", option_value_value);
     				option.value = option.__value;
@@ -17124,7 +17152,7 @@ var app = (function () {
     		},
     		p: function update(ctx, [dirty]) {
     			if (dirty & /*normalizeInstrumentName, availableInstruments*/ 1) {
-    				const each_value = /*availableInstruments*/ ctx[0];
+    				each_value = /*availableInstruments*/ ctx[0];
     				validate_each_argument(each_value);
     				validate_each_keys(ctx, each_value, get_each_context$4, get_key);
     				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, datalist, destroy_block, create_each_block$4, null, get_each_context$4);
@@ -17181,6 +17209,8 @@ var app = (function () {
     	component_subscribe($$self, instrumentSets, $$value => $$invalidate(3, $instrumentSets = $$value));
     	validate_store(activeSet, "activeSet");
     	component_subscribe($$self, activeSet, $$value => $$invalidate(4, $activeSet = $$value));
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("InstrumentAdder", slots, []);
     	let { availableInstruments = [] } = $$props;
 
     	const denormalizeInstrumentName = input => {
@@ -17225,9 +17255,6 @@ var app = (function () {
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<InstrumentAdder> was created with unknown prop '${key}'`);
     	});
-
-    	let { $$slots = {}, $$scope } = $$props;
-    	validate_slots("InstrumentAdder", $$slots, []);
 
     	$$self.$$set = $$props => {
     		if ("availableInstruments" in $$props) $$invalidate(0, availableInstruments = $$props.availableInstruments);
@@ -17283,7 +17310,7 @@ var app = (function () {
     	}
     }
 
-    /* src\components\SetEditor.svelte generated by Svelte v3.24.1 */
+    /* src\components\SetEditor.svelte generated by Svelte v3.32.1 */
 
     const { console: console_1 } = globals;
     const file$a = "src\\components\\SetEditor.svelte";
@@ -17610,8 +17637,8 @@ var app = (function () {
     		{ nohover: /*$isReordering*/ ctx[4] }
     	];
 
-    	function remove_handler(...args) {
-    		return /*remove_handler*/ ctx[14](/*index*/ ctx[20], ...args);
+    	function remove_handler() {
+    		return /*remove_handler*/ ctx[14](/*index*/ ctx[20]);
     	}
 
     	let instrumentcard_props = {};
@@ -17833,6 +17860,8 @@ var app = (function () {
     	component_subscribe($$self, showAdsr, $$value => $$invalidate(5, $showAdsr = $$value));
     	validate_store(editMode, "editMode");
     	component_subscribe($$self, editMode, $$value => $$invalidate(6, $editMode = $$value));
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("SetEditor", slots, []);
     	let deleteDialog;
     	let availableInstruments = [];
 
@@ -17922,8 +17951,6 @@ var app = (function () {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1.warn(`<SetEditor> was created with unknown prop '${key}'`);
     	});
 
-    	let { $$slots = {}, $$scope } = $$props;
-    	validate_slots("SetEditor", $$slots, []);
     	const click_handler = () => deleteDialog.showModal();
     	const remove_handler = index => removeInstrument(index);
     	const click_handler_1 = () => deleteDialog.close();
@@ -18011,7 +18038,7 @@ var app = (function () {
     	}
     }
 
-    /* src\components\SetListItem.svelte generated by Svelte v3.24.1 */
+    /* src\components\SetListItem.svelte generated by Svelte v3.32.1 */
     const file$b = "src\\components\\SetListItem.svelte";
 
     function get_each_context$5(ctx, list, i) {
@@ -18150,7 +18177,7 @@ var app = (function () {
     		},
     		p: function update(ctx, dirty) {
     			if (dirty & /*normalizedName, set*/ 65) {
-    				const each_value = /*set*/ ctx[0].instruments;
+    				each_value = /*set*/ ctx[0].instruments;
     				validate_each_argument(each_value);
     				validate_each_keys(ctx, each_value, get_each_context$5, get_key);
     				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, ul, destroy_block, create_each_block$5, null, get_each_context$5);
@@ -18220,7 +18247,8 @@ var app = (function () {
     			append_dev(span, t0);
     			append_dev(li, t1);
     		},
-    		p: function update(ctx, dirty) {
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
     			if (dirty & /*set*/ 1 && t0_value !== (t0_value = /*normalizedName*/ ctx[6](/*i*/ ctx[1].name) + "")) set_data_dev(t0, t0_value);
     		},
     		d: function destroy(detaching) {
@@ -18500,6 +18528,8 @@ var app = (function () {
     				if (!if_block0) {
     					if_block0 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
     					if_block0.c();
+    				} else {
+    					if_block0.p(ctx, dirty);
     				}
 
     				transition_in(if_block0, 1);
@@ -18630,6 +18660,8 @@ var app = (function () {
     	component_subscribe($$self, activeSet, $$value => $$invalidate(4, $activeSet = $$value));
     	validate_store(editMode, "editMode");
     	component_subscribe($$self, editMode, $$value => $$invalidate(5, $editMode = $$value));
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("SetListItem", slots, []);
     	let { set } = $$props;
     	let { i } = $$props;
 
@@ -18663,8 +18695,6 @@ var app = (function () {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<SetListItem> was created with unknown prop '${key}'`);
     	});
 
-    	let { $$slots = {}, $$scope } = $$props;
-    	validate_slots("SetListItem", $$slots, []);
     	const click_handler = () => $editMode ? showEditDialog() : activeSet.set(i);
     	const click_handler_1 = () => setEditDialog.close();
 
@@ -18769,7 +18799,7 @@ var app = (function () {
     	}
     }
 
-    /* src\components\SetList.svelte generated by Svelte v3.24.1 */
+    /* src\components\SetList.svelte generated by Svelte v3.32.1 */
     const file$c = "src\\components\\SetList.svelte";
 
     // (78:2) {#if $editMode}
@@ -19154,6 +19184,8 @@ var app = (function () {
     	component_subscribe($$self, isReordering, $$value => $$invalidate(1, $isReordering = $$value));
     	validate_store(editMode, "editMode");
     	component_subscribe($$self, editMode, $$value => $$invalidate(2, $editMode = $$value));
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("SetList", slots, []);
 
     	function addSet() {
     		instrumentSets.set([
@@ -19199,7 +19231,7 @@ var app = (function () {
     	function update(from, to) {
     		let newList = [...$instrumentSets];
     		newList[from] = [newList[to], newList[to] = newList[from]][0];
-    		set_store_value(instrumentSets, $instrumentSets = [...newList]);
+    		set_store_value(instrumentSets, $instrumentSets = [...newList], $instrumentSets);
     		instrumentSets.set($instrumentSets);
     	}
 
@@ -19213,9 +19245,6 @@ var app = (function () {
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<SetList> was created with unknown prop '${key}'`);
     	});
-
-    	let { $$slots = {}, $$scope } = $$props;
-    	validate_slots("SetList", $$slots, []);
 
     	function draganddroplist_list_binding(value) {
     		$instrumentSets = value;
@@ -19270,7 +19299,7 @@ var app = (function () {
     	}
     }
 
-    /* src\components\ThemeSwitcher.svelte generated by Svelte v3.24.1 */
+    /* src\components\ThemeSwitcher.svelte generated by Svelte v3.32.1 */
     const file$d = "src\\components\\ThemeSwitcher.svelte";
 
     // (130:0) {#if optionsVisible}
@@ -19485,6 +19514,8 @@ var app = (function () {
     	let $theme;
     	validate_store(theme, "theme");
     	component_subscribe($$self, theme, $$value => $$invalidate(1, $theme = $$value));
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("ThemeSwitcher", slots, []);
     	let optionsVisible = false;
 
     	function applyTheme(newVal) {
@@ -19510,8 +19541,6 @@ var app = (function () {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<ThemeSwitcher> was created with unknown prop '${key}'`);
     	});
 
-    	let { $$slots = {}, $$scope } = $$props;
-    	validate_slots("ThemeSwitcher", $$slots, []);
     	const click_handler = () => applyTheme(0);
     	const click_handler_1 = () => applyTheme(1);
     	const click_handler_2 = () => applyTheme(2);
@@ -19765,7 +19794,7 @@ var app = (function () {
       return JSON.parse(data.slice(begin, end) + '}')
     }
 
-    if ( module.exports) module.exports = load;
+    if (module.exports) module.exports = load;
     if (typeof window !== 'undefined') window.loadAudio = load;
     });
 
@@ -20380,7 +20409,7 @@ var app = (function () {
     };
 
     var index_min = createCommonjsModule(function (module, exports) {
-    (function(e){var t; {module.exports=e();}})(function(){return function o(e,t,s){function a(n,i){if(!t[n]){if(!e[n]){var l=typeof commonjsRequire=="function"&&commonjsRequire;if(!i&&l)return l(n,!0);if(r)return r(n,!0);var h=new Error("Cannot find module '"+n+"'");throw h.code="MODULE_NOT_FOUND",h}var c=t[n]={exports:{}};e[n][0].call(c.exports,function(t){var s=e[n][1][t];return a(s?s:t)},c,c.exports,o,e,t,s);}return t[n].exports}var r=typeof commonjsRequire=="function"&&commonjsRequire;for(var n=0;n<s.length;n++)a(s[n]);return a}({1:[function(e,t,s){Object.defineProperty(s,"__esModule",{value:true});s["default"]=function(e){function t(e){this._event=e;this._data=e.data;this.receivedTime=e.receivedTime;if(this._data&&this._data.length<2){console.warn("Illegal MIDI message of length",this._data.length);return}this._messageCode=e.data[0]&240;this.channel=e.data[0]&15;switch(this._messageCode){case 128:this.messageType="noteoff";this.key=e.data[1]&127;this.velocity=e.data[2]&127;break;case 144:this.messageType="noteon";this.key=e.data[1]&127;this.velocity=e.data[2]&127;break;case 160:this.messageType="keypressure";this.key=e.data[1]&127;this.pressure=e.data[2]&127;break;case 176:this.messageType="controlchange";this.controllerNumber=e.data[1]&127;this.controllerValue=e.data[2]&127;if(this.controllerNumber===120&&this.controllerValue===0){this.channelModeMessage="allsoundoff";}else if(this.controllerNumber===121){this.channelModeMessage="resetallcontrollers";}else if(this.controllerNumber===122){if(this.controllerValue===0){this.channelModeMessage="localcontroloff";}else {this.channelModeMessage="localcontrolon";}}else if(this.controllerNumber===123&&this.controllerValue===0){this.channelModeMessage="allnotesoff";}else if(this.controllerNumber===124&&this.controllerValue===0){this.channelModeMessage="omnimodeoff";}else if(this.controllerNumber===125&&this.controllerValue===0){this.channelModeMessage="omnimodeon";}else if(this.controllerNumber===126){this.channelModeMessage="monomodeon";}else if(this.controllerNumber===127){this.channelModeMessage="polymodeon";}break;case 192:this.messageType="programchange";this.program=e.data[1];break;case 208:this.messageType="channelpressure";this.pressure=e.data[1]&127;break;case 224:this.messageType="pitchbendchange";var t=e.data[2]&127;var s=e.data[1]&127;this.pitchBend=(t<<8)+s;break}}return new t(e)};t.exports=s["default"];},{}]},{},[1])(1)});
+    (function(e){{module.exports=e();}})(function(){return function o(e,t,s){function a(n,i){if(!t[n]){if(!e[n]){var l=typeof commonjsRequire=="function"&&commonjsRequire;if(!i&&l)return l(n,!0);if(r)return r(n,!0);var h=new Error("Cannot find module '"+n+"'");throw h.code="MODULE_NOT_FOUND",h}var c=t[n]={exports:{}};e[n][0].call(c.exports,function(t){var s=e[n][1][t];return a(s?s:t)},c,c.exports,o,e,t,s);}return t[n].exports}var r=typeof commonjsRequire=="function"&&commonjsRequire;for(var n=0;n<s.length;n++)a(s[n]);return a}({1:[function(e,t,s){Object.defineProperty(s,"__esModule",{value:true});s["default"]=function(e){function t(e){this._event=e;this._data=e.data;this.receivedTime=e.receivedTime;if(this._data&&this._data.length<2){console.warn("Illegal MIDI message of length",this._data.length);return}this._messageCode=e.data[0]&240;this.channel=e.data[0]&15;switch(this._messageCode){case 128:this.messageType="noteoff";this.key=e.data[1]&127;this.velocity=e.data[2]&127;break;case 144:this.messageType="noteon";this.key=e.data[1]&127;this.velocity=e.data[2]&127;break;case 160:this.messageType="keypressure";this.key=e.data[1]&127;this.pressure=e.data[2]&127;break;case 176:this.messageType="controlchange";this.controllerNumber=e.data[1]&127;this.controllerValue=e.data[2]&127;if(this.controllerNumber===120&&this.controllerValue===0){this.channelModeMessage="allsoundoff";}else if(this.controllerNumber===121){this.channelModeMessage="resetallcontrollers";}else if(this.controllerNumber===122){if(this.controllerValue===0){this.channelModeMessage="localcontroloff";}else {this.channelModeMessage="localcontrolon";}}else if(this.controllerNumber===123&&this.controllerValue===0){this.channelModeMessage="allnotesoff";}else if(this.controllerNumber===124&&this.controllerValue===0){this.channelModeMessage="omnimodeoff";}else if(this.controllerNumber===125&&this.controllerValue===0){this.channelModeMessage="omnimodeon";}else if(this.controllerNumber===126){this.channelModeMessage="monomodeon";}else if(this.controllerNumber===127){this.channelModeMessage="polymodeon";}break;case 192:this.messageType="programchange";this.program=e.data[1];break;case 208:this.messageType="channelpressure";this.pressure=e.data[1]&127;break;case 224:this.messageType="pitchbendchange";var t=e.data[2]&127;var s=e.data[1]&127;this.pitchBend=(t<<8)+s;break}}return new t(e)};t.exports=s["default"];},{}]},{},[1])(1)});
 
     });
 
@@ -20446,7 +20475,7 @@ var app = (function () {
       return midi(scheduler(notes(events(player(ac, source, options)))))
     }
 
-    if ( module.exports) module.exports = SamplePlayer;
+    if (module.exports) module.exports = SamplePlayer;
     if (typeof window !== 'undefined') window.SamplePlayer = SamplePlayer;
     });
 
@@ -20878,11 +20907,11 @@ var app = (function () {
     legacy.instrument = instrument;
     legacy.nameToUrl = nameToUrl;
 
-    if ( module.exports) module.exports = legacy;
+    if (module.exports) module.exports = legacy;
     if (typeof window !== 'undefined') window.Soundfont = legacy;
     });
 
-    /* src\App.svelte generated by Svelte v3.24.1 */
+    /* src\App.svelte generated by Svelte v3.32.1 */
 
     const { Object: Object_1$1, console: console_1$1, document: document_1, window: window_1 } = globals;
 
@@ -21271,6 +21300,8 @@ var app = (function () {
     	component_subscribe($$self, octaveShift, $$value => $$invalidate(18, $octaveShift = $$value));
     	validate_store(chordNotes, "chordNotes");
     	component_subscribe($$self, chordNotes, $$value => $$invalidate(3, $chordNotes = $$value));
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("App", slots, []);
     	instrumentSets.useLocalStorage();
     	showAdsr.useLocalStorage();
     	currentSoundFont.useLocalStorage();
@@ -21488,9 +21519,6 @@ var app = (function () {
     	Object_1$1.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1$1.warn(`<App> was created with unknown prop '${key}'`);
     	});
-
-    	let { $$slots = {}, $$scope } = $$props;
-    	validate_slots("App", $$slots, []);
 
     	const click_handler = () => {
     		let temp = $chordNotes;
