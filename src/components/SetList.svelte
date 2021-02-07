@@ -1,7 +1,12 @@
 <script>
   import { slide } from "svelte/transition";
 
-  import { activeSet, instrumentSets, editMode, isReordering } from "../stores";
+  import {
+    instrumentSets,
+    editMode,
+    isReordering,
+    ac,
+  } from "../stores";
 
   import Button from "./Button.svelte";
   import DragAndDropList from "./DragAndDropList.svelte";
@@ -48,10 +53,22 @@
 
     if (input != null) {
       try {
-        let parsed = JSON.parse(input);
+        let updateable = JSON.parse(input);
 
-        instrumentSets.set([...parsed]);
+        for (const instrSet of updateable) {
+          if (instrSet.instruments.length < 1) continue;
+          for (const instr of instrSet.instruments) {
+            const instrumentData = Soundfont.instrument(ac, instr.name, {
+              soundfont: instr.soundfont,
+            });
+
+            instr.data = instrumentData;
+          }
+        }
+
+        instrumentSets.set([...updateable]);
       } catch (error) {
+        console.log(error);
         window.pushToast("Restore not successful", "error");
       }
 

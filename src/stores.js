@@ -1,6 +1,5 @@
 import { writable } from 'svelte/store';
-import store from "store";
-import cloneDeep from "lodash.clonedeep";
+import Soundfont from "soundfont-player";
 
 const createWritableStore = (key, startValue) => {
     const { subscribe, set, update } = writable(startValue);
@@ -9,16 +8,16 @@ const createWritableStore = (key, startValue) => {
         subscribe,
         set,
         useLocalStorage: () => {
-            const json = store.get(key);
+            const json = localStorage.getItem(key);
 
             if (key === 'instruments' && json) {
-                let updateable = [...json];
+                let updateable = JSON.parse(json);
 
-                for (let instrSet of updateable) {
+                for (const instrSet of updateable) {
                     if (instrSet.instruments.length < 1) continue;
-                    for (let instr of instrSet.instruments) {
+                    for (const instr of instrSet.instruments) {
 
-                        let instrumentData = Soundfont.instrument(ac, instr.name, {
+                        const instrumentData = Soundfont.instrument(ac, instr.name, {
                             soundfont: instr.soundfont
                         });
 
@@ -29,15 +28,12 @@ const createWritableStore = (key, startValue) => {
 
                 set(updateable);
             }
-
-            // const json = localStorage.getItem(key);
-            if (json) {
-                set(json);
+            else if (json) {
+                set(JSON.parse(json));
             }
 
             subscribe(current => {
-                store.set(key, cloneDeep(current));
-                // localStorage.setItem(key, JSON.stringify(current));
+                localStorage.setItem(key, JSON.stringify(current));
             });
         }
     };
@@ -159,34 +155,32 @@ export const keysPressed = writable({
 
 export const defaultAdsr = [0.005, 0.395, 0.8, 1.2];
 
-export const keysDown = writable(
-    {
-        20: false,
-        65: false,
-        83: false,
-        68: false,
-        70: false,
-        71: false,
-        72: false,
-        74: false,
-        75: false,
-        76: false,
-        186: false,
-        222: false,
-        220: false,
-        13: false,
-        81: false,
-        87: false,
-        69: false,
-        84: false,
-        90: false,
-        73: false,
-        79: false,
-        80: false,
-        221: false,
-        8: false
-    }
-);
+export const keysDown = writable({
+    20: false,
+    65: false,
+    83: false,
+    68: false,
+    70: false,
+    71: false,
+    72: false,
+    74: false,
+    75: false,
+    76: false,
+    186: false,
+    222: false,
+    220: false,
+    13: false,
+    81: false,
+    87: false,
+    69: false,
+    84: false,
+    90: false,
+    73: false,
+    79: false,
+    80: false,
+    221: false,
+    8: false
+});
 
 export let ac = new AudioContext();
 
@@ -201,14 +195,10 @@ export const theme = createWritableStore('theme', 0);
 export const isReordering = createWritableStore('isReordering', false);
 export const isFocused = writable(false);
 
-export const instrumentSets = createWritableStore('instruments',
-    [
-        {
-            name: 'Set 1',
-            instruments: []
-        }
-    ]
-);
+export const instrumentSets = createWritableStore('instruments', [{
+    name: 'Set 1',
+    instruments: []
+}]);
 
 export const defaultChords = {
     65: "Gm",

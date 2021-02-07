@@ -154,7 +154,7 @@
       {update}
     >
       <InstrumentCard
-        {...item}
+        {item}
         {index}
         on:remove={() => removeInstrument(index)}
         nohover={$isReordering}

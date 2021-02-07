@@ -13,16 +13,21 @@
     editMode,
   } from "../stores";
 
-  export let id;
-  export let name;
-  export let volume;
-  export let octave;
-  export let soundfont;
-  export let adsr;
-  export let absoluteVolume;
+  export let item;
+
+  let {
+    id, name, volume, octave, soundfont, adsr, absoluteVolume
+  } = item;
+
+  // export let id;
+  // export let name;
+  // export let volume;
+  // export let octave;
+  // export let soundfont;
+  // export let adsr;
+  // export let absoluteVolume;
   export let nohover = false;
   export let index;
-  export let data = null;
 
   let optionsVisible = false;
 
