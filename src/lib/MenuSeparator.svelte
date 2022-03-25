@@ -1,0 +1,1 @@
+<div class="h-px my-6 transition-colors bg-gray-200 pointer-events-none select-none dark:bg-gray-700">&nbsp;</div>
